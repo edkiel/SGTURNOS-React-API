@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Planificar Turnos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Planificación de Turnos</h2>
+
+    <form th:action="@{/admin/planificar-turno}" th:object="${turno}" method="post">
+        <div class="mb-3">
+            <label for="usuario" class="form-label">Seleccionar Usuario:</label>
+            <select id="usuario" name="usuarioId" class="form-select" required>
+                <option th:each="usuario : ${usuarios}"
+                        th:value="${usuario.id}"
+                        th:text="${usuario.nombre + ' (' + usuario.correo + ')'}">
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha" class="form-label">Fecha:</label>
+            <input type="date" id="fecha" name="fecha" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="horaInicio" class="form-label">Hora de Inicio:</label>
+            <input type="time" id="horaInicio" name="horaInicio" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="horaFin" class="form-label">Hora de Fin:</label>
+            <input type="time" id="horaFin" name="horaFin" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="area" class="form-label">Área / Servicio:</label>
+            <input type="text" id="area" name="area" class="form-control" required>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success">Guardar Turno</button>
+            <a th:href="@{/admindash}" class="btn btn-secondary ms-2">Cancelar</a>
+        </div>
+    </form>
+
+</div>
+
+</body>
+</html>
