@@ -1,3 +1,5 @@
+// File: com/sgturnos.config/CustomLoginSuccessHandler.java
+
 package com.sgturnos.config;
 
 import java.io.IOException;
@@ -10,14 +12,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 // Este manejador se activa después de que un usuario se autentica con éxito.
+// En lugar de redirigir, simplemente envía una respuesta 200 OK,
+// lo cual es ideal para una API REST.
 @Component
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        // Redirige siempre a la URL raíz de la aplicación.
-        // El enrutador de React, en el front-end, se encargará de la navegación
-        // interna (por ejemplo, a /admin/dashboard).
-        response.sendRedirect("/");
+        // Enviar una respuesta 200 OK y no redirigir.
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"message\": \"Login exitoso\"}");
     }
 }

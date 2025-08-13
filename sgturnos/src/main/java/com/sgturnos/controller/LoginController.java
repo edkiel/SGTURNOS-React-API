@@ -1,42 +1,38 @@
 package com.sgturnos.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.sgturnos.payload.LoginRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
+@RequestMapping("/api") // La ruta base del controlador ha sido cambiada a /api
 public class LoginController {
-    
-     @GetMapping("/")
-    public String redirigirInicio() {
-        return "redirect:/login";
+
+    private final AuthenticationManager authenticationManager;
+
+    public LoginController(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
     }
 
-    @GetMapping("/login")
-    public String mostrarLogin(@RequestParam(value = "error", required = false) String error,
-                                         @RequestParam(value = "logout", required = false) String logout,
-                                         @RequestParam(value = "sin_permiso", required = false) String sinPermiso,
-                                         Model model) {
+    @PostMapping("/login") // La ruta completa para el login será /api/login
+    public ResponseEntity<String> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        // Usa el AuthenticationManager para autenticar al usuario.
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+        );
 
-        if (error != null) {
-            model.addAttribute("mensaje", "Usuario o contraseña incorrectos.");
-        }
-
-        if (logout != null) {
-            model.addAttribute("mensaje", "Has cerrado sesión correctamente.");
-        }
-
-        if (sinPermiso != null) {
-            model.addAttribute("mensaje", "No tienes permiso para acceder a esa sección.");
-        }
-
-        return "comunes/login"; // Carga login.html desde templates
-        }
-    
-    
-    @GetMapping("/error_rol")
-    public String errorRol() {
-        return "comunes/error_rol";
+        // Si la autenticación es exitosa, se establece el contexto de seguridad.
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        // Retorna una respuesta exitosa.
+        return new ResponseEntity<>("¡Usuario autenticado con éxito!", HttpStatus.OK);
     }
 }
