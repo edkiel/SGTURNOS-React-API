@@ -1,7 +1,6 @@
 package com.sgturnos.controller;
 
 import com.sgturnos.dto.LoginRequest;
-import com.sgturnos.dto.LoginResponse;
 import com.sgturnos.dto.RegistroRequest;
 import com.sgturnos.model.Rol;
 import com.sgturnos.model.Usuario;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -50,13 +47,11 @@ public class AuthController {
             return new ResponseEntity<>("El correo ya esta registrado!", HttpStatus.BAD_REQUEST);
         }
         
-        // Agregamos esta validación para evitar duplicidad de documento de identidad
         if (usuarioRepository.existsById(registroRequest.getIdUsuario())) {
             return new ResponseEntity<>("El documento de identidad ya esta registrado!", HttpStatus.BAD_REQUEST);
         }
 
         Usuario usuario = new Usuario();
-        // **Línea corregida:** Asignamos el idUsuario del DTO al objeto Usuario
         usuario.setIdUsuario(registroRequest.getIdUsuario()); 
         usuario.setCorreo(registroRequest.getCorreo());
         usuario.setPrimerNombre(registroRequest.getPrimerNombre());
@@ -65,7 +60,6 @@ public class AuthController {
         usuario.setSegundoApellido(registroRequest.getSegundoApellido());
         usuario.setContrasena(passwordEncoder.encode(registroRequest.getContrasena()));
 
-        // Asignamos el rol por defecto
         Rol rol = rolRepository.findByRol("ADMINISTRADOR").orElseThrow();
         usuario.setRol(rol);
 
@@ -75,25 +69,25 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtTokenProvider.generateToken(authentication);
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtTokenProvider.generateToken(authentication);
 
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        return new ResponseEntity<>(new LoginResponse(token, roles), HttpStatus.OK);
+            // Crea un mapa para devolver una respuesta JSON con 'accessToken'
+            Map<String, String> response = Collections.singletonMap("accessToken", token);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Credenciales inv\u00e1lidas.", HttpStatus.UNAUTHORIZED);
+        }
     }
 
-@GetMapping("/protegido")
+    @GetMapping("/protegido")
     public String recursoProtegido() {
         return "¡Acceso concedido a un recurso protegido!";
     }
-
-
 }

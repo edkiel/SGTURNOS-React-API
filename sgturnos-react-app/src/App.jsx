@@ -13,28 +13,38 @@ const LoginForm = ({ onLoginSuccess }) => {
     setError('');
 
     try {
+      // Ajusta esta URL si tu backend no est\u00e1 en localhost:8085
       const response = await axios.post('http://localhost:8085/api/auth/login', { email, password });
+      // Guarda el token de acceso en el almacenamiento local
       localStorage.setItem('accessToken', response.data.accessToken);
       onLoginSuccess();
     } catch (err) {
       if (err.response && err.response.data) {
         setError(err.response.data.message);
       } else {
-        setError('Ocurri\u00f3 un error de conexi\u00f3n con el servidor.');
+        setError('Ocurrio un error de conexión con el servidor.');
       }
       console.error(err);
     }
   };
 
   return (
-    <div className="login-card w-full max-w-sm">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Iniciar Sesi\u00f3n</h2>
-      {error && <p className="error-message mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="login-card w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
+      {/* AQU\u00cd DEBES REEMPLAZAR LA URL DEL SRC POR LA URL P\u00daBLICA DE TU LOGO.
+        Por ejemplo: src="https://tuservidor.com/images/logosinfondo_SGT-naranja1.png" 
+      */}
+      <img 
+        src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" 
+        alt="Logo de la aplicación" 
+        className="h-24 mx-auto mb-8"
+      />
+      <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Iniciar Sesión</h2>
+      {error && <p className="text-red-500 text-center mb-4 font-semibold">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">Correo:</label>
+          <label className="block text-gray-700 text-base font-bold mb-2">Correo:</label>
           <input
-            className="input-field"
+            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -42,9 +52,9 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">Contrase\u00f1a:</label>
+          <label className="block text-gray-700 text-base font-bold mb-2">Contraseña:</label>
           <input
-            className="input-field"
+            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -52,7 +62,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <button
-          className="login-btn bg-blue-500 hover:bg-blue-700 focus:outline-none focus:shadow-outline"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform hover:scale-105"
           type="submit"
         >
           Entrar
@@ -208,10 +218,19 @@ const App = () => {
 
   return (
     <Router>
-      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-        <Routes>
-          <Route path="/" element={isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <LoginForm onLoginSuccess={handleLoginSuccess} />} />
-        </Routes>
+      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 relative overflow-hidden">
+        {/* AQU\u00cd DEBES REEMPLAZAR LA URL DEL BACKGROUND-IMAGE POR LA URL P\u00daBLICA DE TU FONDO.
+          Por ejemplo: backgroundImage: `url(https://tuservidor.com/images/FondoLogin.png)`
+        */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center" 
+          style={{ backgroundImage: `url(https://i.ibb.co/tMJhgXxt/theme2.png)` }}
+        ></div>
+        <div className="relative z-10 flex justify-center items-center min-h-screen w-full">
+          <Routes>
+            <Route path="/" element={isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <LoginForm onLoginSuccess={handleLoginSuccess} />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );
