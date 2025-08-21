@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
 
-// Componente para el formulario de inicio de sesión
+// Componente para el formulario de inicio de sesi\u00f3n
 const LoginForm = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,7 +13,7 @@ const LoginForm = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      // Petición para iniciar sesión usando la instancia api
+      // Petición para iniciar sesi\u00F3n usando la instancia api
       const response = await api.post('/auth/login', { email, password });
       
       // Guarda el token de acceso en el almacenamiento local
@@ -25,26 +25,30 @@ const LoginForm = ({ onLoginSuccess }) => {
       if (err.response && err.response.data) {
         setError(err.response.data.message);
       } else {
-        setError('Ocurrió un error de conexión con el servidor.');
+        setError('Ocurri\u00F3 un error de conexi\u00F3n con el servidor.');
       }
       console.error(err);
     }
   };
 
   return (
-    <div className="login-card w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
+    <div className="relative w-full max-w-lg p-10 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl transition-all duration-500 transform hover:scale-105">
+      {/* T\u00edtulos y subt\u00edtulos a\u00f1adidos */}
+      <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-2">Sistema de Gestión de Turnos</h1>
+      <h2 className="text-xl font-medium text-center text-gray-700 mb-8">SGTurnos</h2>
+
       <img
         src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png"
-        alt="Logo de la aplicación"
-        className="h-24 mx-auto mb-8"
+        alt="Logo de la aplicaci\u00f3n"
+        className="h-40 mx-auto mb-8 animate-pulse-slow"
       />
-      <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Iniciar Sesión</h2>
+      <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Iniciar Sesión</h3>
       {error && <p className="text-red-500 text-center mb-4 font-semibold">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-gray-700 text-base font-bold mb-2">Correo:</label>
           <input
-            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="shadow-inner appearance-none border-2 border-gray-300 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 transform hover:scale-105"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -54,7 +58,7 @@ const LoginForm = ({ onLoginSuccess }) => {
         <div>
           <label className="block text-gray-700 text-base font-bold mb-2">Contraseña:</label>
           <input
-            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="shadow-inner appearance-none border-2 border-gray-300 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 transform hover:scale-105"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -62,7 +66,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform hover:scale-105"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform hover:scale-105 shadow-xl"
           type="submit"
         >
           Entrar
@@ -203,7 +207,7 @@ const App = () => {
   }, [location.pathname]);
 
   const handleLoginSuccess = () => {
-    fetchUserProfile(); // Llama a la función sin argumentos, ya que el interceptor maneja el token
+    fetchUserProfile(); // Llama a la funci\u00f3n sin argumentos, ya que el interceptor maneja el token
   };
 
   const handleLogout = () => {
