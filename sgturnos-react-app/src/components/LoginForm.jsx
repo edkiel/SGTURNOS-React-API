@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { api } from '../api';
 
 const LoginForm = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -11,11 +11,10 @@ const LoginForm = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      // Ajusta esta URL si tu backend no est\u00e1 en localhost:8085
-      const response = await axios.post('http://localhost:8085/api/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       
       // Guarda el token de acceso en el almacenamiento local
-      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('token', response.data.accessToken);
       onLoginSuccess();
 
     } catch (err) {
@@ -30,10 +29,10 @@ const LoginForm = ({ onLoginSuccess }) => {
         }
       } else if (err.request) {
         // La solicitud fue hecha pero no se recibi\u00f3 respuesta
-        setError('Ocurri\u00f3 un error de conexi\u00f3n con el servidor. Verifica que el backend est\u00e9 en funcionamiento.');
+        setError('Ocurrió un error de conexión con el servidor. Verifica que el backend est\u00e9 en funcionamiento.');
       } else {
         // Algo m\u00e1s caus\u00f3 el error
-        setError('Ocurri\u00f3 un error inesperado. Int\u00e9ntalo de nuevo.');
+        setError('Ocurrió un error inesperado. Inténtalo de nuevo.');
       }
       console.error(err);
     }

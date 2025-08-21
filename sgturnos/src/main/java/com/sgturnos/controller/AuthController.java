@@ -78,7 +78,7 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String token = jwtTokenProvider.generateToken(authentication);
 
-            // Crea un mapa para devolver una respuesta JSON con 'accessToken'
+            // Se devuelve el token en un mapa con la clave 'accessToken'
             Map<String, String> response = Collections.singletonMap("accessToken", token);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

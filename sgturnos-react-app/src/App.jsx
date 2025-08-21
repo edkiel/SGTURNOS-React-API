@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { api } from './api';
 
-// Componente para el formulario de inicio de sesi\u00f3n
+// Componente para el formulario de inicio de sesión
 const LoginForm = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,16 +13,19 @@ const LoginForm = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      // Ajusta esta URL si tu backend no est\u00e1 en localhost:8085
-      const response = await axios.post('http://localhost:8085/api/auth/login', { email, password });
+      // Petición para iniciar sesión usando la instancia api
+      const response = await api.post('/auth/login', { email, password });
+      
       // Guarda el token de acceso en el almacenamiento local
-      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('token', response.data.accessToken);
+      
+      // Llama a la funci\u00F3n para manejar el \u00E9xito del login
       onLoginSuccess();
     } catch (err) {
       if (err.response && err.response.data) {
         setError(err.response.data.message);
       } else {
-        setError('Ocurrio un error de conexión con el servidor.');
+        setError('Ocurrió un error de conexión con el servidor.');
       }
       console.error(err);
     }
@@ -30,12 +33,9 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   return (
     <div className="login-card w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-      {/* AQU\u00cd DEBES REEMPLAZAR LA URL DEL SRC POR LA URL P\u00daBLICA DE TU LOGO.
-        Por ejemplo: src="https://tuservidor.com/images/logosinfondo_SGT-naranja1.png" 
-      */}
-      <img 
-        src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" 
-        alt="Logo de la aplicación" 
+      <img
+        src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png"
+        alt="Logo de la aplicación"
         className="h-24 mx-auto mb-8"
       />
       <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Iniciar Sesión</h2>
@@ -72,52 +72,21 @@ const LoginForm = ({ onLoginSuccess }) => {
   );
 };
 
-// Componente del dashboard (p\u00e1gina principal despu\u00e9s del login)
-const Dashboard = ({ onLogout }) => {
-  const [user, setUser] = useState(null);
+// Componente del dashboard (p\u00E1gina principal despu\u00E9s del login)
+const Dashboard = ({ user, onLogout }) => {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState('ADMINISTRADOR');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) {
-        onLogout();
-        return;
-      }
-      try {
-        const response = await axios.get('http://localhost:8085/api/users/profile', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setUser(response.data);
-      } catch (err) {
-        console.error('Error fetching user profile:', err);
-        onLogout();
-      }
-    };
-    fetchUser();
-  }, [onLogout]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    onLogout();
-    navigate('/');
-  };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setMessage('');
-    const accessToken = localStorage.getItem('accessToken');
     try {
-      await axios.post('http://localhost:8085/api/users/create', {
+      await api.post('/users/create', {
         email: newUserEmail,
         password: newUserPassword,
         role: newUserRole
-      }, {
-        headers: { Authorization: `Bearer ${accessToken}` },
       });
       setMessage('Usuario creado exitosamente.');
       setNewUserEmail('');
@@ -132,23 +101,15 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <p className="text-xl">Cargando...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-8 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800">Dashboard</h1>
-        <button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-red-600 transition-colors">Cerrar Sesi\u00f3n</button>
+        <button onClick={onLogout} className="bg-red-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-red-600 transition-colors">Cerrar Sesi\u00f3n</button>
       </div>
       <div className="bg-white p-8 rounded-xl shadow-lg">
-        <p className="text-xl font-medium">Bienvenido, {user.email}</p>
-        <p className="text-lg text-gray-600">Rol: {user.role}</p>
+        <p className="text-xl font-medium">Bienvenido, {user?.primerNombre}!</p>
+        <p className="text-lg text-gray-600">Rol: {user?.role}</p>
       </div>
 
       <div className="mt-12">
@@ -171,7 +132,7 @@ const Dashboard = ({ onLogout }) => {
               />
             </div>
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">Contrase\u00f1a:</label>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña:</label>
               <input
                 className="input-field"
                 type="password"
@@ -204,36 +165,88 @@ const Dashboard = ({ onLogout }) => {
   );
 };
 
-// Componente principal de la aplicaci\u00f3n
+// Componente que maneja el enrutamiento y la l\u00f3gica principal de la aplicaci\u00f3n
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Funci\u00f3n para obtener el perfil del usuario
+  const fetchUserProfile = async () => {
+    try {
+      const response = await api.get('/usuarios/profile');
+      setUser(response.data);
+      setIsLoading(false);
+      if (location.pathname === '/login') {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUser(null);
+      setIsLoading(false);
+      localStorage.removeItem('token');
+      navigate('/login');
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && location.pathname !== '/login') {
+      fetchUserProfile();
+    } else {
+      setIsLoading(false);
+      if (!token && location.pathname !== '/login') {
+        navigate('/login');
+      }
+    }
+  }, [location.pathname]);
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
+    fetchUserProfile(); // Llama a la función sin argumentos, ya que el interceptor maneja el token
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    setUser(null);
+    navigate('/login');
   };
 
-  return (
-    <Router>
-      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 relative overflow-hidden">
-        {/* AQU\u00cd DEBES REEMPLAZAR LA URL DEL BACKGROUND-IMAGE POR LA URL P\u00daBLICA DE TU FONDO.
-          Por ejemplo: backgroundImage: `url(https://tuservidor.com/images/FondoLogin.png)`
-        */}
-        <div 
-          className="absolute inset-0 z-0 bg-cover bg-center" 
-          style={{ backgroundImage: `url(https://i.ibb.co/tMJhgXxt/theme2.png)` }}
-        ></div>
-        <div className="relative z-10 flex justify-center items-center min-h-screen w-full">
-          <Routes>
-            <Route path="/" element={isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <LoginForm onLoginSuccess={handleLoginSuccess} />} />
-          </Routes>
-        </div>
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-xl">Cargando...</p>
       </div>
-    </Router>
+    );
+  }
+
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 relative overflow-hidden">
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(https://i.ibb.co/tMJhgXxt/theme2.png)` }}
+      ></div>
+      <div className="relative z-10 flex justify-center items-center min-h-screen w-full">
+        <Routes>
+          <Route path="/login" element={<LoginForm onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/" element={
+            user ? (
+              <Dashboard user={user} onLogout={handleLogout} />
+            ) : (
+              <LoginForm onLoginSuccess={handleLoginSuccess} />
+            )
+          } />
+        </Routes>
+      </div>
+    </div>
   );
 };
 
-export default App;
+// La funci\u00f3n principal se exporta envuelta en BrowserRouter
+export default function AppWrapper() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
