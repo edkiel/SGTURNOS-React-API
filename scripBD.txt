@@ -1,0 +1,48 @@
+CREATE DATABASE IF NOT EXISTS bsprueba9;
+USE bsprueba9;
+
+-- Tabla de Roles
+CREATE TABLE roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabla de Usuarios
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doc_type VARCHAR(20) NOT NULL,
+    doc_number VARCHAR(20) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Tabla de Asignación de Roles
+CREATE TABLE users_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    PRIMARY KEY (user_id, role_id)
+);
+
+-- Tabla de Turnos
+CREATE TABLE turnos (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    descripcion VARCHAR(200) NOT NULL,
+    user_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Insertar Roles Iniciales
+INSERT INTO roles (name) VALUES ('ROLE_ADMIN'), ('ROLE_USER');
+
+-- Insertar Usuario Admin (contraseña: "admin123" encriptada con BCrypt)
+INSERT INTO users (doc_type, doc_number, password, full_name, enabled) 
+VALUES ('DNI', 'admin', '$2a$10$XURPShQNCsLjp1ESc2laoObo9QZDhxz73hJPaEv7/cBha4pk0AgP6', 'Administrador', TRUE);
+
+-- Asignar Rol de Admin
+INSERT INTO users_roles (user_id, role_id) 
+VALUES (1, 1);
