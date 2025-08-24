@@ -1,5 +1,6 @@
 package com.sgturnos.controller;
 
+// Importaciones necesarias para el controlador
 import com.sgturnos.dto.LoginRequest;
 import com.sgturnos.dto.RegistroRequest;
 import com.sgturnos.model.Rol;
@@ -23,17 +24,34 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * Controlador REST que maneja las operaciones de autenticación
+ * @RestController indica que es un controlador REST que devuelve datos en formato JSON
+ * @RequestMapping especifica la ruta base para todas las operaciones de autenticación
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    /**
+     * Componentes necesarios para la autenticación y gestión de usuarios
+     */
+    private final AuthenticationManager authenticationManager; // Maneja el proceso de autenticación
+    private final UsuarioRepository usuarioRepository;        // Acceso a la base de datos de usuarios
+    private final RolRepository rolRepository;                // Acceso a la base de datos de roles
+    private final PasswordEncoder passwordEncoder;            // Codifica las contraseñas
+    private final JwtTokenProvider jwtTokenProvider;         // Genera y valida tokens JWT
 
-    public AuthController(AuthenticationManager authenticationManager, UsuarioRepository usuarioRepository, RolRepository rolRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    /**
+     * Constructor que recibe todas las dependencias necesarias mediante inyección
+     * Spring Boot inyectará automáticamente las implementaciones correspondientes
+     */
+    public AuthController(
+            AuthenticationManager authenticationManager, 
+            UsuarioRepository usuarioRepository, 
+            RolRepository rolRepository, 
+            PasswordEncoder passwordEncoder, 
+            JwtTokenProvider jwtTokenProvider) {
         this.authenticationManager = authenticationManager;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
@@ -41,16 +59,25 @@ public class AuthController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    /**
+     * Endpoint para registrar un nuevo usuario
+     * @PostMapping indica que este método maneja las solicitudes POST a /api/auth/register
+     * @param registroRequest contiene los datos del nuevo usuario
+     * @return ResponseEntity con el mensaje de éxito o error
+     */
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegistroRequest registroRequest) {
+        // Verifica si el correo ya está registrado
         if (usuarioRepository.findByCorreo(registroRequest.getCorreo()).isPresent()) {
             return new ResponseEntity<>("El correo ya esta registrado!", HttpStatus.BAD_REQUEST);
         }
         
+        // Verifica si el ID de usuario ya está registrado
         if (usuarioRepository.existsById(registroRequest.getIdUsuario())) {
             return new ResponseEntity<>("El documento de identidad ya esta registrado!", HttpStatus.BAD_REQUEST);
         }
 
+        // Crea un nuevo usuario con los datos del registro
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(registroRequest.getIdUsuario()); 
         usuario.setCorreo(registroRequest.getCorreo());
@@ -58,34 +85,54 @@ public class AuthController {
         usuario.setSegundoNombre(registroRequest.getSegundoNombre());
         usuario.setPrimerApellido(registroRequest.getPrimerApellido());
         usuario.setSegundoApellido(registroRequest.getSegundoApellido());
+        // Codifica la contraseña antes de guardarla
         usuario.setContrasena(passwordEncoder.encode(registroRequest.getContrasena()));
 
+        // Asigna el rol de ADMINISTRADOR al nuevo usuario
         Rol rol = rolRepository.findByRol("ADMINISTRADOR").orElseThrow();
         usuario.setRol(rol);
 
+        // Guarda el usuario en la base de datos
         usuarioRepository.save(usuario);
 
         return new ResponseEntity<>("Usuario registrado exitosamente!", HttpStatus.OK);
     }
 
+    /**
+     * Endpoint para la autenticación de usuarios
+     * @PostMapping indica que este método maneja las solicitudes POST a /api/auth/login
+     * @param loginRequest contiene el correo y contraseña del usuario
+     * @return ResponseEntity con el token JWT si la autenticación es exitosa
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
+            // Intenta autenticar al usuario con las credenciales proporcionadas
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.getEmail(),
                     loginRequest.getPassword()));
+
+            // Establece la autenticación en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Genera un token JWT para el usuario autenticado
             String token = jwtTokenProvider.generateToken(authentication);
 
-            // Se devuelve el token en un mapa con la clave 'accessToken'
+            // Devuelve el token en un objeto JSON con la clave 'accessToken'
             Map<String, String> response = Collections.singletonMap("accessToken", token);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Credenciales inv\u00e1lidas.", HttpStatus.UNAUTHORIZED);
+            // En caso de error de autenticación, devuelve un mensaje de error
+            return new ResponseEntity<>("Credenciales inválidas.", HttpStatus.UNAUTHORIZED);
         }
     }
 
+    /**
+     * Endpoint de prueba para verificar la protección de rutas
+     * @GetMapping indica que este método maneja las solicitudes GET a /api/auth/protegido
+     * @return Un mensaje simple para confirmar el acceso
+     */
     @GetMapping("/protegido")
     public String recursoProtegido() {
         return "¡Acceso concedido a un recurso protegido!";

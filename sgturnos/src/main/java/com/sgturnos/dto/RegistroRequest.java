@@ -1,12 +1,22 @@
 package com.sgturnos.dto;
 
+/**
+ * Clase DTO (Data Transfer Object) que representa la solicitud de registro de un nuevo usuario
+ * Esta clase se utiliza para transportar los datos del formulario de registro desde el cliente (frontend)
+ * hasta el servidor (backend)
+ */
 public class RegistroRequest {
+    // Identificador único del usuario
     private Long idUsuario;
+    // Nombres del usuario (primer y segundo nombre)
     private String primerNombre;
     private String segundoNombre;
+    // Apellidos del usuario (primer y segundo apellido)
     private String primerApellido;
     private String segundoApellido;
+    // Correo electrónico que servirá como nombre de usuario
     private String correo;
+    // Contraseña del usuario (debe ser encriptada antes de almacenarse)
     private String contrasena;
 
     public Long getIdUsuario() {
