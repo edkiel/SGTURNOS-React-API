@@ -88,8 +88,9 @@ public class AuthController {
         // Codifica la contraseña antes de guardarla
         usuario.setContrasena(passwordEncoder.encode(registroRequest.getContrasena()));
 
-        // Asigna el rol de ADMINISTRADOR al nuevo usuario
-        Rol rol = rolRepository.findByRol("ADMINISTRADOR").orElseThrow();
+        // Busca el rol por su ID
+        Rol rol = rolRepository.findById(registroRequest.getIdRol())
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + registroRequest.getIdRol()));
         usuario.setRol(rol);
 
         // Guarda el usuario en la base de datos

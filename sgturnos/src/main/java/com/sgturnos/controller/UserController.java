@@ -1,8 +1,9 @@
 package com.sgturnos.controller;
 
 import com.sgturnos.model.Usuario;
-// Se corrige el import de UserRepository a UsuarioRepository.
+import com.sgturnos.model.Rol;
 import com.sgturnos.repository.UsuarioRepository;
+import com.sgturnos.repository.RolRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,9 +16,16 @@ import java.util.List;
 public class UserController {
 
     private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
 
-    public UserController(UsuarioRepository usuarioRepository) {
+    public UserController(UsuarioRepository usuarioRepository, RolRepository rolRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+    }
+
+    @GetMapping("/roles")
+    public List<Rol> getAllRoles() {
+        return rolRepository.findAll();
     }
 
     @GetMapping

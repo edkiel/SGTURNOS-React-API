@@ -261,8 +261,12 @@ const UserManagement = () => {
                 value={formData.Id_rol}
                 onChange={handleInputChange}
               >
-                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                <option value="USUARIO">USUARIO</option>
+                <option value="">Seleccione un rol</option>
+                <option value="adm05">ADMINISTRADOR</option>
+                <option value="aux01">AUXILIAR</option>
+                <option value="enf02">ENFERMERO</option>
+                <option value="med03">MÉDICO</option>
+                <option value="ter04">TERAPIA</option>
               </select>
             </div>
             <div>

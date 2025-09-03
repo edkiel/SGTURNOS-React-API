@@ -18,6 +18,8 @@ public class RegistroRequest {
     private String correo;
     // Contraseña del usuario (debe ser encriptada antes de almacenarse)
     private String contrasena;
+    // Identificador del rol asignado al usuario
+    private String idRol;
 
     public Long getIdUsuario() {
         return idUsuario;
@@ -60,5 +62,13 @@ public class RegistroRequest {
     }
     public void setContrasena(String contrasena) {
         this.contrasena = contrasena;
+    }
+
+    public String getIdRol() {
+        return idRol;
+    }
+
+    public void setIdRol(String idRol) {
+        this.idRol = idRol;
     }
 }
