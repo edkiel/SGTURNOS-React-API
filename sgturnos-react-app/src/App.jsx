@@ -82,12 +82,12 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   const [editingUserId, setEditingUserId] = useState(null);
   const [formData, setFormData] = useState({
-    Id_usuario: '',
-    primer_nombre: '',
-    segundo_nombre: '',
-    primer_apellido: '',
-    segundo_apellido: '',
-    Id_rol: 'USUARIO',
+    idUsuario: '',
+    primerNombre: '',
+    segundoNombre: '',
+    primerApellido: '',
+    segundoApellido: '',
+    idRol: 'aux01', // Valor por defecto
     correo: '',
     contrasena: ''
   });
@@ -135,7 +135,7 @@ const UserManagement = () => {
       fetchUsers(); // Actualiza la lista de usuarios
     } catch (err) {
       if (err.response && err.response.data) {
-        setMessage(err.response.data.message);
+        setMessage(err.response.data.message || err.response.data);
       } else {
         setMessage('Error en la operacion.');
       }
@@ -146,12 +146,12 @@ const UserManagement = () => {
   // Funcion para resetear el formulario
   const resetForm = () => {
     setFormData({
-      Id_usuario: '',
-      primer_nombre: '',
-      segundo_nombre: '',
-      primer_apellido: '',
-      segundo_apellido: '',
-      Id_rol: 'USUARIO',
+      idUsuario: '',
+      primerNombre: '',
+      segundoNombre: '',
+      primerApellido: '',
+      segundoApellido: '',
+      idRol: 'aux01',
       correo: '',
       contrasena: ''
     });
@@ -159,14 +159,14 @@ const UserManagement = () => {
 
   // Funcion para iniciar el modo de edicion
   const handleEditUser = (userData) => {
-    setEditingUserId(userData.Id_usuario);
+    setEditingUserId(userData.idUsuario);
     setFormData({
-      Id_usuario: userData.Id_usuario,
-      primer_nombre: userData.primer_nombre,
-      segundo_nombre: userData.segundo_nombre,
-      primer_apellido: userData.primer_apellido,
-      segundo_apellido: userData.segundo_apellido,
-      Id_rol: userData.Id_rol,
+      idUsuario: userData.idUsuario,
+      primerNombre: userData.primerNombre,
+      segundoNombre: userData.segundoNombre || '',
+      primerApellido: userData.primerApellido,
+      segundoApellido: userData.segundoApellido || '',
+      idRol: userData.rol.idRol,
       correo: userData.correo,
       contrasena: '' // La contrasena no se precarga por seguridad
     });
@@ -205,10 +205,11 @@ const UserManagement = () => {
               <input
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 type="number"
-                name="Id_usuario"
-                value={formData.Id_usuario}
+                name="idUsuario"
+                value={formData.idUsuario}
                 onChange={handleInputChange}
                 required
+                disabled={editingUserId !== null}
               />
             </div>
             <div>
@@ -216,8 +217,8 @@ const UserManagement = () => {
               <input
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 type="text"
-                name="primer_nombre"
-                value={formData.primer_nombre}
+                name="primerNombre"
+                value={formData.primerNombre}
                 onChange={handleInputChange}
                 required
               />
@@ -227,8 +228,8 @@ const UserManagement = () => {
               <input
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 type="text"
-                name="segundo_nombre"
-                value={formData.segundo_nombre}
+                name="segundoNombre"
+                value={formData.segundoNombre}
                 onChange={handleInputChange}
               />
             </div>
@@ -237,8 +238,8 @@ const UserManagement = () => {
               <input
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 type="text"
-                name="primer_apellido"
-                value={formData.primer_apellido}
+                name="primerApellido"
+                value={formData.primerApellido}
                 onChange={handleInputChange}
                 required
               />
@@ -248,8 +249,8 @@ const UserManagement = () => {
               <input
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 type="text"
-                name="segundo_apellido"
-                value={formData.segundo_apellido}
+                name="segundoApellido"
+                value={formData.segundoApellido}
                 onChange={handleInputChange}
               />
             </div>
@@ -257,11 +258,10 @@ const UserManagement = () => {
               <label className="block text-gray-700 text-sm font-bold mb-2">Rol:</label>
               <select
                 className="shadow-inner appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                name="Id_rol"
-                value={formData.Id_rol}
+                name="idRol"
+                value={formData.idRol}
                 onChange={handleInputChange}
               >
-                <option value="">Seleccione un rol</option>
                 <option value="adm05">ADMINISTRADOR</option>
                 <option value="aux01">AUXILIAR</option>
                 <option value="enf02">ENFERMERO</option>
@@ -289,6 +289,7 @@ const UserManagement = () => {
                 value={formData.contrasena}
                 onChange={handleInputChange}
                 required={!editingUserId}
+                placeholder={editingUserId ? 'Dejar en blanco para no cambiar' : ''}
               />
             </div>
           </div>
@@ -331,11 +332,11 @@ const UserManagement = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {users.map((u) => (
-                <tr key={u.Id_usuario}>
-                  <td className="px-6 py-4 whitespace-nowrap">{u.Id_usuario}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{u.primer_nombre} {u.segundo_nombre}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{u.primer_apellido} {u.segundo_apellido}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{u.Id_rol}</td>
+                <tr key={u.idUsuario}>
+                  <td className="px-6 py-4 whitespace-nowrap">{u.idUsuario}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{u.primerNombre} {u.segundoNombre}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{u.primerApellido} {u.segundoApellido}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{u.rol ? u.rol.rol : 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{u.correo}</td>
                   <td className="px-6 py-4 whitespace-nowrap space-x-2">
                     <button
@@ -345,7 +346,7 @@ const UserManagement = () => {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDeleteUser(u.Id_usuario)}
+                      onClick={() => handleDeleteUser(u.idUsuario)}
                       className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full transition-colors"
                     >
                       Eliminar
