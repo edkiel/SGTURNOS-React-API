@@ -1,7 +1,4 @@
-package com.sgturnos.config;
-
-// Importaciones necesarias para la configuración de seguridad
-import com.sgturnos.security.JwtAuthenticationFilter;
+package com.sgturnos.config;import com.sgturnos.security.JwtAuthenticationFilter;
 import com.sgturnos.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -87,9 +84,11 @@ public class SecurityConfig {
             // Configura las reglas de autorización
             .authorizeHttpRequests(auth -> auth
                 // Permite acceso público a las rutas de autenticación y registro
-                .requestMatchers("/api/auth/**").permitAll()
-                // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para producción.
-                .requestMatchers("/api/usuarios/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/usuarios/roles").permitAll()
+                // Requiere rol ADMIN para gestión de usuarios
+                .requestMatchers("/api/usuarios/**").hasAnyAuthority("ADMIN", "AUXILIAR")
+                // Requiere autenticación para el perfil de usuario
+                .requestMatchers("/api/usuarios/profile").authenticated()
                 // Todas las demás rutas requieren autenticación
                 .anyRequest().authenticated()
             )

@@ -1,0 +1,159 @@
+package com.sgturnos.controller;
+
+import com.sgturnos.model.Usuario;
+import com.sgturnos.repository.UsuarioRepository;
+import com.sgturnos.repository.RolRepository;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@RestController
+@RequestMapping("/api/usuarios")
+@CrossOrigin(origins = "http://localhost:5173")
+public class UserController {
+
+    private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserController(UsuarioRepository usuarioRepository, RolRepository rolRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostMapping("/crear")
+    public ResponseEntity<?> createUser(@RequestBody Usuario usuario) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserRole = authentication.getAuthorities().iterator().next().getAuthority();
+        
+        if (!currentUserRole.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Solo los administradores pueden crear nuevos usuarios");
+        }
+        
+        try {
+            // Encriptar la contraseña antes de guardar
+            usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioRepository.save(usuario));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Error al crear el usuario: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/roles")
+    public ResponseEntity<?> getAllRoles() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserRole = authentication.getAuthorities().iterator().next().getAuthority();
+        
+        if (!currentUserRole.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Solo los administradores pueden ver los roles");
+        }
+        
+        return ResponseEntity.ok(rolRepository.findAll());
+    }
+
+    @GetMapping("/getall")
+    public ResponseEntity<?> getAllUsuarios() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserRole = authentication.getAuthorities().iterator().next().getAuthority();
+        
+        if (!currentUserRole.equals("ADMIN") && !currentUserRole.equals("AUXILIAR")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("No tienes permisos para ver la lista de usuarios");
+        }
+        
+        return ResponseEntity.ok(usuarioRepository.findAll());
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No hay usuario autenticado");
+            }
+            String username = authentication.getName();
+
+            Usuario usuario = usuarioRepository.findByCorreo(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            Usuario usuarioSinContrasena = new Usuario();
+            usuarioSinContrasena.setIdUsuario(usuario.getIdUsuario());
+            usuarioSinContrasena.setPrimerNombre(usuario.getPrimerNombre());
+            usuarioSinContrasena.setSegundoNombre(usuario.getSegundoNombre());
+            usuarioSinContrasena.setPrimerApellido(usuario.getPrimerApellido());
+            usuarioSinContrasena.setSegundoApellido(usuario.getSegundoApellido());
+            usuarioSinContrasena.setCorreo(usuario.getCorreo());
+            usuarioSinContrasena.setIdRol(usuario.getIdRol());
+            
+            return ResponseEntity.ok(usuarioSinContrasena);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Error al obtener el perfil: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Usuario usuario) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserRole = authentication.getAuthorities().iterator().next().getAuthority();
+        
+        if (!currentUserRole.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Solo los administradores pueden actualizar usuarios");
+        }
+
+        try {
+            Usuario existingUser = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            existingUser.setPrimerNombre(usuario.getPrimerNombre());
+            existingUser.setSegundoNombre(usuario.getSegundoNombre());
+            existingUser.setPrimerApellido(usuario.getPrimerApellido());
+            existingUser.setSegundoApellido(usuario.getSegundoApellido());
+            existingUser.setCorreo(usuario.getCorreo());
+            existingUser.setIdRol(usuario.getIdRol());
+            
+            if (usuario.getContrasena() != null && !usuario.getContrasena().isEmpty()) {
+                existingUser.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+            }
+            
+            return ResponseEntity.ok(usuarioRepository.save(existingUser));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Error al actualizar el usuario: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserRole = authentication.getAuthorities().iterator().next().getAuthority();
+        
+        if (!currentUserRole.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Solo los administradores pueden eliminar usuarios");
+        }
+
+        try {
+            if (!usuarioRepository.existsById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuario no encontrado");
+            }
+            
+            usuarioRepository.deleteById(id);
+            return ResponseEntity.ok().body("Usuario eliminado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al eliminar el usuario: " + e.getMessage());
+        }
+    }
+}
