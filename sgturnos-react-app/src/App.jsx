@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
+import TurnosModule from './components/turnos/TurnosModule';
+import PersonalMalla from './components/turnos/PersonalMalla';
 
 // Componente para el formulario de inicio de sesion
 const LoginForm = ({ onLoginSuccess }) => {
@@ -91,6 +93,8 @@ const UserManagement = () => {
     correo: '',
     contrasena: ''
   });
+  const [search, setSearch] = useState('');
+  const [searchField, setSearchField] = useState('all');
 
   // Funcion para obtener la lista de usuarios
   const fetchUsers = async () => {
@@ -316,8 +320,27 @@ const UserManagement = () => {
         </form>
       </div>
 
-      <div className="mt-12">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Lista de Usuarios</h2>
+      <div className="mt-8">
+        {/* Buscador rapido entre formulario y lista */}
+        <div className="bg-white p-6 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <label className="font-medium mr-2">Buscar:</label>
+            <select value={searchField} onChange={(e) => setSearchField(e.target.value)} className="p-2 border rounded">
+              <option value="all">Todos</option>
+              <option value="name">Nombre</option>
+              <option value="id">Id</option>
+              <option value="rol">Rol</option>
+              <option value="correo">Correo</option>
+              <option value="usuario">Usuario</option>
+            </select>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Texto de busqueda..." className="ml-2 p-2 border rounded w-64" />
+            <button onClick={() => { /* buscar ya hace filtro en cliente; si quieres server-side aquí puedes llamar API */ }} className="ml-2 bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600">Buscar</button>
+            <button onClick={() => { setSearch(''); setSearchField('all'); }} className="ml-2 bg-gray-200 px-3 py-2 rounded hover:bg-gray-300">Limpiar</button>
+          </div>
+          <div className="text-sm text-gray-600">Filtra la lista de usuarios por id, nombre, rol o correo.</div>
+        </div>
+
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">Lista de Usuarios</h2>
         <div className="bg-white p-8 rounded-xl shadow-lg overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -331,7 +354,33 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((u) => (
+              {users
+                .filter((user) => {
+                  if (!search || search.trim() === '') return true;
+                  const q = search.toLowerCase();
+                  const fullName = `${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.toLowerCase();
+                  switch (searchField) {
+                    case 'name':
+                      return fullName.includes(q);
+                    case 'id':
+                      return String(user.idUsuario || '').includes(q);
+                    case 'rol':
+                      return (String(user.rol?.rol || user.idRol || '')).toLowerCase().includes(q);
+                    case 'correo':
+                      return (user.correo || '').toLowerCase().includes(q);
+                    case 'usuario':
+                      return (String(user.idUsuario || '').includes(q) || (user.correo || '').toLowerCase().includes(q));
+                    case 'all':
+                    default:
+                      return (
+                        fullName.includes(q) ||
+                        (user.correo || '').toLowerCase().includes(q) ||
+                        String(user.idUsuario || '').includes(q) ||
+                        String(user.rol?.rol || user.idRol || '').toLowerCase().includes(q)
+                      );
+                  }
+                })
+                .map((u) => (
                 <tr key={u.idUsuario}>
                   <td className="px-6 py-4 whitespace-nowrap">{u.idUsuario}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{u.primerNombre} {u.segundoNombre}</td>
@@ -370,20 +419,18 @@ const Dashboard = ({ user, onLogout }) => {
     switch (activeTab) {
       case 'home':
         return (
-          <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-            <h2 className="text-3xl font-medium text-gray-800 mb-4">Bienvenido, {user?.primerNombre}</h2>
-            <p className="text-lg text-gray-600">Este es tu panel de control de administrador.</p>
+          <div className="space-y-6">
+            <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
+              <h2 className="text-3xl font-medium text-gray-800 mb-4">Bienvenido, {user?.primerNombre}</h2>
+              <p className="text-lg text-gray-600">Este es tu panel de control de administrador.</p>
+            </div>
+            <PersonalMalla user={user} />
           </div>
         );
       case 'users':
         return <UserManagement />;
       case 'turns':
-        return (
-          <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Gestion de Turnos</h2>
-            <p className="text-lg text-gray-600 mt-4">Aqui podras gestionar los turnos.</p>
-          </div>
-        );
+        return <TurnosModule />;
       case 'news':
         return (
           <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
@@ -505,6 +552,7 @@ const App = () => {
         navigate('/login');
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const handleLoginSuccess = () => {

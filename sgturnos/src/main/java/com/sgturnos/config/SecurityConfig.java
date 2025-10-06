@@ -88,8 +88,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Permite acceso público a las rutas de autenticación y registro
                 .requestMatchers("/api/auth/**").permitAll()
-                // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para producción.
+                // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para production.
                 .requestMatchers("/api/usuarios/**").permitAll()
+                // Permitimos temporalmente acceso público a los endpoints de mallas para pruebas locales.
+                .requestMatchers("/api/mallas/**").permitAll()
                 // Todas las demás rutas requieren autenticación
                 .anyRequest().authenticated()
             )

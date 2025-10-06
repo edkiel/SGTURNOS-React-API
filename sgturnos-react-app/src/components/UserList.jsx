@@ -6,8 +6,11 @@ const UserList = () => {
   const [error, setError] = useState('');
   const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [searchField, setSearchField] = useState('all'); // all, name, id, rol, correo, usuario
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       console.log('Obteniendo lista de usuarios...');
       const response = await api.get('/usuarios/getall');
@@ -21,7 +24,7 @@ const UserList = () => {
         data: err.response?.data,
         headers: err.response?.headers
       });
-      
+
       if (err.response?.status === 403) {
         setError('No tienes permisos para ver la lista de usuarios');
       } else if (err.response?.status === 401) {
@@ -83,30 +86,79 @@ const UserList = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Lista de Usuarios</h2>
-        <button
-          onClick={() => {
-            setLoading(true);
-            fetchUsers();
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Cargando...
-            </>
-          ) : (
-            'Actualizar Lista'
-          )}
-        </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <div className="w-full sm:w-auto flex items-center gap-3">
+          <h2 className="text-2xl font-bold">Lista de Usuarios</h2>
+          <select
+            aria-label="Campo de busqueda"
+            value={searchField}
+            onChange={(e) => setSearchField(e.target.value)}
+            className="ml-3 p-2 border rounded"
+          >
+            <option value="all">Todos</option>
+            <option value="name">Nombre</option>
+            <option value="id">Id</option>
+            <option value="rol">Rol</option>
+            <option value="correo">Correo</option>
+            <option value="usuario">Usuario</option>
+          </select>
+          <input
+            type="text"
+            aria-label="Buscar usuarios"
+            placeholder={
+              searchField === 'all'
+                ? 'Buscar por nombre, correo, rol, id o usuario...'
+                : searchField === 'name'
+                ? 'Buscar por nombre...'
+                : searchField === 'id'
+                ? 'Buscar por id...'
+                : searchField === 'rol'
+                ? 'Buscar por rol...'
+                : searchField === 'correo'
+                ? 'Buscar por correo...'
+                : 'Buscar por usuario...'
+            }
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="ml-2 p-2 border rounded w-60"
+          />
+          <button
+            onClick={() => fetchUsers()}
+            className="ml-2 bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600"
+          >
+            Buscar
+          </button>
+          <button
+            onClick={() => { setSearch(''); setSearchField('all'); }}
+            className="ml-2 bg-gray-200 px-3 py-2 rounded hover:bg-gray-300"
+          >
+            Limpiar
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchUsers();
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Cargando...
+              </>
+            ) : (
+              'Actualizar Lista'
+            )}
+          </button>
+        </div>
       </div>
-      
+
       {/* Modal de edición */}
       {editingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -199,7 +251,33 @@ const UserList = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
+            {users
+              .filter((user) => {
+                if (!search || search.trim() === '') return true;
+                const q = search.toLowerCase();
+                const fullName = `${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.toLowerCase();
+                switch (searchField) {
+                  case 'name':
+                    return fullName.includes(q);
+                  case 'id':
+                    return String(user.idUsuario || '').includes(q);
+                  case 'rol':
+                    return (String(user.idRol || '')).toLowerCase().includes(q) || (user.rol?.rol || '').toLowerCase().includes(q);
+                  case 'correo':
+                    return (user.correo || '').toLowerCase().includes(q);
+                  case 'usuario':
+                    return (String(user.idUsuario || '').includes(q) || (user.correo || '').toLowerCase().includes(q));
+                  case 'all':
+                  default:
+                    return (
+                      fullName.includes(q) ||
+                      (user.correo || '').toLowerCase().includes(q) ||
+                      String(user.idUsuario || '').includes(q) ||
+                      String(user.idRol || '').toLowerCase().includes(q)
+                    );
+                }
+              })
+              .map((user) => (
               <tr key={user.idUsuario}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {`${user.primerNombre} ${user.segundoNombre || ''} ${user.primerApellido} ${user.segundoApellido || ''}`}

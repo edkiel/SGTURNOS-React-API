@@ -15,4 +15,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     default Optional<Usuario> findByUsername(String username) {
         return findByCorreo(username);
     }
+
+    // Buscar usuarios por idRol (o por Rol.rol si fuera necesario)
+    java.util.List<com.sgturnos.model.Usuario> findAllByRol_IdRol(String idRol);
+
+    java.util.List<com.sgturnos.model.Usuario> findAllByRol_RolIgnoreCase(String rolName);
 }
