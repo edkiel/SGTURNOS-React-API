@@ -376,7 +376,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 Object cell = row.get("d"+d);
                 if (cell!=null && !cell.toString().isBlank()) {
                     String s = cell.toString();
-                    if (!s.toUpperCase().contains("EXTRA")) turns += 1; // count full shifts
+                    if (!s.toUpperCase().contains("APOYO")) turns += 1; // count full shifts
                 }
             }
             assignedTurns.put(id, turns);
@@ -384,42 +384,100 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             row.put("horas", turns * 12);
         }
 
-        // Assign partial extra hours (<12) to reach 192h when possible
+    // Ensure every user reaches 192 hours by adding APOYO (support) assignments.
+    // Prefer adding full 12h apoyo shifts on weekdays; if <12 remaining, append partial apoyo to an existing shift
         for (Map<String, Object> row : rows) {
             Number nid = (Number) row.get("id");
-            if (nid==null || nid.longValue()<1) continue;
+            if (nid == null || nid.longValue() < 1) continue;
             long id = nid.longValue();
-            int turns = assignedTurns.getOrDefault(id, 0);
-            int hours = turns * 12;
+
+            // compute current hours: if 'horas' field exists use it, otherwise compute from assignedTurns
+            int hours = 0;
+            Object horasObj = row.get("horas");
+            if (horasObj instanceof Number) hours = ((Number) horasObj).intValue();
+            else hours = assignedTurns.getOrDefault(id, 0) * 12;
+
             int remaining = 192 - hours;
-            if (remaining > 0 && remaining < 12) {
-                // find a day where the user already has a shift and append extra
-                for (int d=1; d<=days; d++) {
-                    Object cell = row.get("d"+d);
-                    if (cell!=null && !cell.toString().isBlank() && !cell.toString().toUpperCase().contains("EXTRA")) {
-                        String newVal = cell.toString() + " + Extra (" + remaining + "h)";
-                        row.put("d"+d, newVal);
-                        // update horas field if present
-                        int newHours = hours + remaining;
-                        row.put("horas", newHours);
-                        // mark assigned so we don't try to add more
+            if (remaining <= 0) {
+                // already satisfied
+                row.put("horas", Math.max(0, hours));
+                continue;
+            }
+
+            // Helper: use private method findDayForExtra(...) defined below
+
+            // Add full 12h Apoyo shifts while possible (weekday-only; try to distribute across month)
+            while (remaining >= 12) {
+                int day = findBestWeekdayForApoyo(row, ym, days, rows);
+                if (day == -1) break; // no available weekday
+                row.put("d" + day, "Apoyo (12h)");
+                hours += 12;
+                remaining -= 12;
+            }
+
+            // If some hours remain (<12), try to append to an existing shift first (prefer weekdays), else put on a free day
+            if (remaining > 0) {
+                boolean appended = false;
+                // try append to existing shift (non-LIBRE) preferring weekdays
+                for (int d = 1; d <= days && !appended; d++) {
+                    LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
+                    DayOfWeek dow = date.getDayOfWeek();
+                    boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
+                    if (isWeekend) continue; // prefer weekdays for partials
+                    Object cell = row.get("d" + d);
+                    String cellStr = cell == null ? "" : cell.toString();
+                    if (!cellStr.isBlank() && !cellStr.toUpperCase().contains("APOYO") && !cellStr.equalsIgnoreCase("LIBRE") && !cellStr.equalsIgnoreCase("POSTURNO")) {
+                        row.put("d" + d, cellStr + " + Apoyo (" + remaining + "h)");
+                        hours += remaining;
                         remaining = 0;
+                        appended = true;
                         break;
                     }
                 }
+                // if not appended, try any weekday free day
+                if (!appended) {
+                    for (int d = 1; d <= days && !appended; d++) {
+                        LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
+                        DayOfWeek dow = date.getDayOfWeek();
+                        boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
+                        if (isWeekend) continue;
+                        Object cell = row.get("d" + d);
+                        String cellStr = cell == null ? "" : cell.toString();
+                        if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.equalsIgnoreCase("POSTURNO")) {
+                            row.put("d" + d, "Apoyo (" + remaining + "h)");
+                            hours += remaining;
+                            remaining = 0;
+                            appended = true;
+                            break;
+                        }
+                    }
+                }
+                // Do not place partial Apoyo on weekends (policy: avoid weekends). If not appended on weekdays, leave remaining.
             }
+
+            // store updated hours
+            row.put("horas", hours);
+
+            // Recompute turnos by counting non-LIBRE/POSTURNO cells (Apoyo(12h) counts as full turno)
+            int newTurns = 0;
+            for (int d = 1; d <= days; d++) {
+                Object cell = row.get("d" + d);
+                String s = cell == null ? "" : cell.toString();
+                if (s.isBlank()) continue;
+                String up = s.toUpperCase();
+                if (up.contains("LIBRE") || up.contains("POSTURNO")) continue;
+                // count as a turno; if partial hour we still count as part of horas but not full turno
+                if (up.contains("APOYO (12H)" ) || !up.contains("APOYO")) {
+                    // APOYO(12h) or regular shift -> count as full turno
+                    newTurns++;
+                } else if (up.contains("APOYO") ) {
+                    // partial apoyo doesn't increment full turno count
+                }
+            }
+            row.put("turnos", newTurns);
         }
 
-        // After assignment compute per-user stats and append as fields (ignore meta rows)
-        for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid == null) continue;
-            long id = nid.longValue();
-            if (id < 1) continue; // skip meta rows
-            int turns = assignedTurns.getOrDefault(id, 0);
-            row.put("turnos", turns);
-            row.put("horas", turns * 12);
-        }
+    // NOTE: horas/turnos are updated above after applying APOYO assignments; do not overwrite here.
 
         // Post-processing: set empty cells to LIBRE or POSTURNO (if previous day was a night shift for that user)
         for (Map<String, Object> row : rows) {
@@ -441,6 +499,8 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 }
             }
         }
+
+        // (helper moved to class scope)
 
         // Build summary row with pool sizes and shortages
         Map<String, Object> summary = new LinkedHashMap<>();
@@ -503,4 +563,90 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
 
         return rows;
     }
+
+    // helper: find a day index where an extra/full 12h can be placed for the given user row
+    private int findDayForExtra(Map<String, Object> row, YearMonth ym, int days, boolean requireFree) {
+        // First try weekdays
+        for (int d = 1; d <= days; d++) {
+            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
+            DayOfWeek dow = date.getDayOfWeek();
+            boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
+            if (isWeekend) continue;
+            Object cell = row.get("d" + d);
+            String cellStr = cell == null ? "" : cell.toString();
+            if (requireFree) {
+                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) return d;
+            } else {
+                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.toUpperCase().contains("POSTURNO")) return d;
+            }
+        }
+        // Then try weekends
+        for (int d = 1; d <= days; d++) {
+            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
+            DayOfWeek dow = date.getDayOfWeek();
+            boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
+            if (!isWeekend) continue;
+            Object cell = row.get("d" + d);
+            String cellStr = cell == null ? "" : cell.toString();
+            if (requireFree) {
+                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) return d;
+            } else {
+                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.toUpperCase().contains("POSTURNO")) return d;
+            }
+        }
+        return -1;
+    }
+
+    private int findBestWeekdayForApoyo(Map<String, Object> row, YearMonth ym, int days, List<Map<String, Object>> rows) {
+        // collect days already used by this user for Apoyo
+        List<Integer> myApoyoDays = new ArrayList<>();
+        for (int d = 1; d <= days; d++) {
+            Object cell = row.get("d" + d);
+            if (cell != null && cell.toString().toLowerCase().contains("apoyo")) myApoyoDays.add(d);
+        }
+
+        // helper to check if any other row has Apoyo on day d
+        java.util.function.Predicate<Integer> dayHasApoyo = (d) -> {
+            for (Map<String, Object> r : rows) {
+                Object c = r.get("d" + d);
+                if (c != null && c.toString().toLowerCase().contains("apoyo")) return true;
+            }
+            return false;
+        };
+
+        int bestDay = -1;
+        int bestScore = -1; // larger is better (distance to nearest myApoyoDays)
+
+        for (int d = 1; d <= days; d++) {
+            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
+            DayOfWeek dow = date.getDayOfWeek();
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue; // skip weekends
+
+            // skip if other rows already have Apoyo that day
+            if (dayHasApoyo.test(d)) continue;
+
+            Object cell = row.get("d" + d);
+            String cellStr = cell == null ? "" : cell.toString();
+            // prefer empty/LIBRE/POSTURNO cells
+            if (!(cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.equalsIgnoreCase("POSTURNO"))) continue;
+
+            // compute distance score: min distance to existing myApoyoDays (if none, prefer central days)
+            int score;
+            if (myApoyoDays.isEmpty()) {
+                score = days/2 - Math.abs(d - (days/2));
+            } else {
+                int minDist = Integer.MAX_VALUE;
+                for (int ad : myApoyoDays) minDist = Math.min(minDist, Math.abs(d - ad));
+                score = minDist;
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestDay = d;
+            }
+        }
+
+        return bestDay;
+    }
+
 }

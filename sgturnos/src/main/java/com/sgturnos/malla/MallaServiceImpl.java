@@ -38,4 +38,43 @@ public class MallaServiceImpl implements MallaService {
         if (files == null) return List.of();
         return new ArrayList<>(Arrays.asList(files));
     }
+
+    @Override
+    public void savePublishedInfo(String roleId, String month, String filename, java.util.List<java.util.Map<String, Object>> preview) throws Exception {
+        Path dir = Path.of(mallaStoragePath);
+        if (!Files.exists(dir)) Files.createDirectories(dir);
+        Path published = dir.resolve("published.json");
+
+        java.util.Map<String, Object> root = new java.util.HashMap<>();
+        if (Files.exists(published)) {
+            String text = Files.readString(published);
+            try {
+                root.putAll(new com.fasterxml.jackson.databind.ObjectMapper().readValue(text, java.util.Map.class));
+            } catch (Exception ex) {
+                // ignore and overwrite
+            }
+        }
+
+        java.util.Map<String, Object> info = new java.util.HashMap<>();
+        info.put("file", filename);
+        info.put("month", month);
+        info.put("roleId", roleId);
+        info.put("preview", preview);
+        root.put(roleId + "::" + month, info);
+
+        String out = new com.fasterxml.jackson.databind.ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(root);
+        Files.writeString(published, out);
+    }
+
+    @Override
+    public java.util.Map<String, Object> getPublishedInfo(String roleId, String month) throws Exception {
+        Path dir = Path.of(mallaStoragePath);
+        Path published = dir.resolve("published.json");
+        if (!Files.exists(published)) return null;
+        String text = Files.readString(published);
+        java.util.Map<String, Object> root = new com.fasterxml.jackson.databind.ObjectMapper().readValue(text, java.util.Map.class);
+        Object v = root.get(roleId + "::" + month);
+        if (v instanceof java.util.Map) return (java.util.Map<String, Object>) v;
+        return null;
+    }
 }

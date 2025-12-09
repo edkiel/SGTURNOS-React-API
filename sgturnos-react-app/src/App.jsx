@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from
 import { api } from './api';
 import TurnosModule from './components/turnos/TurnosModule';
 import PersonalMalla from './components/turnos/PersonalMalla';
+import MyAccount from './components/MyAccount';
 
 // Componente para el formulario de inicio de sesion
 const LoginForm = ({ onLoginSuccess }) => {
@@ -426,11 +427,14 @@ const Dashboard = ({ user, onLogout }) => {
             </div>
             <PersonalMalla user={user} />
           </div>
+          
         );
+      case 'myinfo':
+        return <MyAccount user={user} />;
       case 'users':
         return <UserManagement />;
       case 'turns':
-        return <TurnosModule />;
+        return <TurnosModule user={user} />;
       case 'news':
         return (
           <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
@@ -469,12 +473,28 @@ const Dashboard = ({ user, onLogout }) => {
               </button>
             </li>
             <li>
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
-              >
-                Gestion de Usuarios
-              </button>
+              {(() => {
+                // show 'Gestion de Usuarios' only for admin; otherwise show 'Informacion de mi usuario'
+                const isAdminLocal = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+                if (isAdminLocal) {
+                  return (
+                    <button
+                      onClick={() => setActiveTab('users')}
+                      className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                    >
+                      Gestion de Usuarios
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => setActiveTab('myinfo')}
+                    className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'myinfo' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                  >
+                    INFORMACION DE MI USUARIO
+                  </button>
+                );
+              })()}
             </li>
             <li>
               <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Dashboard = ({ onLogout }) => {
+const Dashboard = ({ user, onLogout }) => {
   const [newCorreo, setNewCorreo] = useState('');
   const [newContrasena, setNewContrasena] = useState('');
   const [newRol, setNewRol] = useState('');
@@ -106,6 +106,35 @@ const Dashboard = ({ onLogout }) => {
           </button>
         </form>
       </div>
+      {/* Publish malla - visible only to admin (client-side guard) */}
+      {(() => {
+        // simple admin detection: check user role name or id
+        const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+        if (!isAdmin) return null;
+        return (
+          <div className="mt-6 p-6 bg-blue-50 rounded-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">Publicar Malla (Administradores)</h3>
+            <div className="space-y-2">
+              <input type="text" placeholder="roleId (ej: med03)" className="w-full p-2 border rounded" id="pubRole" />
+              <input type="month" className="w-full p-2 border rounded" id="pubMonth" defaultValue={new Date().toISOString().slice(0,7)} />
+              <button
+                onClick={async () => {
+                  const roleId = document.getElementById('pubRole').value;
+                  const month = document.getElementById('pubMonth').value;
+                  if (!roleId || !month) { setError('roleId y month son requeridos'); return; }
+                  try {
+                    const res = await fetch(`/api/mallas/publish?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`, { method: 'POST' });
+                    if (!res.ok) { const t = await res.text(); setError(t || 'Error publicando'); return; }
+                    const json = await res.json();
+                    setMessage('Malla publicada: ' + json.file);
+                  } catch (e) { setError('Error de red: ' + e.message); }
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded"
+              >Publicar Malla</button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 
 // months list removed (we use input type="month")
 
-const TurnosModule = () => {
+const TurnosModule = ({ user }) => {
   // month state stored as YYYY-MM for the <input type="month" /> control
   const now = new Date();
   const initialMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -15,17 +15,16 @@ const TurnosModule = () => {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(true);
 
-  // roles that should appear in the dropdown (exclude administrador)
-  const allowedRoleIds = ['aux01', 'enf02', 'med03', 'ter04'];
-  const allowedRoleMap = {
-    aux01: { value: 'aux01', label: 'AUXILIAR' },
-    enf02: { value: 'enf02', label: 'ENFERMERO' },
-    med03: { value: 'med03', label: 'MÉDICO' },
-    ter04: { value: 'ter04', label: 'TERAPIA' }
-  };
-
   // fetch roles from backend if available, but only keep the allowed ones
   React.useEffect(() => {
+    const allowedRoleIds = ['aux01', 'enf02', 'med03', 'ter04'];
+    const allowedRoleMap = {
+      aux01: { value: 'aux01', label: 'AUXILIAR' },
+      enf02: { value: 'enf02', label: 'ENFERMERO' },
+      med03: { value: 'med03', label: 'MÉDICO' },
+      ter04: { value: 'ter04', label: 'TERAPIA' }
+    };
+
     const fetchRoles = async () => {
       try {
         const res = await fetch('/api/usuarios/roles');
@@ -54,12 +53,46 @@ const TurnosModule = () => {
     fetchRoles();
   }, []);
 
+  // detect admin client-side
+  const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+
+  // If not admin, force role to the user's role and try to fetch published malla for the selected month
+  React.useEffect(() => {
+    if (isAdmin) return;
+    if (!user) return;
+    const r = user.rol && user.rol.idRol ? user.rol.idRol : (user.rol && user.rol.rol ? user.rol.rol : '');
+    setRole(r);
+
+    const fetchPublished = async () => {
+      try {
+        const pubRes = await fetch(`/api/mallas/published?roleId=${encodeURIComponent(r)}&month=${encodeURIComponent(month)}`);
+        if (!pubRes.ok) {
+          // no published malla
+          setGridData([]);
+          return;
+        }
+        const pubJson = await pubRes.json();
+        if (pubJson && pubJson.preview) {
+          setGridData(pubJson.preview || []);
+        } else {
+          setGridData([]);
+        }
+      } catch (err) {
+        console.warn('Error fetching published malla', err);
+        setGridData([]);
+      }
+    };
+    fetchPublished();
+  }, [user, month, isAdmin]);
+
   const handleGenerate = async () => {
     setLoading(true);
     try {
       // Call backend generator to get preview built from DB users
       const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`;
-      const res = await fetch(`/api/mallas/generate${qs}`, { method: 'POST' });
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`/api/mallas/generate${qs}`, { method: 'POST', headers });
       if (!res.ok) throw new Error('Error generando en servidor: ' + res.statusText);
       const json = await res.json();
       // server returns { file, preview }
@@ -69,7 +102,6 @@ const TurnosModule = () => {
     } catch (err) {
       console.warn('Fallo al generar desde servidor, usando fallback local', err);
       // fallback: create simple mock like before so UI still shows something
-      const now = new Date();
       const [y, m] = month.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
       const employees = [
@@ -91,9 +123,13 @@ const TurnosModule = () => {
     }
   };
 
+  
+
   return (
     <div className="p-6 bg-white rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Planificación de Turnos</h2>
+
+      {/* Role buttons moved to Inicio (PersonalMalla) per UX request */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
@@ -119,11 +155,13 @@ const TurnosModule = () => {
             onClick={async () => {
               try {
                 const params = new URLSearchParams({ roleId: role, month });
-                const res = await fetch('/api/mallas/generate', { method: 'POST', body: params });
+                const token = localStorage.getItem('token');
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                const res = await fetch('/api/mallas/generate', { method: 'POST', body: params, headers });
                 // server expects form params; fallback to query string
                 if (!res.ok) {
                   // try with query string
-                  const res2 = await fetch(`/api/mallas/generate?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`, { method: 'POST' });
+                  const res2 = await fetch(`/api/mallas/generate?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`, { method: 'POST', headers });
                   if (!res2.ok) throw new Error('Error generando en servidor');
                   const json = await res2.json();
                   setGridData(json.preview || []);
@@ -144,7 +182,14 @@ const TurnosModule = () => {
 
       <div className="mb-4">
         <button
-          onClick={() => exportGridToExcel(gridData, `malla_${month}_${role}.xlsx`)}
+          onClick={() => exportGridToExcel(gridData, `malla_${month}_${role}.xlsx`, {
+            excludeColumns: [
+              'MED_min','MED_max','MED_avg','MED_std','JEF_min','JEF_max','JEF_avg','JEF_std',
+              'AUX_min','AUX_max','AUX_avg','AUX_std','TER_min','TER_max','TER_avg','TER_std',
+              'MED_pool','MED_needDay','MED_needNight','MED_shortage','JEF_pool','JEF_needDay','JEF_needNight','JEF_shortage',
+              'AUX_pool','AUX_needDay','AUX_needNight','AUX_shortage','TER_pool','TER_needDay','TER_needNight','TER_shortage'
+            ]
+          }) }
           className="bg-green-600 text-white px-3 py-2 rounded-md mr-2"
           disabled={!gridData || gridData.length === 0}
         >Exportar Excel</button>
@@ -160,7 +205,12 @@ const TurnosModule = () => {
             // create an xlsx blob in memory, then upload to backend
             try {
               const wbName = `malla_${month}_${role}.xlsx`;
-              const workbookBlob = await exportGridToExcel(gridData, wbName, { returnBlob: true });
+              const workbookBlob = await exportGridToExcel(gridData, wbName, { returnBlob: true, excludeColumns: [
+                'MED_min','MED_max','MED_avg','MED_std','JEF_min','JEF_max','JEF_avg','JEF_std',
+                'AUX_min','AUX_max','AUX_avg','AUX_std','TER_min','TER_max','TER_avg','TER_std',
+                'MED_pool','MED_needDay','MED_needNight','MED_shortage','JEF_pool','JEF_needDay','JEF_needNight','JEF_shortage',
+                'AUX_pool','AUX_needDay','AUX_needNight','AUX_shortage','TER_pool','TER_needDay','TER_needNight','TER_shortage'
+              ] });
               if (!workbookBlob) return;
               const form = new FormData();
               form.append('file', workbookBlob, wbName);
