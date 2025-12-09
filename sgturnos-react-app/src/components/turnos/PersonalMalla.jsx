@@ -5,6 +5,7 @@ const PersonalMalla = ({ user }) => {
   const [malla, setMalla] = useState(null);
   const [isOfficial, setIsOfficial] = useState(false);
   const month = new Date().toISOString().slice(0,7);
+  const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
 
   // Helper: carga solo la malla publicada para un roleId (si existe), no genera si no existe
   const loadPublished = async (roleId) => {
@@ -53,7 +54,15 @@ const PersonalMalla = ({ user }) => {
           console.debug('No published malla or error fetching published malla', err);
         }
 
-        // Fallback to preview generation (only for the logged-in user's own role)
+        // Fallback to preview generation ONLY for admin users: non-admins should only see published mallas
+        const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+        if (!isAdmin) {
+          // do not generate a preview for regular roles
+          setMalla([]);
+          setIsOfficial(false);
+          return;
+        }
+
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const res = await fetch(`/api/mallas/generate?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`, { method: 'POST', headers });
@@ -66,13 +75,12 @@ const PersonalMalla = ({ user }) => {
       }
     })();
   }, [user]);
-
   if (!malla || malla.length === 0) return <div className="bg-white p-4 rounded-md shadow">No hay malla generada para tu rol.</div>;
 
   return (
     <div className="bg-white p-4 rounded-md shadow">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-bold">Tu malla ({new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})</h3>
+        <h3 className="font-bold">{isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : 'Consultar mi malla de turno'}</h3>
         {isOfficial && <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Oficial</span>}
       </div>
       <div className="flex items-center justify-between gap-2 mb-3">

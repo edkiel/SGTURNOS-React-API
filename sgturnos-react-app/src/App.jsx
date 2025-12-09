@@ -433,6 +433,8 @@ const Dashboard = ({ user, onLogout }) => {
         return <MyAccount user={user} />;
       case 'users':
         return <UserManagement />;
+      case 'myturns':
+        return <PersonalMalla user={user} />;
       case 'turns':
         return <TurnosModule user={user} />;
       case 'news':
@@ -497,12 +499,27 @@ const Dashboard = ({ user, onLogout }) => {
               })()}
             </li>
             <li>
-              <button
-                onClick={() => setActiveTab('turns')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
-              >
-                Gestion de Turnos
-              </button>
+              {(() => {
+                const isAdminLocal = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+                if (isAdminLocal) {
+                  return (
+                    <button
+                      onClick={() => setActiveTab('turns')}
+                      className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                    >
+                      Gestion de Turnos
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => setActiveTab('myturns')}
+                    className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'myturns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                  >
+                    Consultar mi malla de turno
+                  </button>
+                );
+              })()}
             </li>
             <li>
               <button

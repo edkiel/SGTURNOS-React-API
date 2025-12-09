@@ -51,27 +51,7 @@ const TurnosGrid = ({ data, month }) => {
 
   return (
     <div>
-      <div className="flex items-center justify-end gap-2 mb-3">
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
-          onClick={() => exportGridToExcel(null, 'malla-turnos.xlsx', { tableId: containerId })}
-        >
-          Exportar XLSX
-        </button>
-        <button
-          className="bg-gray-600 hover:bg-gray-700 text-white text-sm px-3 py-1 rounded"
-          onClick={async () => {
-            try {
-              const blob = await exportGridToPdf(containerId, 'malla-turnos.pdf', { returnBlob: true });
-              if (blob) window.open(URL.createObjectURL(blob), '_blank');
-            } catch (err) {
-              console.error('Error exportando PDF', err);
-            }
-          }}
-        >
-          Previsualizar PDF
-        </button>
-      </div>
+      {/* Export buttons removed from the inline grid view per UX request */}
 
       <div id={containerId} className="space-y-6">
         {weeks.map((w, wi) => (
