@@ -127,18 +127,19 @@ const TurnosModule = ({ user }) => {
   const publishMalla = async () => {
     if (!gridData || gridData.length === 0) return alert('No hay malla para publicar.');
     const token = localStorage.getItem('token');
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
     try {
-      const body = JSON.stringify({ roleId: role, month, preview: gridData });
-      const res = await fetch('/api/mallas/publish', { method: 'POST', headers, body });
+      // backend expects roleId and month as request params (form or query string)
+      const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`;
+      const res = await fetch(`/api/mallas/publish${qs}`, { method: 'POST', headers });
       if (!res.ok) {
         const txt = await res.text().catch(() => null);
         throw new Error(txt || ('Status ' + res.status));
       }
       const json = await res.json().catch(() => ({}));
       alert('Malla publicada correctamente.');
-      // Optionally mark as official
+      // keep gridData as-is; published metadata saved on server
       setGridData(gridData);
     } catch (e) {
       console.error('Error publicando malla', e);
