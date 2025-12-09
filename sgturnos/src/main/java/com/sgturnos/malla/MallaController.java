@@ -36,6 +36,15 @@ public class MallaController {
     @PostMapping("/generate")
     public ResponseEntity<?> generateMalla(@RequestParam("roleId") String roleId, @RequestParam("month") String month, @RequestParam(value = "path", required = false) String path) {
         try {
+            // Only administrators may generate mallas. Disallow medicos, auxiliares, enfermeras, terapeutas.
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || auth.getAuthorities().stream().noneMatch(a -> {
+                String at = a.getAuthority() == null ? "" : a.getAuthority().toLowerCase();
+                return at.contains("admin") || at.contains("adm");
+            })) {
+                return ResponseEntity.status(403).body("Forbidden: only administrators can generate mallas");
+            }
+
             if (path != null && !path.isBlank()) {
                 // allow controller to set a custom storage path temporarily
                 mallaGeneratorService.setStoragePath(path);
@@ -47,6 +56,39 @@ public class MallaController {
             resp.put("preview", preview);
             resp.put("path", saved.getAbsolutePath());
             return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/publish")
+    public ResponseEntity<?> publishMalla(@RequestParam("roleId") String roleId, @RequestParam("month") String month) {
+        try {
+            // only admin users can publish
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().toLowerCase().contains("adm"))) {
+                return ResponseEntity.status(403).body("Forbidden: only administrators can publish mallas");
+            }
+            // generate and save file
+            File saved = mallaGeneratorService.generateAndSave(roleId, month);
+            java.util.List<java.util.Map<String, Object>> preview = mallaGeneratorService.preview(roleId, month);
+            // persist published metadata
+            mallaService.savePublishedInfo(roleId, month, saved.getName(), preview);
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("file", saved.getName());
+            resp.put("preview", preview);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/published")
+    public ResponseEntity<?> getPublished(@RequestParam("roleId") String roleId, @RequestParam("month") String month) {
+        try {
+            java.util.Map<String, Object> info = mallaService.getPublishedInfo(roleId, month);
+            if (info == null) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(info);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
