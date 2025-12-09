@@ -21,7 +21,7 @@ const TurnosModule = ({ user }) => {
     const allowedRoleMap = {
       aux01: { value: 'aux01', label: 'AUXILIAR' },
       enf02: { value: 'enf02', label: 'ENFERMERO' },
-      med03: { value: 'med03', label: 'MÉDICO' },
+      med03: { value: 'med03', label: 'MEDICO' },
       ter04: { value: 'ter04', label: 'TERAPIA' }
     };
 
@@ -123,6 +123,30 @@ const TurnosModule = ({ user }) => {
     }
   };
 
+  // Publish current preview/grid as the official published malla for the selected role and month
+  const publishMalla = async () => {
+    if (!gridData || gridData.length === 0) return alert('No hay malla para publicar.');
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    try {
+      // backend expects roleId and month as request params (form or query string)
+      const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`;
+      const res = await fetch(`/api/mallas/publish${qs}`, { method: 'POST', headers });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => null);
+        throw new Error(txt || ('Status ' + res.status));
+      }
+      const json = await res.json().catch(() => ({}));
+      alert('Malla publicada correctamente.');
+      // keep gridData as-is; published metadata saved on server
+      setGridData(gridData);
+    } catch (e) {
+      console.error('Error publicando malla', e);
+      alert('Error publicando la malla: ' + (e.message || e));
+    }
+  };
+
   
 
   return (
@@ -149,34 +173,9 @@ const TurnosModule = ({ user }) => {
           </select>
         </div>
         <div className="flex items-end space-x-2">
-          <button onClick={handleGenerate} disabled={loading} className="bg-blue-600 disabled:opacity-60 text-white px-4 py-2 rounded-md">Generar Malla</button>
+          <button onClick={handleGenerate} disabled={loading} title="Generar Malla - Solo previsualización para revisión" className="bg-blue-600 disabled:opacity-60 text-white px-4 py-2 rounded-md">Generar (Previsualización)</button>
           <button onClick={() => setPreview(p => !p)} className="bg-gray-200 text-gray-800 px-3 py-2 rounded-md">{preview ? 'Ocultar vista' : 'Vista previa'}</button>
-          <button
-            onClick={async () => {
-              try {
-                const params = new URLSearchParams({ roleId: role, month });
-                const token = localStorage.getItem('token');
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                const res = await fetch('/api/mallas/generate', { method: 'POST', body: params, headers });
-                // server expects form params; fallback to query string
-                if (!res.ok) {
-                  // try with query string
-                  const res2 = await fetch(`/api/mallas/generate?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`, { method: 'POST', headers });
-                  if (!res2.ok) throw new Error('Error generando en servidor');
-                  const json = await res2.json();
-                  setGridData(json.preview || []);
-                  alert('Malla generada en servidor: ' + json.file);
-                } else {
-                  const json = await res.json();
-                  setGridData(json.preview || []);
-                  alert('Malla generada en servidor: ' + json.file);
-                }
-              } catch (e) {
-                alert('Error al generar en servidor: ' + e.message);
-              }
-            }}
-            className="bg-purple-600 text-white px-3 py-2 rounded-md"
-          >Generar en servidor</button>
+          
         </div>
       </div>
 
@@ -225,6 +224,14 @@ const TurnosModule = ({ user }) => {
           className="bg-indigo-600 text-white px-3 py-2 rounded-md"
           disabled={!gridData || gridData.length === 0}
         >Guardar en servidor</button>
+        {isAdmin && (
+          <button
+            onClick={() => publishMalla()}
+            title="Publica la malla en el servidor y la marca como oficial"
+            className="bg-teal-600 text-white px-3 py-2 rounded-md ml-2"
+            disabled={!gridData || gridData.length === 0}
+          >Publicar Malla (hacer oficial)</button>
+        )}
       </div>
 
       {preview && (

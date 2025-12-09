@@ -417,13 +417,28 @@ const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('home'); // Estado para controlar la pestana activa
 
   const renderContent = () => {
+    // Obtener nombre amigable del rol
+    const getRoleName = () => {
+      if (!user || !user.rol) return '';
+      const roleId = (user.rol.idRol || user.rol.rol || '').toLowerCase();
+      const roleMap = { 'aux01': 'Auxiliar', 'enf02': 'Enfermero', 'med03': 'Médico', 'ter04': 'Terapeuta', 'adm': 'Administrador' };
+      return roleMap[roleId] || roleId;
+    };
+    
+    const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+
     switch (activeTab) {
       case 'home':
         return (
           <div className="space-y-6">
             <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-              <h2 className="text-3xl font-medium text-gray-800 mb-4">Bienvenido, {user?.primerNombre}</h2>
-              <p className="text-lg text-gray-600">Este es tu panel de control de administrador.</p>
+              <h2 className="text-3xl font-medium text-gray-800 mb-4">
+                Bienvenido, {user?.primerNombre} 
+                {user?.rol && <span className="text-sm text-gray-500 ml-2">({getRoleName()})</span>}
+              </h2>
+              <p className="text-lg text-gray-600">
+                {isAdmin ? 'Este es tu panel de control de administrador.' : 'Consulta tu malla de turno publicada.'}
+              </p>
             </div>
             <PersonalMalla user={user} />
           </div>
@@ -433,6 +448,8 @@ const Dashboard = ({ user, onLogout }) => {
         return <MyAccount user={user} />;
       case 'users':
         return <UserManagement />;
+      case 'myturns':
+        return <PersonalMalla user={user} />;
       case 'turns':
         return <TurnosModule user={user} />;
       case 'news':
@@ -497,12 +514,27 @@ const Dashboard = ({ user, onLogout }) => {
               })()}
             </li>
             <li>
-              <button
-                onClick={() => setActiveTab('turns')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
-              >
-                Gestion de Turnos
-              </button>
+              {(() => {
+                const isAdminLocal = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+                if (isAdminLocal) {
+                  return (
+                    <button
+                      onClick={() => setActiveTab('turns')}
+                      className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                    >
+                      Gestion de Turnos
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => setActiveTab('myturns')}
+                    className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'myturns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                  >
+                    Consultar mi malla de turno
+                  </button>
+                );
+              })()}
             </li>
             <li>
               <button
@@ -616,10 +648,14 @@ const App = () => {
 };
 
 // La funcion principal se exporta envuelta en BrowserRouter
+import ErrorBoundary from './ErrorBoundary';
+
 export default function AppWrapper() {
   return (
     <Router>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </Router>
   );
 }
