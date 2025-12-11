@@ -92,6 +92,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/usuarios/**").permitAll()
                 // Permitimos temporalmente acceso público a los endpoints de mallas para pruebas locales.
                 .requestMatchers("/api/mallas/**").permitAll()
+                // Permite acceso público a los endpoints de descarga de soportes PDF
+                .requestMatchers("/api/novedades/*/soporte").permitAll()
                 // Todas las demás rutas requieren autenticación
                 .anyRequest().authenticated()
             )
