@@ -1,8 +1,12 @@
+import VacacionesModule from './components/novedades/VacacionesModule';
+import IncapacidadesModule from './components/novedades/IncapacidadesModule';
+import AdminNovedades from './components/novedades/AdminNovedades';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
 import TurnosModule from './components/turnos/TurnosModule';
 import PersonalMalla from './components/turnos/PersonalMalla';
+import AdminPublishedMallas from './components/turnos/AdminPublishedMallas';
 import MyAccount from './components/MyAccount';
 
 // Componente para el formulario de inicio de sesion
@@ -415,6 +419,7 @@ const UserManagement = () => {
 // Componente del dashboard (pagina principal despues del login)
 const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('home'); // Estado para controlar la pestana activa
+  const [novedadesTab, setNovedadesTab] = useState('vacaciones'); // Tab para módulo de novedades
 
   const renderContent = () => {
     // Obtener nombre amigable del rol
@@ -440,7 +445,7 @@ const Dashboard = ({ user, onLogout }) => {
                 {isAdmin ? 'Este es tu panel de control de administrador.' : 'Consulta tu malla de turno publicada.'}
               </p>
             </div>
-            <PersonalMalla user={user} />
+            {isAdmin ? <AdminPublishedMallas /> : <PersonalMalla user={user} />}
           </div>
           
         );
@@ -453,10 +458,43 @@ const Dashboard = ({ user, onLogout }) => {
       case 'turns':
         return <TurnosModule user={user} />;
       case 'news':
+        if (isAdmin) {
+          return <AdminNovedades usuarioAdminId={user?.idUsuario} />;
+        }
+
         return (
-          <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Gestion de Novedades</h2>
-            <p className="text-lg text-gray-600 mt-4">Proximamente se implementara la gestion de novedades.</p>
+          <div className="space-y-6">
+            {/* Tabs para módulos de novedades */}
+            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-wrap gap-2">
+              <button
+                onClick={() => setNovedadesTab('vacaciones')}
+                className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+                  novedadesTab === 'vacaciones'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Vacaciones
+              </button>
+              <button
+                onClick={() => setNovedadesTab('incapacidades')}
+                className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+                  novedadesTab === 'incapacidades'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Incapacidades
+              </button>
+            </div>
+
+            {/* Contenido según tab seleccionado */}
+            {novedadesTab === 'vacaciones' && (
+              <VacacionesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+            )}
+            {novedadesTab === 'incapacidades' && (
+              <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+            )}
           </div>
         );
       case 'other':

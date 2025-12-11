@@ -1,0 +1,27 @@
+AUXILIAR
+50288419	Teresa Maria	Castro Lopez	
+
+usuario:		teresacastro@paliacare.com
+pass:			castro8419
+
+ENFERMERO
+
+0293847	Oscar Santiago	Campos Ovalle	ENFERMERO
+usuario: 		oscarcampos@paliacare.com	
+pass:			campos3847
+
+
+
+MEDICO
+99887766	Ana	Gomez	MEDICO	
+usuario:		anagomez@paliacare.com
+Pass:			gomez7766
+
+
+TERAPEUTA
+
+44455566	Paula Gabriela	Molina Terrence	TERAPIA
+usuario:		paulamolina@paliacare.com
+pass:			molina5566
+
+
