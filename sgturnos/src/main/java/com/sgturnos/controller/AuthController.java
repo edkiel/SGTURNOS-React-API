@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.Collections;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.Map;
  * @RequestMapping especifica la ruta base para todas las operaciones de autenticación
  */
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -88,9 +90,51 @@ public class AuthController {
         // Codifica la contraseña antes de guardarla
         usuario.setContrasena(passwordEncoder.encode(registroRequest.getContrasena()));
 
-        // Busca el rol por su ID
-        Rol rol = rolRepository.findById(registroRequest.getIdRol())
-            .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + registroRequest.getIdRol()));
+        // Resolución robusta de rol: aceptar IDs (ej: "adm05") o nombres de rol existentes en BD (ej: "ADMINISTRADOR")
+        String solicitado = registroRequest.getIdRol();
+        if (solicitado == null || solicitado.trim().isEmpty()) {
+            // Rol por defecto si el frontend no envía nada
+            solicitado = "AUXILIAR";
+        }
+
+        String originalSolicitado = solicitado;
+        String normalizado = solicitado.trim().toUpperCase();
+
+        // Mapear nombres usados por el frontend a nombres reales en BD
+        switch (normalizado) {
+            case "USUARIO":
+            case "AUX":
+            case "AUXILIAR":
+                normalizado = "AUXILIAR"; break;
+            case "JEFE_INMEDIATO":
+            case "OPERACIONES_CLINICAS":
+            case "RECURSOS_HUMANOS":
+            case "ADMIN":
+            case "ADMINISTRADOR":
+                normalizado = "ADMINISTRADOR"; break;
+            case "MEDICO":
+                normalizado = "MEDICO"; break;
+            case "ENFERMERO":
+                normalizado = "ENFERMERO"; break;
+            case "TERAPIA":
+                normalizado = "TERAPIA"; break;
+            default:
+                // Mantener valor tal cual, puede ser un ID como "adm05", "aux01", etc.
+                normalizado = solicitado.trim();
+        }
+
+        // Intentar primero por ID (id_rol), luego por nombre (columna 'rol')
+        Rol rol = null;
+        try {
+            rol = rolRepository.findById(normalizado).orElse(null);
+        } catch (Exception ignored) {}
+        if (rol == null) {
+            var maybeRol = rolRepository.findByRol(normalizado);
+            if (maybeRol.isEmpty()) {
+                return new ResponseEntity<>("Rol no encontrado: " + originalSolicitado, HttpStatus.BAD_REQUEST);
+            }
+            rol = maybeRol.get();
+        }
         usuario.setRol(rol);
 
         // Guarda el usuario en la base de datos

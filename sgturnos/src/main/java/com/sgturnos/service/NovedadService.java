@@ -20,6 +20,9 @@ public class NovedadService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private AlertaMallaService alertaMallaService;
 
     /**
      * Crea una nueva novedad
@@ -66,7 +69,12 @@ public class NovedadService {
         novedad.setFechaAprobacion(LocalDateTime.now());
         novedad.setUsuarioAdmin(admin);
 
-        return novedadRepository.save(novedad);
+        Novedad novedadGuardada = novedadRepository.save(novedad);
+        
+        // Crear alerta de malla cuando se aprueba una novedad
+        alertaMallaService.crearAlertaPorNovedad(novedadGuardada);
+
+        return novedadGuardada;
     }
 
     /**

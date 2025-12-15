@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../api';
+import { api, API_BASE_URL } from '../../api';
 
 /**
  * Componente para que administradores aprueben o rechacen novedades
@@ -30,13 +29,7 @@ const AdminNovedades = ({ usuarioAdminId }) => {
 
   const cargarTipos = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/novedades/tipos/disponibles`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/novedades/tipos/disponibles`);
       setTipos(response.data);
     } catch (err) {
       console.error('Error cargando tipos:', err);
@@ -46,13 +39,7 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   const cargarNovedades = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/novedades/todas`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/novedades/todas`);
       setNovedades(response.data);
     } catch (err) {
       console.error('Error cargando novedades:', err);
@@ -64,13 +51,9 @@ const AdminNovedades = ({ usuarioAdminId }) => {
 
   const handleAprobar = async (idNovedad) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_BASE_URL}/novedades/aprobar/${idNovedad}`,
-        { idUsuarioAdmin: usuarioAdminId },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      await api.post(
+        `/novedades/aprobar/${idNovedad}`,
+        { idUsuarioAdmin: usuarioAdminId }
       );
       setSuccess('Novedad aprobada exitosamente');
       cargarNovedades();
@@ -88,15 +71,11 @@ const AdminNovedades = ({ usuarioAdminId }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_BASE_URL}/novedades/rechazar/${selectedNovedad.idNovedad}`,
+      await api.post(
+        `/novedades/rechazar/${selectedNovedad.idNovedad}`,
         {
           idUsuarioAdmin: usuarioAdminId,
           motivo: motivoRechazo
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
         }
       );
       setSuccess('Novedad rechazada exitosamente');
@@ -241,36 +220,54 @@ const AdminNovedades = ({ usuarioAdminId }) => {
                   n.estado === 'PENDIENTE' ? 'border-yellow-500 border-l-4' : 'border-gray-200'
                 }`}
               >
-                <div className="grid grid-cols-3 gap-4 items-center mb-4">
-                  {/* Información principal */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {n.usuario?.nombres} {n.usuario?.apellidos}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  {/* Información del usuario */}
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Usuario</p>
+                    <h3 className="text-lg font-semibold text-gray-800 mt-1">
+                      {n.usuario?.primerNombre} {n.usuario?.primerApellido}
                     </h3>
-                    <p className="text-gray-600 text-sm mt-1">
-                      {n.usuario?.email}
+                    <p className="text-gray-600 text-xs mt-1">
+                      {n.usuario?.correo}
                     </p>
+                    <div className="mt-2">
+                      <span className="inline-block text-blue-600 text-xs font-semibold bg-blue-50 px-2 py-1 rounded">
+                        {n.usuario?.rol?.rol || 'Sin rol'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Tipo y fechas */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Tipo</p>
-                    <p className="text-lg text-gray-800">{n.tipo?.nombre}</p>
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Tipo de Novedad</p>
+                    <p className="text-lg text-gray-800 font-semibold mt-1">{n.tipo?.nombre}</p>
 
                     {n.fechaInicio && n.fechaFin && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        {n.fechaInicio} al {n.fechaFin}
+                      <p className="text-xs text-gray-600 mt-2">
+                        📅 {n.fechaInicio} al {n.fechaFin}
                       </p>
                     )}
                   </div>
 
+                  {/* ID Documento e ID Novedad */}
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Datos</p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      <span className="font-semibold">ID Usuario:</span> {n.usuario?.idUsuario}
+                    </p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      <span className="font-semibold">ID Novedad:</span> {n.idNovedad}
+                    </p>
+                  </div>
+
                   {/* Estado y fecha */}
-                  <div className="text-right">
-                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold border ${obtenerEstadoColor(n.estado)}`}>
+                  <div className="col-span-1 text-right">
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-2">Estado</p>
+                    <span className={`inline-block px-3 py-2 rounded-full text-sm font-semibold border ${obtenerEstadoColor(n.estado)}`}>
                       {n.estado}
                     </span>
                     <p className="text-gray-600 text-xs mt-2">
-                      {new Date(n.fechaSolicitud).toLocaleDateString('es-ES')}
+                      🗓️ {new Date(n.fechaSolicitud).toLocaleDateString('es-ES')}
                     </p>
                   </div>
                 </div>

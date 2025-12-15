@@ -25,3 +25,37 @@ usuario:		paulamolina@paliacare.com
 pass:			molina5566
 
 
+ADMINISTRADOR:
+958287755	Gabriel Gael	Garcia Marquez	ADMINISTRADOR	
+usuario:		gabrielgarcia@paliacare.com
+pass:			garcia7755
+
+
+
+
+camila fernanda zuluaga pombo	
+camilazuluaga@paliacare.com
+zuluaga9988
+
+
+
+ADMINISTRADOR_RECURSOS_HUMANOS
+miranda catrina fula cortez	9686711199	
+mirandafula@paliacare.com
+fula1199
+
+	
+ADMINISTRADOR --OPERACIONES_CLINICAS
+Susana cintia Ruiz Cruz	95462288
+susanaruiz@paliacare.com
+ruiz2288
+
+	
+ADMINISTRADOR
+Dante jose Gebel Urrutia	48273377
+dantegebel@paliacare.com
+gebel3377
+
+
+
+	ADMINISTRADOR

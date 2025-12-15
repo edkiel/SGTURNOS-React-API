@@ -60,10 +60,27 @@ public class Novedad {
     @JoinColumn(name = "id_usuario_admin")
     private Usuario usuarioAdmin; // Administrador que aprobó/rechazó
 
+    // Campos para control de aprobaciones múltiples (vacaciones)
+    @Column(name = "aprobacion_jefe")
+    private Boolean aprobacionJefe = false;
+
+    @Column(name = "aprobacion_operaciones")
+    private Boolean aprobacionOperaciones = false;
+
+    @Column(name = "aprobacion_rrhh")
+    private Boolean aprobacionRrhh = false;
+
+    @Column(name = "aplicada_a_malla")
+    private Boolean aplicadaAMalla = false;
+
     // Constructores
     public Novedad() {
         this.estado = "PENDIENTE";
         this.fechaSolicitud = LocalDateTime.now();
+        this.aprobacionJefe = false;
+        this.aprobacionOperaciones = false;
+        this.aprobacionRrhh = false;
+        this.aplicadaAMalla = false;
     }
 
     public Novedad(Usuario usuario, TipoNovedad tipo, LocalDate fechaInicio, LocalDate fechaFin, String descripcion) {
@@ -171,6 +188,38 @@ public class Novedad {
 
     public void setUsuarioAdmin(Usuario usuarioAdmin) {
         this.usuarioAdmin = usuarioAdmin;
+    }
+
+    public Boolean getAprobacionJefe() {
+        return aprobacionJefe;
+    }
+
+    public void setAprobacionJefe(Boolean aprobacionJefe) {
+        this.aprobacionJefe = aprobacionJefe;
+    }
+
+    public Boolean getAprobacionOperaciones() {
+        return aprobacionOperaciones;
+    }
+
+    public void setAprobacionOperaciones(Boolean aprobacionOperaciones) {
+        this.aprobacionOperaciones = aprobacionOperaciones;
+    }
+
+    public Boolean getAprobacionRrhh() {
+        return aprobacionRrhh;
+    }
+
+    public void setAprobacionRrhh(Boolean aprobacionRrhh) {
+        this.aprobacionRrhh = aprobacionRrhh;
+    }
+
+    public Boolean getAplicadaAMalla() {
+        return aplicadaAMalla;
+    }
+
+    public void setAplicadaAMalla(Boolean aplicadaAMalla) {
+        this.aplicadaAMalla = aplicadaAMalla;
     }
 
     @Override

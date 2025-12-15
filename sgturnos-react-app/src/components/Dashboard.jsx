@@ -89,14 +89,28 @@ const Dashboard = ({ user, onLogout }) => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">Rol (ej: ADMINISTRADOR, USUARIO):</label>
-            <input
+            <label className="block text-gray-700 text-sm font-bold mb-2">Rol del Usuario:</label>
+            <select
               className="shadow appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              type="text"
               value={newRol}
               onChange={(e) => setNewRol(e.target.value)}
               required
-            />
+            >
+              <option value="">-- Selecciona un rol --</option>
+              <option value="Usuario">Usuario Estándar</option>
+              <optgroup label="--- Roles Administrativos ---">
+                <option value="Jefe Inmediato">Jefe de Departamento / Jefe Inmediato</option>
+                <option value="Operaciones Clínicas">Operaciones Clínicas</option>
+                <option value="Recursos Humanos">Recursos Humanos</option>
+                <option value="Administrador">Administrador del Sistema</option>
+              </optgroup>
+            </select>
+            <p className="text-xs text-gray-600 mt-2">
+              {newRol === 'Jefe Inmediato' && '📋 Revisa y aprueba mallas (no puede publicar)'}
+              {newRol === 'Operaciones Clínicas' && '🏥 Crea, edita y publica mallas después de aprobaciones'}
+              {newRol === 'Recursos Humanos' && '💼 Revisa mallas para nómina, aprueba novedades'}
+              {newRol === 'Administrador' && '🔐 Acceso total al sistema'}
+            </p>
           </div>
           <button
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl focus:outline-none focus:shadow-outline w-full"

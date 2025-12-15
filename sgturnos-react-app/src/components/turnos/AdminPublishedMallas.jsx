@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../../api';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import TurnosGrid from './TurnosGrid';
 import html2canvas from 'html2canvas';
@@ -46,22 +47,20 @@ const AdminPublishedMallas = () => {
     setLoading(prev => ({ ...prev, [roleId]: true }));
 
     try {
-      const res = await fetch(`/api/mallas/published?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`);
+      const res = await api.get(`/mallas/published?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`);
       
-      if (!res.ok) {
-        setMallaData(prev => ({ ...prev, [roleId]: [] }));
-        setLoading(prev => ({ ...prev, [roleId]: false }));
-        return;
-      }
-
-      const json = await res.json();
+      const json = res.data;
       if (json && json.preview) {
         setMallaData(prev => ({ ...prev, [roleId]: json.preview || [] }));
       } else {
+        // Malla no publicada aún es normal, no mostrar error
         setMallaData(prev => ({ ...prev, [roleId]: [] }));
       }
     } catch (e) {
-      console.warn('Error loading published malla for role', roleId, e);
+      // Capturar errores de red pero no mostrar alerta si la malla no existe
+      if (e.response?.status !== 404) {
+        console.error('Error loading published malla for role', roleId, e);
+      }
       setMallaData(prev => ({ ...prev, [roleId]: [] }));
     } finally {
       setLoading(prev => ({ ...prev, [roleId]: false }));
@@ -97,7 +96,7 @@ const AdminPublishedMallas = () => {
   };
 
   // Exportar a PDF
-  const handleExportPdf = (roleId, roleName) => {
+  const handleExportPdf = async (roleId, roleName) => {
     const malla = mallaData[roleId];
     if (!malla || malla.length === 0) {
       alert('No hay datos para exportar');
@@ -111,10 +110,19 @@ const AdminPublishedMallas = () => {
       return;
     }
 
-    exportGridToPdf(containerId, `Malla_${roleName}_${month}.pdf`, {
-      orientation: 'landscape',
-      margin: 10
-    });
+    try {
+      await exportGridToPdf(containerId, `Malla_${roleName}_${month}.pdf`, {
+        marginX: 10,
+        marginY: 10,
+        fontSize: '11px',
+        canvasScale: 2,
+        excludeRowMarkers: ['EQUITY_STATS', 'SUMMARY'],
+        excludeRowIds: [-1, -2]
+      });
+    } catch (error) {
+      console.error('Error exportando PDF:', error);
+      alert('Error al exportar PDF. Revisa la consola.');
+    }
   };
 
   // Generar PDF para vista previa en modal
@@ -127,6 +135,9 @@ const AdminPublishedMallas = () => {
 
     setPdfModal(prev => ({ ...prev, isGenerating: true }));
 
+    // Pequeño delay para asegurar que el DOM está completamente renderizado
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     try {
       const containerId = `malla-grid-${roleId}`;
       const elem = document.getElementById(containerId);
@@ -136,49 +147,80 @@ const AdminPublishedMallas = () => {
         return;
       }
 
+      console.log('Generando PDF para:', roleId, 'Elemento encontrado:', elem);
+
       // Crear copia del elemento para no afectar el original
       const clonedElem = elem.cloneNode(true);
       clonedElem.style.position = 'absolute';
       clonedElem.style.left = '-9999px';
+      clonedElem.style.top = '0';
       clonedElem.style.width = elem.scrollWidth + 'px';
+      clonedElem.style.backgroundColor = '#ffffff';
       document.body.appendChild(clonedElem);
 
-      // Convertir a canvas
+      // Esperar un momento para que el clon se renderice
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Convertir a canvas con mejor configuración
       const canvas = await html2canvas(clonedElem, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        scale: 1
+        scale: 2, // Aumentar escala para mejor calidad
+        logging: true, // Habilitar logs para debugging
+        width: elem.scrollWidth,
+        height: elem.scrollHeight,
+        windowWidth: elem.scrollWidth,
+        windowHeight: elem.scrollHeight
       });
+
+      console.log('Canvas generado:', canvas.width, 'x', canvas.height);
 
       // Limpiar clon
       document.body.removeChild(clonedElem);
 
-      // Crear PDF
-      const A4_WIDTH = 297;
-      const A4_HEIGHT = 210;
-      const imgWidth = A4_WIDTH - 20;
+      // Validar que el canvas tiene contenido
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('El canvas generado está vacío');
+      }
+
+      // Crear PDF en orientación horizontal (landscape)
+      const A4_WIDTH = 297; // mm
+      const A4_HEIGHT = 210; // mm
+      const margin = 10;
+      const imgWidth = A4_WIDTH - (margin * 2);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       const pdf = new jsPDF('l', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
+
+      console.log('Dimensiones del PDF:', imgWidth, 'x', imgHeight);
+
+      // Agregar título
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Malla de ${roleName} - ${month}`, margin, margin + 5);
 
       let heightLeft = imgHeight;
-      let position = 0;
+      let position = margin + 10; // Dejar espacio para el título
 
-      while (heightLeft >= 0) {
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= A4_HEIGHT - 20;
-        position -= A4_HEIGHT - 20;
+      // Primera página
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (A4_HEIGHT - position - margin);
 
-        if (heightLeft > 0) {
-          pdf.addPage();
-        }
+      // Páginas adicionales si es necesario
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position = -(imgHeight - heightLeft) + margin;
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (A4_HEIGHT - (margin * 2));
       }
 
       // Convertir PDF a blob y crear URL
       const pdfBlob = pdf.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      console.log('PDF generado exitosamente, URL:', pdfUrl);
 
       setPdfModal({
         isOpen: true,
@@ -188,7 +230,7 @@ const AdminPublishedMallas = () => {
       });
     } catch (error) {
       console.error('Error generating PDF preview:', error);
-      alert('Error al generar la vista previa del PDF');
+      alert(`Error al generar la vista previa del PDF: ${error.message}`);
       setPdfModal(prev => ({ ...prev, isGenerating: false }));
     }
   };
@@ -236,7 +278,7 @@ const AdminPublishedMallas = () => {
                   {/* Grid de turnos */}
                   <div id={`malla-grid-${roleId}`} className="mb-6 overflow-x-auto">
                     {hasDayColumns(mallaData[roleId]) ? (
-                      <TurnosGrid malla={mallaData[roleId]} />
+                      <TurnosGrid data={mallaData[roleId]} month={month} />
                     ) : (
                       <p className="text-gray-500 text-center py-8">
                         Formato de malla no reconocido
