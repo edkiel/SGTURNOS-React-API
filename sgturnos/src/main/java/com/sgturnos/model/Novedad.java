@@ -60,7 +60,7 @@ public class Novedad {
     @JoinColumn(name = "id_usuario_admin")
     private Usuario usuarioAdmin; // Administrador que aprobó/rechazó
 
-    // Campos para control de aprobaciones múltiples (vacaciones)
+    // Campos para control de aprobaciones múltiples (vacaciones, permisos y novedades con fechas)
     @Column(name = "aprobacion_jefe")
     private Boolean aprobacionJefe = false;
 

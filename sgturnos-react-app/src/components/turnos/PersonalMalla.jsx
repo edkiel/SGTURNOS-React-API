@@ -89,7 +89,7 @@ const PersonalMalla = ({ user }) => {
   if (!malla || malla.length === 0) return <div className="bg-white p-4 rounded-md shadow">No hay malla generada para tu rol.</div>;
 
   return (
-    <div className="bg-white p-4 rounded-md shadow">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-md shadow" style={{ maxWidth: '1400px' }}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-bold">
           {isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : `Malla de turno - ${getRoleName()}`}

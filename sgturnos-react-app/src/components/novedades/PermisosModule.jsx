@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../api';
+import axios from 'axios';
+import { API_BASE_URL } from '../../api';
 
 /**
- * Componente mejorado para solicitudes de vacaciones
- * Incluye selección de aprobadores y visualización del flujo de aprobación
+ * Componente para gestionar solicitudes de permisos especiales
+ * Permite a los usuarios crear solicitudes de permiso con fecha definida
+ * Incluye selección de los 3 aprobadores (Jefe, Operaciones, RRHH)
  */
-const VacacionesModuleV2 = ({ usuarioId, userName }) => {
-  const [vacaciones, setVacaciones] = useState([]);
+const PermisosModule = ({ usuarioId, userName }) => {
+  const [permisos, setPermisos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [filter, setFilter] = useState('todas');
+  const [filter, setFilter] = useState('todas'); // todas, pendientes, aprobadas, rechazadas
 
   // Formulario
   const [form, setForm] = useState({
     fechaInicio: '',
     fechaFin: '',
     descripcion: '',
+    tipoPermiso: '',
     idJefeInmediato: '',
     idOperacionesClinicas: '',
     idRecursosHumanos: ''
@@ -25,15 +28,16 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Cargar permisos y usuarios al montar el componente
   useEffect(() => {
-    cargarVacaciones();
+    cargarPermisos();
     cargarUsuarios();
   }, [usuarioId]);
 
   const cargarUsuarios = async () => {
     try {
       // Cargar solo administradores por idRol
-      const response = await api.get(`/usuarios/por-rol?idRol=adm05`);
+      const response = await axios.get(`${API_BASE_URL}/usuarios/por-rol?idRol=adm05`);
       const lista = Array.isArray(response.data) ? response.data : [];
       setUsuarios(lista);
     } catch (err) {
@@ -41,16 +45,23 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
     }
   };
 
-  const cargarVacaciones = async () => {
+  const cargarPermisos = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/novedades/usuario/${usuarioId}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/novedades/usuario/${usuarioId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-      const vacacionesFiltradas = response.data.filter(n => n.tipo?.nombre === 'Vacaciones');
-      setVacaciones(vacacionesFiltradas);
+      // Filtrar solo permisos (tipo 3, ajustar según tu DB)
+      const permisosFiltrados = response.data.filter(n => n.tipo?.nombre === 'Permisos');
+      setPermisos(permisosFiltrados);
     } catch (err) {
-      console.error('Error cargando vacaciones:', err);
-      setError('Error al cargar las vacaciones');
+      console.error('Error cargando permisos:', err);
+      setError('Error al cargar los permisos');
     } finally {
       setLoading(false);
     }
@@ -77,89 +88,110 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
       return;
     }
 
+    if (form.descripcion.trim().length === 0) {
+      setError('La descripción es requerida');
+      return;
+    }
+
     if (!form.idJefeInmediato || !form.idOperacionesClinicas || !form.idRecursosHumanos) {
       setError('Debe seleccionar los 3 aprobadores');
       return;
     }
 
     try {
-      // Crear la solicitud de vacaciones
-      const response = await api.post(
-        `/novedades/crear`,
+      const token = localStorage.getItem('token');
+
+      // Crear la solicitud de permiso
+      const response = await axios.post(
+        `${API_BASE_URL}/novedades/crear`,
         {
           idUsuario: usuarioId,
-          idTipo: 1, // ID para Vacaciones
+          idTipo: 3, // ID para Permisos (ajustar según tu DB)
           fechaInicio: form.fechaInicio,
           fechaFin: form.fechaFin,
           descripcion: form.descripcion
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
       const idNovedad = response.data.idNovedad;
 
       // Crear las 3 aprobaciones pendientes
-      await api.post(
-        `/vacaciones/crear-aprobaciones`,
+      await axios.post(
+        `${API_BASE_URL}/aprobaciones/crear-permisos`,
         {
           idNovedad,
           idJefeInmediato: parseInt(form.idJefeInmediato),
           idOperacionesClinicas: parseInt(form.idOperacionesClinicas),
           idRecursosHumanos: parseInt(form.idRecursosHumanos)
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
-      setSuccess('Solicitud de vacaciones creada exitosamente. Pendiente de 3 aprobaciones.');
+      setSuccess('Solicitud de permiso creada exitosamente. Pendiente de 3 aprobaciones.');
       setForm({
         fechaInicio: '',
         fechaFin: '',
         descripcion: '',
+        tipoPermiso: '',
         idJefeInmediato: '',
         idOperacionesClinicas: '',
         idRecursosHumanos: ''
       });
       setShowForm(false);
-      cargarVacaciones();
+
+      // Recargar permisos
+      cargarPermisos();
     } catch (err) {
-      console.error('Error creando vacaciones:', err);
+      console.error('Error creando permiso:', err);
       setError(err.response?.data?.error || 'Error al crear la solicitud');
     }
   };
 
   const obtenerEstadoColor = (estado) => {
     switch (estado) {
-      case 'APROBADA': return 'bg-green-100 text-green-800 border-green-300';
-      case 'RECHAZADA': return 'bg-red-100 text-red-800 border-red-300';
-      case 'PENDIENTE': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'APROBADA':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'RECHAZADA':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'PENDIENTE':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
-  const vacacionesFiltradas = vacaciones.filter(v => {
+  const permisosFiltrados = permisos.filter(p => {
     if (filter === 'todas') return true;
-    if (filter === 'pendientes') return v.estado === 'PENDIENTE';
-    if (filter === 'aprobadas') return v.estado === 'APROBADA';
-    if (filter === 'rechazadas') return v.estado === 'RECHAZADA';
+    if (filter === 'pendientes') return p.estado === 'PENDIENTE';
+    if (filter === 'aprobadas') return p.estado === 'APROBADA';
+    if (filter === 'rechazadas') return p.estado === 'RECHAZADA';
     return true;
   });
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
+    <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Gestión de Vacaciones</h1>
+            <h1 className="text-3xl font-bold text-gray-800">🔐 Gestión de Permisos</h1>
             <p className="text-gray-600 mt-1">Usuario: {userName}</p>
             <p className="text-sm text-gray-500 mt-1">Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
-            {showForm ? 'Cancelar' : 'Nueva Solicitud'}
+            {showForm ? 'Cancelar' : 'Nuevo Permiso'}
           </button>
         </div>
 
-        {/* Mensajes */}
+        {/* Mensajes de estado */}
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
             {error}
@@ -173,8 +205,9 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
 
         {/* Formulario */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud de Vacaciones</h2>
+          <div className="bg-white shadow-lg rounded-lg p-6 mb-8 border-l-4 border-amber-600">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud de Permiso</h2>
+
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Fechas */}
@@ -187,7 +220,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="fechaInicio"
                     value={form.fechaInicio}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -201,7 +234,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="fechaFin"
                     value={form.fechaFin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -215,7 +248,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="idJefeInmediato"
                     value={form.idJefeInmediato}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -235,7 +268,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="idOperacionesClinicas"
                     value={form.idOperacionesClinicas}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -255,7 +288,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="idRecursosHumanos"
                     value={form.idRecursosHumanos}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -267,6 +300,21 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                   </select>
                 </div>
 
+                {/* Tipo de Permiso */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Permiso *
+                  </label>
+                  <input
+                    type="text"
+                    name="tipoPermiso"
+                    value={form.tipoPermiso}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Permiso de asuntos personales, Cita médica, etc..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  />
+                </div>
+
                 {/* Descripción */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -276,9 +324,9 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                     name="descripcion"
                     value={form.descripcion}
                     onChange={handleInputChange}
+                    placeholder="Ingresa detalles de tu solicitud de permiso..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describa el motivo de sus vacaciones..."
                     required
                   />
                 </div>
@@ -294,7 +342,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Enviar Solicitud
                 </button>
@@ -304,15 +352,15 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
         )}
 
         {/* Filtros */}
-        <div className="mb-6 flex gap-4">
+        <div className="flex gap-2 mb-6 flex-wrap">
           {['todas', 'pendientes', 'aprobadas', 'rechazadas'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === f
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -320,78 +368,60 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
           ))}
         </div>
 
-        {/* Lista de vacaciones */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando...</p>
-          </div>
-        ) : vacacionesFiltradas.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500">No hay solicitudes de vacaciones</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {vacacionesFiltradas.map(v => (
-              <div key={v.idNovedad} className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-gray-800">
-                        Vacaciones #{v.idNovedad}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${obtenerEstadoColor(v.estado)}`}>
-                        {v.estado}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-4">
-                      <div>
-                        <span className="font-semibold">Fecha inicio:</span> {v.fechaInicio}
-                      </div>
-                      <div>
-                        <span className="font-semibold">Fecha fin:</span> {v.fechaFin}
-                      </div>
-                      <div className="col-span-2">
-                        <span className="font-semibold">Descripción:</span> {v.descripcion}
-                      </div>
-                      <div>
-                        <span className="font-semibold">Solicitud:</span> {new Date(v.fechaSolicitud).toLocaleString()}
-                      </div>
-                    </div>
-
-                    {/* Estado de aprobaciones */}
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-semibold text-gray-700 mb-2">Estado de Aprobaciones:</h4>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${v.aprobacionJefe ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span>Jefe Inmediato</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${v.aprobacionOperaciones ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span>Operaciones Clínicas</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${v.aprobacionRrhh ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span>Recursos Humanos</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {v.motivoRechazo && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
-                        <span className="font-semibold">Motivo de rechazo:</span> {v.motivoRechazo}
-                      </div>
-                    )}
+        {/* Lista de permisos */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+              <p className="text-gray-600 mt-2">Cargando permisos...</p>
+            </div>
+          ) : permisosFiltrados.length === 0 ? (
+            <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
+              <p className="text-gray-500">No hay solicitudes de permiso para mostrar</p>
+            </div>
+          ) : (
+            permisosFiltrados.map(p => (
+              <div
+                key={p.idNovedad}
+                className="bg-white shadow rounded-lg p-6 border-l-4 border-amber-400 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {p.fechaInicio} al {p.fechaFin}
+                    </h3>
+                    <p className="text-gray-600 text-sm mt-1">
+                      Solicitado: {new Date(p.fechaSolicitud).toLocaleDateString('es-ES')}
+                    </p>
                   </div>
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${obtenerEstadoColor(p.estado)}`}>
+                    {p.estado}
+                  </span>
                 </div>
+
+                <p className="text-gray-700 mb-4">{p.descripcion}</p>
+
+                {p.estado === 'RECHAZADA' && p.motivoRechazo && (
+                  <div className="bg-red-50 border border-red-200 rounded p-3 text-sm">
+                    <p className="font-semibold text-red-800">Motivo del rechazo:</p>
+                    <p className="text-red-700">{p.motivoRechazo}</p>
+                  </div>
+                )}
+
+                {p.estado === 'APROBADA' && p.fechaAprobacion && (
+                  <div className="bg-green-50 border border-green-200 rounded p-3 text-sm">
+                    <p className="text-green-700">
+                      Aprobado: {new Date(p.fechaAprobacion).toLocaleDateString('es-ES')}
+                    </p>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default VacacionesModuleV2;
+export default PermisosModule;

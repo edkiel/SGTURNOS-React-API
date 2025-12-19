@@ -52,7 +52,7 @@ const MyAccount = ({ user }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '1400px' }}>
       <h2 className="text-2xl font-semibold mb-4">Informacion de mi usuario</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>

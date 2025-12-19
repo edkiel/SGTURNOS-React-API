@@ -88,7 +88,7 @@ const AlertasMalla = ({ usuarioId }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-lg">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-lg shadow-lg" style={{ maxWidth: '1400px' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <span className="text-3xl mr-3">🚨</span>

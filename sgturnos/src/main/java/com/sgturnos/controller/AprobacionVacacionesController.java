@@ -3,6 +3,7 @@ package com.sgturnos.controller;
 import com.sgturnos.model.AprobacionNovedad;
 import com.sgturnos.model.Novedad;
 import com.sgturnos.service.AprobacionVacacionesService;
+import com.sgturnos.service.NovedadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,38 @@ public class AprobacionVacacionesController {
 
     @Autowired
     private AprobacionVacacionesService aprobacionService;
+
+    @Autowired
+    private NovedadService novedadService;
+
+    /**
+     * Crear aprobaciones pendientes para permisos
+     * POST /api/aprobaciones/crear-permisos
+     * Body: { idNovedad, idJefeInmediato, idOperacionesClinicas, idRecursosHumanos }
+     */
+    @PostMapping("/crear-permisos")
+    public ResponseEntity<?> crearAprobacionesPermisos(@RequestBody Map<String, Object> body) {
+        try {
+            Long idNovedad = Long.valueOf(body.get("idNovedad").toString());
+            Long idJefeInmediato = Long.valueOf(body.get("idJefeInmediato").toString());
+            Long idOperacionesClinicas = Long.valueOf(body.get("idOperacionesClinicas").toString());
+            Long idRecursosHumanos = Long.valueOf(body.get("idRecursosHumanos").toString());
+
+            Novedad novedad = novedadService.obtenerNovedadPorId(idNovedad);
+            if (novedad == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Novedad no encontrada"));
+            }
+
+            aprobacionService.crearAprobacionesPendientes(novedad, idJefeInmediato, idOperacionesClinicas, idRecursosHumanos);
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Aprobaciones de permisos creadas exitosamente",
+                "idNovedad", idNovedad
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     /**
      * Aprobar una novedad desde un rol específico

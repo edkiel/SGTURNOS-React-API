@@ -150,7 +150,7 @@ const TurnosModule = ({ user }) => {
   
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-lg">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '1400px' }}>
       <h2 className="text-2xl font-bold mb-4">Planificación de Turnos</h2>
 
       {/* Role buttons moved to Inicio (PersonalMalla) per UX request */}

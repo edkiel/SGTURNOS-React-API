@@ -116,7 +116,7 @@ const RecursosHumanosRevisor = ({ usuarioId }) => {
   // Se mantiene para referencia futura
 
   return (
-    <div className="space-y-6">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" style={{ maxWidth: '1400px' }}>
       {/* Encabezado */}
       <div className="bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-600 p-6 rounded-lg">
         <h2 className="text-2xl font-bold text-purple-900 mb-2">Revisión de Mallas - Recursos Humanos</h2>

@@ -249,7 +249,7 @@ const AdminPublishedMallas = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8" style={{ maxWidth: '1400px' }}>
       <div className="bg-white p-6 rounded-xl shadow-lg">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Mallas Oficiales Publicadas</h2>
         <p className="text-gray-600 mb-6">Mes: <span className="font-semibold">{month}</span></p>

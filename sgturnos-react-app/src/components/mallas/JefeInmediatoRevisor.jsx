@@ -122,7 +122,7 @@ const JefeInmediatoRevisor = ({ usuarioId }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" style={{ maxWidth: '1400px' }}>
       {/* Encabezado */}
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-600 p-6 rounded-lg">
         <h2 className="text-2xl font-bold text-blue-900 mb-2">Revisión de Mallas - Jefe Inmediato</h2>

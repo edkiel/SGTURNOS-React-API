@@ -142,4 +142,118 @@ public class NovedadService {
         novedad.setSoportePath(soportePath);
         return novedadRepository.save(novedad);
     }
+
+    /**
+     * Aprueba una novedad por parte del Jefe Inmediato/Directo
+     * Evalúa la primacía de la situación
+     */
+    public Novedad aprobarPorJefe(Long idNovedad, Long idUsuarioJefe) {
+        Novedad novedad = novedadRepository.findById(idNovedad).orElse(null);
+        if (novedad == null) {
+            return null;
+        }
+
+        Usuario jefe = usuarioRepository.findById(idUsuarioJefe).orElse(null);
+        if (jefe == null) {
+            return null;
+        }
+
+        novedad.setAprobacionJefe(true);
+        return novedadRepository.save(novedad);
+    }
+
+    /**
+     * Aprueba una novedad por parte de Operaciones Clínicas
+     * Genera alerta para recalcular malla y cubrir espacio
+     */
+    public Novedad aprobarPorOperaciones(Long idNovedad, Long idUsuarioOperaciones) {
+        Novedad novedad = novedadRepository.findById(idNovedad).orElse(null);
+        if (novedad == null) {
+            return null;
+        }
+
+        Usuario operaciones = usuarioRepository.findById(idUsuarioOperaciones).orElse(null);
+        if (operaciones == null) {
+            return null;
+        }
+
+        novedad.setAprobacionOperaciones(true);
+
+        // Generar alerta de malla cuando Operaciones Clínicas aprueba
+        alertaMallaService.crearAlertaPorNovedad(novedad);
+
+        return novedadRepository.save(novedad);
+    }
+
+    /**
+     * Aprueba una novedad por parte de Recursos Humanos
+     * Finaliza el proceso de aprobación y marca como APROBADA
+     */
+    public Novedad aprobarPorRRHH(Long idNovedad, Long idUsuarioRRHH) {
+        Novedad novedad = novedadRepository.findById(idNovedad).orElse(null);
+        if (novedad == null) {
+            return null;
+        }
+
+        Usuario rrhh = usuarioRepository.findById(idUsuarioRRHH).orElse(null);
+        if (rrhh == null) {
+            return null;
+        }
+
+        novedad.setAprobacionRrhh(true);
+
+        // Si todos los niveles aprobaron, marcar como APROBADA
+        if (Boolean.TRUE.equals(novedad.getAprobacionJefe()) 
+            && Boolean.TRUE.equals(novedad.getAprobacionOperaciones()) 
+            && Boolean.TRUE.equals(novedad.getAprobacionRrhh())) {
+            novedad.setEstado("APROBADA");
+            novedad.setFechaAprobacion(LocalDateTime.now());
+            novedad.setUsuarioAdmin(rrhh);
+        }
+
+        return novedadRepository.save(novedad);
+    }
+
+    /**
+     * Rechaza una novedad en cualquier nivel de aprobación
+     */
+    public Novedad rechazarEnNivel(Long idNovedad, Long idUsuario, String motivo, String nivel) {
+        Novedad novedad = novedadRepository.findById(idNovedad).orElse(null);
+        if (novedad == null) {
+            return null;
+        }
+
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) {
+            return null;
+        }
+
+        novedad.setEstado("RECHAZADA");
+        novedad.setFechaAprobacion(LocalDateTime.now());
+        novedad.setUsuarioAdmin(usuario);
+        novedad.setMotivoRechazo(motivo + " (Rechazado por: " + nivel + ")");
+
+        return novedadRepository.save(novedad);
+    }
+
+    /**
+     * Obtiene novedades pendientes de aprobación por Jefe
+     */
+    public List<Novedad> obtenerNovedadesPendientesJefe() {
+        return novedadRepository.findByAprobacionJefeAndEstado(false, "PENDIENTE");
+    }
+
+    /**
+     * Obtiene novedades pendientes de aprobación por Operaciones
+     */
+    public List<Novedad> obtenerNovedadesPendientesOperaciones() {
+        return novedadRepository.findByAprobacionJefeTrueAndAprobacionOperacionesFalseAndEstado("PENDIENTE");
+    }
+
+    /**
+     * Obtiene novedades pendientes de aprobación por RRHH
+     */
+    public List<Novedad> obtenerNovedadesPendientesRRHH() {
+        return novedadRepository.findByAprobacionJefeTrueAndAprobacionOperacionesTrueAndAprobacionRrhhFalseAndEstado("PENDIENTE");
+    }
 }

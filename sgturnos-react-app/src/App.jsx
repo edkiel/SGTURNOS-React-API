@@ -1,7 +1,13 @@
 import VacacionesModuleV2 from './components/novedades/VacacionesModuleV2';
 import IncapacidadesModule from './components/novedades/IncapacidadesModule';
-import AprobadorVacaciones from './components/novedades/AprobadorVacaciones';
+import PermisosModule from './components/novedades/PermisosModule';
+import CambiosTurnosModule from './components/novedades/CambiosTurnosModule';
+import CalamidadModule from './components/novedades/CalamidadModule';
 import AdminNovedades from './components/novedades/AdminNovedades';
+import SelectorNovedades from './components/novedades/SelectorNovedades';
+import JefeNovedadesRevisor from './components/novedades/JefeNovedadesRevisor';
+import OperacionesNovedadesRevisor from './components/novedades/OperacionesNovedadesRevisor';
+import RRHHNovedadesRevisor from './components/novedades/RRHHNovedadesRevisor';
 import JefeInmediatoRevisor from './components/mallas/JefeInmediatoRevisor';
 import RecursosHumanosRevisor from './components/mallas/RecursosHumanosRevisor';
 import AlertasMalla from './components/mallas/AlertasMalla';
@@ -46,23 +52,23 @@ const LoginForm = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="relative w-full max-w-lg p-10 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl transition-all duration-500 transform hover:scale-105">
+    <div className="relative w-full max-w-sm p-5 sm:p-6 bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-xl shadow-2xl">
       {/* Titulos y subtitulos anadidos */}
-      <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-2">Sistema de Gestion de Turnos</h1>
-      <h2 className="text-xl font-medium text-center text-gray-700 mb-8">SGTurnos</h2>
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-900 mb-1 leading-tight">Sistema de Gestion de Turnos</h1>
+      <h2 className="text-base font-medium text-center text-gray-700 mb-3">SGTurnos</h2>
 
       <img
         src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png"
         alt="Logo de la aplicacion"
-        className="h-40 mx-auto mb-8 animate-pulse-slow"
+        className="h-16 sm:h-20 mx-auto mb-4"
       />
-      <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Iniciar Sesion</h3>
+      <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-4">Iniciar Sesion</h3>
       {error && <p className="text-red-500 text-center mb-4 font-semibold">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-gray-700 text-base font-bold mb-2">Correo:</label>
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Correo:</label>
           <input
-            className="shadow-inner appearance-none border-2 border-gray-300 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 transform hover:scale-105"
+            className="shadow-inner appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -70,9 +76,9 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <div>
-          <label className="block text-gray-700 text-base font-bold mb-2">Contrasena:</label>
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Contrasena:</label>
           <input
-            className="shadow-inner appearance-none border-2 border-gray-300 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 transform hover:scale-105"
+            className="shadow-inner appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -80,7 +86,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <button
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform hover:scale-105 shadow-xl"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 rounded-lg focus:outline-none focus:ring-3 focus:ring-blue-300 w-full shadow-lg"
           type="submit"
         >
           Entrar
@@ -150,34 +156,16 @@ const Dashboard = ({ user, onLogout }) => {
         return <TurnosModule user={user} />;
       case 'news':
         if (isAdmin) {
-          return <AdminNovedades usuarioAdminId={user?.idUsuario} />;
+          return <AdminNovedades usuarioAdminId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRol={user?.rol?.rol} />;
         }
 
         return (
-          <div className="space-y-6">
-            {/* Tabs para módulos de novedades */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-wrap gap-2">
-              <button
-                onClick={() => setNovedadesTab('vacaciones')}
-                className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-                  novedadesTab === 'vacaciones'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Vacaciones
-              </button>
-              <button
-                onClick={() => setNovedadesTab('incapacidades')}
-                className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-                  novedadesTab === 'incapacidades'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Incapacidades
-              </button>
-            </div>
+          <div className="space-y-8">
+            {/* Selector elegante de novedades */}
+            <SelectorNovedades 
+              onSelect={setNovedadesTab}
+              selectedTab={novedadesTab}
+            />
 
             {/* Contenido según tab seleccionado */}
             {novedadesTab === 'vacaciones' && (
@@ -186,12 +174,25 @@ const Dashboard = ({ user, onLogout }) => {
             {novedadesTab === 'incapacidades' && (
               <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
             )}
+            {novedadesTab === 'permisos' && (
+              <PermisosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+            )}
+            {novedadesTab === 'cambios' && (
+              <CambiosTurnosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+            )}
+            {novedadesTab === 'calamidad' && (
+              <CalamidadModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+            )}
           </div>
         );
-      case 'approvals':
-        return <AprobadorVacaciones usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
       case 'jefe-revisor':
         return <JefeInmediatoRevisor usuarioId={user?.idUsuario} />;
+      case 'jefe-novedades':
+        return <JefeNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
+      case 'operaciones-novedades':
+        return <OperacionesNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
+      case 'rrhh-novedades':
+        return <RRHHNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
       case 'rrhh-revisor':
         return <RecursosHumanosRevisor usuarioId={user?.idUsuario} />;
       case 'other':
@@ -275,7 +276,7 @@ const Dashboard = ({ user, onLogout }) => {
             <li>
               <button
                 onClick={() => setExpandNovedades(!expandNovedades)}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 flex justify-between items-center ${activeTab === 'news' || activeTab === 'approvals' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 flex justify-between items-center ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
                 <span>Gestión de Novedades</span>
                 <span className={`transition-transform duration-200 ${expandNovedades ? 'rotate-180' : ''}`}>▼</span>
@@ -288,12 +289,31 @@ const Dashboard = ({ user, onLogout }) => {
                   >
                     📋 Solicitar Novedad
                   </button>
-                  <button
-                    onClick={() => { setActiveTab('approvals'); setExpandNovedades(false); }}
-                    className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'approvals' ? 'bg-purple-500 text-white' : 'hover:bg-gray-700'}`}
-                  >
-                    ✅ Aprobaciones de Vacaciones
-                  </button>
+                  {/* Nuevos botones de aprobación por rol */}
+                  {user?.rol?.rol === 'Jefe Inmediato' && (
+                    <button
+                      onClick={() => { setActiveTab('jefe-novedades'); setExpandNovedades(false); }}
+                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'jefe-novedades' ? 'bg-indigo-500 text-white' : 'hover:bg-gray-700'}`}
+                    >
+                      👔 Aprobar como Jefe
+                    </button>
+                  )}
+                  {user?.rol?.rol === 'Operaciones Clínicas' && (
+                    <button
+                      onClick={() => { setActiveTab('operaciones-novedades'); setExpandNovedades(false); }}
+                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'operaciones-novedades' ? 'bg-cyan-500 text-white' : 'hover:bg-gray-700'}`}
+                    >
+                      🏥 Aprobar como Operaciones
+                    </button>
+                  )}
+                  {user?.rol?.rol === 'Recursos Humanos' && (
+                    <button
+                      onClick={() => { setActiveTab('rrhh-novedades'); setExpandNovedades(false); }}
+                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'rrhh-novedades' ? 'bg-emerald-500 text-white' : 'hover:bg-gray-700'}`}
+                    >
+                      💼 Aprobar como RRHH
+                    </button>
+                  )}
                 </div>
               )}
             </li>
@@ -358,8 +378,10 @@ const Dashboard = ({ user, onLogout }) => {
       </aside>
 
       {/* Contenido principal */}
-      <main className="flex-1 overflow-y-auto p-8">
-        {renderContent()}
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex justify-center">
+        <div className="w-full" style={{ maxWidth: '1400px' }}>
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

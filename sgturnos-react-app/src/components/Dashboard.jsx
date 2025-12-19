@@ -53,7 +53,7 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="w-full max-w-xl p-8 bg-white rounded-xl shadow-lg relative">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg relative" style={{ maxWidth: '1400px' }}>
       <button
         onClick={onLogout}
         className="absolute top-4 right-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl focus:outline-none focus:shadow-outline"

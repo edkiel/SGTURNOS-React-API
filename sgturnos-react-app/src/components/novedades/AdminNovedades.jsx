@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { api, API_BASE_URL } from '../../api';
+import AprobadorVacaciones from './AprobadorVacaciones';
+import AprobadorPermisos from './AprobadorPermisos';
+import AdminAprobadorCambios from './AdminAprobadorCambios';
 
 /**
  * Componente para que administradores aprueben o rechacen novedades
  */
-const AdminNovedades = ({ usuarioAdminId }) => {
+const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
+  const [activeTab, setActiveTab] = useState('vacaciones'); // vacaciones, permisos, cambios
   const [novedades, setNovedades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('todas'); // todas, pendientes, aprobadas, rechazadas
@@ -14,6 +18,9 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterTipo, setFilterTipo] = useState('todos'); // todos, vacaciones, incapacidades, etc.
+
+  // Rol administrativo para aprobar Cambios de Turno
+  const [rolCambios, setRolCambios] = useState('jefe'); // 'jefe' | 'operaciones' | 'rrhh'
 
   const [tipos, setTipos] = useState([]);
 
@@ -117,15 +124,85 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   });
 
   return (
-    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Gestión de Novedades</h1>
-          <p className="text-gray-600 mt-2">Aprueba o rechaza solicitudes de personal</p>
+          <h1 className="text-3xl font-bold text-gray-800">👨‍💼 Gestión de Aprobaciones de Novedades</h1>
+          <p className="text-gray-600 mt-2">Revisa y aprueba solicitudes de personal según tu rol administrativo</p>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* Tabs de navegación */}
+        <div className="mb-8 flex gap-4 bg-white rounded-lg shadow-md p-2">
+          <button
+            onClick={() => setActiveTab('vacaciones')}
+            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
+              activeTab === 'vacaciones'
+                ? 'bg-purple-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📅 Aprobación de Vacaciones
+          </button>
+          <button
+            onClick={() => setActiveTab('permisos')}
+            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
+              activeTab === 'permisos'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            🔐 Aprobación de Permisos
+          </button>
+          <button
+            onClick={() => setActiveTab('cambios')}
+            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
+              activeTab === 'cambios'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            🕒 Aprobación de Cambios de Turno
+          </button>
+        </div>
+
+        {/* Contenido según tab activo */}
+        {activeTab === 'vacaciones' && (
+          <AprobadorVacaciones usuarioId={usuarioAdminId} userName={userName} tipoAprobador={userRol} />
+        )}
+        {activeTab === 'permisos' && (
+          <AprobadorPermisos usuarioId={usuarioAdminId} userName={userName} tipoAprobador={userRol} />
+        )}
+        {activeTab === 'cambios' && (
+          <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Selecciona tu rol de aprobación</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRolCambios('jefe')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'jefe' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  👔 Jefe Inmediato
+                </button>
+                <button
+                  onClick={() => setRolCambios('operaciones')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'operaciones' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  🏥 Operaciones Clínicas
+                </button>
+                <button
+                  onClick={() => setRolCambios('rrhh')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'rrhh' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  👥 Recursos Humanos
+                </button>
+              </div>
+            </div>
+
+            <AdminAprobadorCambios usuarioId={usuarioAdminId} userName={userName} rolAdmin={rolCambios} />
+          </div>
+        )}
+
+        {/* Mensajes de estado - REMOVIDOS porque ahora están en los componentes específicos */}
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
             {error}
@@ -322,9 +399,10 @@ const AdminNovedades = ({ usuarioAdminId }) => {
             ))
           )}
         </div>
-      </div>
 
       {/* Modal para rechazar */}
+
+        {/* Modal para rechazar */}
       {showRejectModal && selectedNovedad && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import CrearUsuarioCompleto from './CrearUsuarioCompleto';
 
@@ -13,6 +13,14 @@ const UserList = () => {
   const [showCrearAdmin, setShowCrearAdmin] = useState(false);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [isAdminUser, setIsAdminUser] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const showToast = (message, type = 'success') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 4200);
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -93,15 +101,19 @@ const UserList = () => {
     cargarRoles();
   }, []);
 
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+
   const handleDelete = async (userId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
         await api.delete(`/usuarios/${userId}`);
         fetchUsers(); // Recargar la lista después de eliminar
-        alert('Usuario eliminado correctamente');
+        showToast('Usuario eliminado. La lista ya está al día.');
       } catch (err) {
         console.error('Error al eliminar usuario:', err);
-        alert('Error al eliminar el usuario');
+        showToast('No pudimos eliminar al usuario. Verifica tu conexión o permisos.', 'error');
       }
     }
   };
@@ -119,10 +131,10 @@ const UserList = () => {
       await api.put(`/usuarios/update/${editingUser.idUsuario}`, editingUser);
       setEditingUser(null);
       fetchUsers(); // Recargar la lista después de actualizar
-      alert('Usuario actualizado correctamente');
+      showToast('Perfil actualizado con éxito.');
     } catch (err) {
       console.error('Error al actualizar usuario:', err);
-      alert('Error al actualizar el usuario');
+      showToast('No pudimos actualizar el perfil. Intenta nuevamente.', 'error');
     }
   };
 
@@ -135,7 +147,40 @@ const UserList = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full mx-auto p-4 sm:p-5" style={{ maxWidth: '1000px' }}>
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 max-w-xs rounded-lg shadow-xl border border-opacity-60 px-4 py-3 transition-all duration-300 backdrop-blur-sm ${
+            toast.type === 'error'
+              ? 'bg-red-50/90 border-red-200 text-red-900'
+              : 'bg-green-50/90 border-green-200 text-green-900'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                toast.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+              }`}
+            >
+              {toast.type === 'error' ? '!' : 'OK'}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold uppercase tracking-wide">
+                {toast.type === 'error' ? 'Error' : 'Éxito'}
+              </div>
+              <div className="text-sm leading-snug mt-1">{toast.message}</div>
+            </div>
+            <button
+              type="button"
+              aria-label="Cerrar notificación"
+              onClick={() => setToast(null)}
+              className="ml-2 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Formulario para usuarios normales */}
       {showCrearUsuario && (
         <div className="mb-6 p-4 bg-white rounded-lg shadow-lg border-2 border-blue-200">
@@ -194,23 +239,20 @@ const UserList = () => {
             <option value="id">Id</option>
             <option value="rol">Rol</option>
             <option value="correo">Correo</option>
-            <option value="usuario">Usuario</option>
           </select>
           <input
             type="text"
             aria-label="Buscar usuarios"
             placeholder={
               searchField === 'all'
-                ? 'Buscar por nombre, correo, rol, id o usuario...'
+                ? 'Buscar por nombre, correo, rol o id...'
                 : searchField === 'name'
                 ? 'Buscar por nombre...'
                 : searchField === 'id'
                 ? 'Buscar por id...'
                 : searchField === 'rol'
                 ? 'Buscar por rol...'
-                : searchField === 'correo'
-                ? 'Buscar por correo...'
-                : 'Buscar por usuario...'
+                : 'Buscar por correo...'
             }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
