@@ -124,6 +124,16 @@ public class UserController {
         return ResponseEntity.ok("Usuario eliminado exitosamente!");
     }
 
+    // Endpoint REST estándar para eliminar usuario (DELETE /api/usuarios/{id})
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUserStandard(@PathVariable Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            return ResponseEntity.badRequest().body("Usuario no encontrado");
+        }
+        usuarioRepository.deleteById(id);
+        return ResponseEntity.ok("Usuario eliminado exitosamente!");
+    }
+
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {
         try {
