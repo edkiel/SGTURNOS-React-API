@@ -14,6 +14,7 @@ const UserList = () => {
   const [availableRoles, setAvailableRoles] = useState([]);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [toast, setToast] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const toastTimer = useRef(null);
 
   const showToast = (message, type = 'success') => {
@@ -105,16 +106,21 @@ const UserList = () => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
-  const handleDelete = async (userId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      try {
-        await api.delete(`/usuarios/${userId}`);
-        fetchUsers(); // Recargar la lista después de eliminar
-        showToast('Usuario eliminado. La lista ya está al día.');
-      } catch (err) {
-        console.error('Error al eliminar usuario:', err);
-        showToast('No pudimos eliminar al usuario. Verifica tu conexión o permisos.', 'error');
-      }
+  const handleDelete = (user) => {
+    setConfirmDelete(user);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!confirmDelete) return;
+    try {
+      await api.delete(`/usuarios/${confirmDelete.idUsuario}`);
+      setConfirmDelete(null);
+      fetchUsers();
+      showToast('Usuario eliminado. La lista ya está al día.');
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err);
+      showToast('No pudimos eliminar al usuario. Verifica tu conexión o permisos.', 'error');
+      setConfirmDelete(null);
     }
   };
 
@@ -146,11 +152,53 @@ const UserList = () => {
     return <div className="text-red-500 text-center">{error}</div>;
   }
 
+  // Totales por rol para tarjetas resumen
+  const roleCounts = users.reduce((acc, user) => {
+    const roleNameRaw = (user.rol?.rol || user.idRol || 'SIN ROL').toString();
+    const key = roleNameRaw.trim() === '' ? 'SIN ROL' : roleNameRaw.toUpperCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const roleEntries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]);
+
   return (
-    <div className="w-full mx-auto p-4 sm:p-5" style={{ maxWidth: '1000px' }}>
+    <div className="w-full mx-auto p-4 sm:p-5" style={{ maxWidth: '1400px' }}>
+      {/* Modal de confirmación de eliminación */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-fadeIn">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-red-100">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Confirmar Eliminación</h3>
+            <p className="text-center text-gray-600 mb-6">
+              ¿Estás seguro de que deseas eliminar al usuario <span className="font-semibold text-gray-900">{confirmDelete.primerNombre} {confirmDelete.primerApellido}</span>?
+              <br />
+              <span className="text-sm text-red-600 mt-2 block">Esta acción no se puede deshacer.</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div
-          className={`fixed top-6 right-6 max-w-xs rounded-lg shadow-xl border border-opacity-60 px-4 py-3 transition-all duration-300 backdrop-blur-sm ${
+          className={`fixed top-6 right-6 max-w-xs rounded-lg shadow-xl border border-opacity-60 px-4 py-3 transition-all duration-300 backdrop-blur-sm z-40 ${
             toast.type === 'error'
               ? 'bg-red-50/90 border-red-200 text-red-900'
               : 'bg-green-50/90 border-green-200 text-green-900'
@@ -181,6 +229,24 @@ const UserList = () => {
           </div>
         </div>
       )}
+
+      {/* Tarjetas de totales por rol */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-5">
+        {roleEntries.map(([rol, total]) => (
+          <div
+            key={rol}
+            className="flex items-center gap-3 p-4 rounded-lg border shadow-sm bg-white"
+          >
+            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+              👥
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-semibold">{rol}</div>
+              <div className="text-xl font-bold text-gray-800">{total} usuario{total === 1 ? '' : 's'}</div>
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Formulario para usuarios normales */}
       {showCrearUsuario && (
         <div className="mb-6 p-4 bg-white rounded-lg shadow-lg border-2 border-blue-200">
@@ -419,7 +485,7 @@ const UserList = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -457,19 +523,21 @@ const UserList = () => {
                   <td className="px-6 py-4 whitespace-nowrap">{user.idUsuario}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{user.correo}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{(user.rol?.rol || user.idRol || '').toString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.idUsuario)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
+                <td className="px-6 py-4 whitespace-nowrap w-32 text-center">
+                  <span className="inline-flex items-center gap-3 justify-center">
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Eliminar
+                    </button>
+                  </span>
                 </td>
               </tr>
             ))}
