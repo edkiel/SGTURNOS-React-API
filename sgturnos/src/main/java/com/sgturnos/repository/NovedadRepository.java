@@ -30,4 +30,19 @@ public interface NovedadRepository extends JpaRepository<Novedad, Long> {
      * Obtiene todas las novedades pendientes por aprobar
      */
     List<Novedad> findByEstadoOrderByFechaSolicitudAsc(String estado);
+
+    /**
+     * Obtiene novedades pendientes de aprobación por Jefe
+     */
+    List<Novedad> findByAprobacionJefeAndEstado(Boolean aprobacionJefe, String estado);
+
+    /**
+     * Obtiene novedades pendientes de aprobación por Operaciones
+     */
+    List<Novedad> findByAprobacionJefeTrueAndAprobacionOperacionesFalseAndEstado(String estado);
+
+    /**
+     * Obtiene novedades pendientes de aprobación por RRHH
+     */
+    List<Novedad> findByAprobacionJefeTrueAndAprobacionOperacionesTrueAndAprobacionRrhhFalseAndEstado(String estado);
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/api/usuarios")
 public class UserController {
 
@@ -37,6 +38,23 @@ public class UserController {
         return usuarioRepository.findAll();
     }
 
+    /**
+     * Listar usuarios por nombre de rol (columna 'rol' en tabla rol) o por ID de rol
+     * GET /api/usuarios/por-rol?rol=ADMINISTRADOR
+     * GET /api/usuarios/por-rol?idRol=adm05
+     */
+    @GetMapping("/por-rol")
+    public List<Usuario> getUsuariosPorRol(
+            @RequestParam(value = "rol", required = false) String rolNombre,
+            @RequestParam(value = "idRol", required = false) String idRol
+    ) {
+        if (idRol != null && !idRol.isBlank()) {
+            return usuarioRepository.findAllByRol_IdRol(idRol);
+        }
+        String nombre = (rolNombre == null || rolNombre.isBlank()) ? "ADMINISTRADOR" : rolNombre.trim();
+        return usuarioRepository.findAllByRol_RolIgnoreCase(nombre);
+    }
+
     @PutMapping("/update/{id}")
     public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody RegistroRequest registroRequest) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -52,8 +70,44 @@ public class UserController {
             usuario.setContrasena(passwordEncoder.encode(registroRequest.getContrasena()));
         }
 
-        Rol rol = rolRepository.findById(registroRequest.getIdRol())
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + registroRequest.getIdRol()));
+        // Resolver rol de forma robusta: aceptar ID (id_rol) o nombre (columna 'rol')
+        String solicitado = registroRequest.getIdRol();
+        if (solicitado == null || solicitado.trim().isEmpty()) {
+            solicitado = usuario.getRol() != null ? usuario.getRol().getRol() : "AUXILIAR";
+        }
+        String originalSolicitado = solicitado;
+        String normalizado = solicitado.trim().toUpperCase();
+
+        switch (normalizado) {
+            case "USUARIO":
+            case "AUX":
+            case "AUXILIAR":
+                normalizado = "AUXILIAR"; break;
+            case "ADMIN":
+            case "ADMINISTRADOR":
+                normalizado = "ADMINISTRADOR"; break;
+            case "MEDICO":
+                normalizado = "MEDICO"; break;
+            case "ENFERMERO":
+                normalizado = "ENFERMERO"; break;
+            case "TERAPEUTA":
+            case "TERAPIA":
+                normalizado = "TERAPIA"; break;
+            default:
+                normalizado = solicitado.trim();
+        }
+
+        Rol rol = null;
+        try {
+            rol = rolRepository.findById(normalizado).orElse(null);
+        } catch (Exception ignored) {}
+        if (rol == null) {
+            var maybeRol = rolRepository.findByRol(normalizado);
+            if (maybeRol.isEmpty()) {
+                return ResponseEntity.badRequest().body("Rol no encontrado: " + originalSolicitado);
+            }
+            rol = maybeRol.get();
+        }
         usuario.setRol(rol);
 
         usuarioRepository.save(usuario);

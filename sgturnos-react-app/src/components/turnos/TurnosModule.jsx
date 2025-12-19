@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import TurnosGrid from './TurnosGrid';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
+import PageHeader from '../common/PageHeader';
 
 // months list removed (we use input type="month")
 
@@ -14,6 +15,15 @@ const TurnosModule = ({ user }) => {
   const [gridData, setGridData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(true);
+
+  const getRoleLabel = () => {
+    if (!user || !user.rol) return '';
+    const roleId = (user.rol.idRol || user.rol.rol || '').toString().toLowerCase();
+    const map = { aux01: 'Auxiliar', enf02: 'Enfermero', med03: 'Médico', ter04: 'Terapeuta', adm: 'Administrador' };
+    if (map[roleId]) return map[roleId];
+    if (roleId.includes('admin')) return 'Administrador';
+    return user.rol.rol || user.rol.idRol || '';
+  };
 
   // fetch roles from backend if available, but only keep the allowed ones
   React.useEffect(() => {
@@ -150,8 +160,13 @@ const TurnosModule = ({ user }) => {
   
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">Planificación de Turnos</h2>
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '1400px' }}>
+      <PageHeader
+        title="Planificación de Turnos"
+        subtitle="Genera, revisa y publica las mallas de cada rol"
+        userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
+        roleLabel={getRoleLabel()}
+      />
 
       {/* Role buttons moved to Inicio (PersonalMalla) per UX request */}
 

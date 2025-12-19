@@ -30,11 +30,11 @@
       "JEF_needDay" : 2,
       "JEF_needNight" : 2,
       "JEF_shortage" : false,
-      "AUX_pool" : 41,
+      "AUX_pool" : 43,
       "AUX_needDay" : 8,
       "AUX_needNight" : 8,
       "AUX_shortage" : false,
-      "TER_pool" : 12,
+      "TER_pool" : 13,
       "TER_needDay" : 2,
       "TER_needNight" : 2,
       "TER_shortage" : false

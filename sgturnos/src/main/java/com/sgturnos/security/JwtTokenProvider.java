@@ -38,8 +38,15 @@ public class JwtTokenProvider {
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationInMs);
 
+        // Extraer el rol del usuario autenticado
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(auth -> auth.getAuthority())
+                .orElse("Usuario");
+
         return Jwts.builder()
                 .setSubject(username)
+                .claim("rol", role)
                 .setIssuedAt(new Date())
                 .setExpiration(expireDate)
                 .signWith(jwtSecret)

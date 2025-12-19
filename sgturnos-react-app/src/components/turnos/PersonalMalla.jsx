@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import TurnosGrid from './TurnosGrid';
+import PageHeader from '../common/PageHeader';
 
 const PersonalMalla = ({ user }) => {
   const [malla, setMalla] = useState(null);
@@ -89,22 +90,34 @@ const PersonalMalla = ({ user }) => {
   if (!malla || malla.length === 0) return <div className="bg-white p-4 rounded-md shadow">No hay malla generada para tu rol.</div>;
 
   return (
-    <div className="bg-white p-4 rounded-md shadow">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-bold">
-          {isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : `Malla de turno - ${getRoleName()}`}
-        </h3>
-        {isOfficial && <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Oficial</span>}
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-md shadow" style={{ maxWidth: '1400px' }}>
+      <PageHeader
+        title="Consultar mi malla de turno"
+        subtitle="Visualiza tu malla publicada y descárgala cuando la necesites"
+        userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
+        roleLabel={getRoleName()}
+      />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">📅</span>
+          <div>
+            <h3 className="font-bold text-xl text-gray-800">
+              {isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : `Malla de turno - ${getRoleName()}`}
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">Semana 1 de 7</p>
+          </div>
+        </div>
+        {isOfficial && <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold px-4 py-2 rounded-full shadow-md text-sm flex items-center gap-1"><span>✓</span> Oficial</span>}
       </div>
 
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
         {/* Botones de roles solo visibles para administrador */}
         {isAdmin && (
           <div className="flex items-center gap-2">
-            <button className="bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded" onClick={async () => await loadPublished('aux01')}>AUXILIARES</button>
-            <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-1 rounded" onClick={async () => await loadPublished('enf02')}>ENFERMEROS</button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded" onClick={async () => await loadPublished('med03')}>MEDICOS</button>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1 rounded" onClick={async () => await loadPublished('ter04')}>TERAPEUTAS</button>
+            <button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('aux01')}>🔧 AUXILIARES</button>
+            <button className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('enf02')}>💉 ENFERMEROS</button>
+            <button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('med03')}>🏥 MEDICOS</button>
+            <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('ter04')}>✨ TERAPEUTAS</button>
           </div>
         )}
         {/* Espaciador si no es admin */}
@@ -112,7 +125,7 @@ const PersonalMalla = ({ user }) => {
 
         <div className="flex items-center gap-2">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1"
             onClick={() => exportGridToExcel(malla, `malla_${new Date().toISOString().slice(0,7)}.xlsx`, {
               excludeColumns: [
                 'MED_min','MED_max','MED_avg','MED_std','JEF_min','JEF_max','JEF_avg','JEF_std',
@@ -122,11 +135,12 @@ const PersonalMalla = ({ user }) => {
               ]
             })}
           >
+            <span>📊</span>
             Exportar XLSX
           </button>
 
           <button
-            className="bg-gray-600 hover:bg-gray-700 text-white text-sm px-3 py-1 rounded"
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1"
             onClick={async () => {
               try {
                 // Export the visible malla (wrap TurnosGrid in container with id 'personal-malla-table')
@@ -141,12 +155,23 @@ const PersonalMalla = ({ user }) => {
               }
             }}
           >
+            <span>📄</span>
             Exportar PDF
           </button>
         </div>
       </div>
 
-      <div>
+      {/* Marco elegante para la malla */}
+      <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-2xl border-2 border-indigo-200 shadow-2xl overflow-hidden">
+        {/* Encabezado decorativo del marco */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-4 flex items-center gap-3">
+          <span className="text-2xl animate-pulse">📋</span>
+          <div className="text-white">
+            <h4 className="font-bold text-lg">Visualización de Malla de Turno</h4>
+            <p className="text-indigo-100 text-xs mt-1">Calendario de turnos publicado para {getRoleName()}</p>
+          </div>
+        </div>
+
         {/* Hidden source for PDF generation (TurnosGrid must be present in DOM for html2canvas) */}
         {hasDayColumns && (
           <div id="personal-malla-table-hidden" style={{ position: 'fixed', left: '-10000px', top: 0, visibility: 'hidden' }}>
@@ -155,7 +180,28 @@ const PersonalMalla = ({ user }) => {
         )}
 
         {/* Visible grid view (TurnosGrid) for conventional users - always show calendar/week cards */}
-        <div id="personal-malla-table" className="mt-3">
+        <div id="personal-malla-table" className="p-6 bg-white">
+          {/* Indicadores de turno */}
+          <div className="mb-4 flex gap-4 flex-wrap justify-center bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-blue-500 rounded-md shadow-md"></span>
+              <span className="text-sm text-gray-700 font-semibold">Turno Diurno</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-indigo-800 rounded-md shadow-md"></span>
+              <span className="text-sm text-gray-700 font-semibold">Turno Nocturno</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-emerald-500 rounded-md shadow-md"></span>
+              <span className="text-sm text-gray-700 font-semibold">Disponible</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-gray-300 rounded-md shadow-md"></span>
+              <span className="text-sm text-gray-700 font-semibold">Descanso</span>
+            </div>
+          </div>
+
+          {/* Grid de turnos */}
           {/* Always render TurnosGrid for day-column data */}
           {hasDayColumns ? (
             <>
@@ -186,6 +232,16 @@ const PersonalMalla = ({ user }) => {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Pie de página con estadísticas */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-t border-indigo-200 flex justify-between items-center">
+          <div className="text-xs text-gray-600">
+            <span className="font-semibold text-indigo-600">Total de días:</span> {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} días
+          </div>
+          <div className="text-xs text-gray-500">
+            Última actualización: {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
         </div>
       </div>
     </div>

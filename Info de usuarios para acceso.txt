@@ -22,6 +22,258 @@ TERAPEUTA
 
 44455566	Paula Gabriela	Molina Terrence	TERAPIA
 usuario:		paulamolina@paliacare.com
-pass:			molina5566
+pasos:			molina5566
 
 
+
+
+
+
+
+
+
+
+
+
+
+ADMINISTRADOR:
+958287755	Gabriel Gael	Garcia Marquez	ADMINISTRADOR	
+usuario:		gabrielgarcia@paliacare.com
+pass:			garcia7755
+
+
+
+
+camila fernanda zuluaga pombo	
+camilazuluaga@paliacare.com
+zuluaga9988
+
+
+TERAPIA
+Veronica Luciana Lara Carranza	11122	veeronicalara@paliacare.com	TERAPIA	_
+
+
+Andres Felipe Herrera Potosi	11122233	andresherrera@paliacare.com	TERAPIA	_
+
+
+Manuel Ethan Ochoa Medrano	33344455	manuelochoa@paliacare.com	TERAPIA	_
+
+
+Paula Gabriela Molina Terrence	44455566	paulamolina@paliacare.com	TERAPIA	_
+
+
+Claudia Marcela Quintana Fajardo	66677788	claudiaquintana@paliacare.com	TERAPIA	_
+
+
+Ricardo Hasam Peña Gareca	77788899	ricardopena@paliacare.com	TERAPIA	_
+
+
+Esteban Pablo Salinas Morgan	99900011	estebansalinas@paliacare.com	TERAPIA	_
+
+
+Genny Carolina Murcia Vargas	110681104	gennymurcia@paliacare.com	TERAPIA	_
+
+
+Angelica Milena Prada Cañón	1103103101	angelicaprada@paliacare.com	TERAPIA	_
+
+
+Julia Fernanda Araujo Henao	1110110113	juliaaraujo@paliacare.com	TERAPIA	_
+
+
+Marcela Panqueva Rios	1110110121	marcelapanqueva@paliacare.com	TERAPIA	_
+
+
+Coni luz Camelo Frias	6546341122	conicamelo@paliacare.com	TERAPIA	_
+
+
+Aldebaran Tauro kido	13212134356	aldebarandetauro@paliacare.com	TERAPIA	_
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Sofia Hernandez	66778899	sofiahernandez@paliacare.com	MEDICO	_
+
+
+Maria Lopez	87654321	marialopez@paliacare.com	MEDICO	_
+
+
+Ana Gomez	99887766	anagomez@paliacare.com	MEDICO	_
+
+
+Mu de Aries kido	123412313	mudearies@paliacare.com	MEDICO	_
+
+
+Ramon Federico Jirafales Barriga	1101246975	ramonjirafales@paliacare.com	MEDICO	_
+
+
+Melissa Andrea Solano Patiño	1102102101	melissasolano@paliacare.com	MEDICO	_
+
+
+Carlos Andrés Rodríguez Ochoa	1105105104	carlosrodriguez@paliacare.com	MEDICO	_
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Rosa Magnolia Jimenez Tafur	10203040	rosajimenez@palicare.com	ENFERMERO	_
+
+
+Oscar Santiago Campos Ovalle	10293847	oscarcampos@paliacare.com	ENFERMERO	_
+
+
+Fernando Luis Luna Rayo	20304050	fernandoluna@paliacare.com	ENFERMERO	_
+
+
+Eduardo Felipe Soto Cardozo	30405060	eduardosoto@paliacare.com	ENFERMERO	_
+
+
+Alberto Emiro Cruz Hunt	40506070	albertocruz@paliacare.com	ENFERMERO	_
+
+
+Lucia Daniela Valdez Florez	56473829	luciavaldez@paliacare.com	ENFERMERO	_
+
+
+Monica Lucia Paredes Camargo	60708090	monicaparedes@paliacare.com	ENFERMERO	_
+
+
+Gabriela Filipa Vega Alarcon	70809010	gabrielavega@paliacare.com	ENFERMERO	_
+
+
+Silvia Maria Rios Patarroyo	80901020	silviarios@paliacare.com	ENFERMERO	_
+
+
+Jenny Andrea Martinez Heredia	1107107107	jennymartinez@paliacare.com	ENFERMERO	_
+
+
+María Camila barajas López	1108108104	mariabarajas@paliacare.com	ENFERMERO	_
+
+
+Armando Stiven Silva Rodríguez	1109109101	armandosilva@paliacare.com	ENFERMERO	_
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Beatriz Ana Mendoza Trump	10439581	beatrizmendoza@paliacare.com	AUXILIAR	_
+
+
+Victor Pablo Guerrero Libano	12233445	victorguerrero@paliacare.com	AUXILIAR	_
+
+
+Pedro camilo Sanchez tolosa	13579246	pedrosanchez@paliacare.com	AUXILIAR	_
+
+
+Isabel Alejandra Muñoz Aguilar	14142135	isabelmunoz@paliacare.com	AUXILIAR	_
+
+
+Miguel Camilo Ruiz Treller	16180339	miguelruiz@paliacare.com	AUXILIAR	_
+
+
+Laura andrea Ramirez valles	24681357	lauraramirez@paliacare.com	AUXILIAR	_
+
+
+Elena sofia Vargas Fox	27182818	elenavargas@paliacare.com	AUXILIAR	_
+
+
+Patricia Nenitza Navarro Palma	29979245	patricianavarro@paliacare.com	AUXILIAR	_
+
+
+Diego David Torres Gomez	31415926	diegotorres@paliacare.com	AUXILIAR	_
+
+
+Teresa Maria Castro Lopez	50288419	teresacastro@paliacare.com	AUXILIAR	_
+
+
+Olga Shakira Espinoza Castrol	55667788	olgaespinoza@paliacare.com	AUXILIAR	_
+
+
+Javier Francisco Moreno Daza	57721566	javiermoreno@paliacare.com	AUXILIAR	_
+
+
+Francisco Javier Romero Caldas	69314718	franciscoromero@palicare.com	AUXILIAR	_
+
+
+Carmen Isabelina Diaz Capera	71828182	carmendiaz@palicare.com	AUXILIAR	_
+
+
+Antonio Jose Ortega Finch	73205080	antonioortega@paliacare.com	AUXILIAR	_
+
+
+Natalia Nikol Flores Catalan	82012513	nataliaflores@paliacare.com	AUXILIAR	_
+
+
+Roberto Carlos Silva Clark	83147098	robertosilva@paliacare.com	AUXILIAR	_
+
+
+Sergio Andres Reyes Segura	95957217	sergioreyes@paliacare.com	AUXILIAR	_
+
+
+Raul Antonio Medina Gutierrez	99001122	raulmedina@paliacare.com	AUXILIAR	_
+
+
+kenshin goku kido himura	123456123	kenshinkido@paliacare.com	AUXILIAR	_
+
+
+Yuliy Paola Daza Oviedo	1101101101	yuliydaza@paliacare.com	AUXILIAR	_
+
+
+Jesús Daniel Beltrán Rodríguez	1104104101	jesusbeltran@paliacare.com	AUXILIAR	_
+
+
+Mónica Patricia Pinilla Castro	1110101110	monicapinilla@paliacare.com	AUXILIAR	_
+
+
+Camila Andrea Vergara Caro	1110110111	camilavergara@paliacare.com	AUXILIAR	_
+
+
+Andrés Felipe Castro Polo	1110110112	andrescastro@paliacare.com	AUXILIAR	_
+
+
+Juana Carolina López Montes	1110110114	juanalopez@paliacare.com	AUXILIAR	_
+
+
+Daniela Carolina Carvajal Rio	1110110115	danielacarvajal@paliacare.com	AUXILIAR	_
+
+
+Verónica Sofia Cantor Jiménez	1110110116	veronicacantor@paliacare.com	AUXILIAR	_
+
+
+Carla Antonia Muñoz Álvarez	1110110117	carlamunoz@paliacare.com	AUXILIAR	_
+
+
+Patricia Paternina	1110110118	patriciapaternina@paliacare.com	AUXILIAR	_
+
+
+Yajaira Paola Rangel Roa	1110110142	yajairarangel@paliacare.com	AUXILIAR	_
+
+
+aioria de leo kido	1434389742	aioriadeleo@paliacare.com	AUXILIAR	_
+
+
+saga de geminis kido	123123456321	sagageminis@paliacare.com	AUXILIAR	_
+
+
+*********************************************************
+*********************************************************
+*********************************************************
+
+
+ADMINISTRADOR_RECURSOS_HUMANOS
+miranda catrina fula cortez	9686711199	
+mirandafula@paliacare.com
+fula1199
+
+	
+ADMINISTRADOR --OPERACIONES_CLINICAS
+Susana cintia Ruiz Cruz	95462288
+susanaruiz@paliacare.com
+ruiz2288
+
+	
+ADMINISTRADOR-- jefe directo
+Dante jose Gebel Urrutia	48273377
+dantegebel@paliacare.com
+gebel3377
+
+
+
+	

@@ -302,4 +302,160 @@ public class NovedadController {
         }
         return base.normalize().toAbsolutePath();
     }
+
+    // ========== ENDPOINTS PARA APROBACIÓN POR NIVELES ==========
+
+    /**
+     * Aprobar novedad por Jefe Inmediato/Directo
+     * POST /api/novedades/aprobar-jefe/{idNovedad}
+     * Body: { idUsuarioJefe }
+     */
+    @PostMapping("/aprobar-jefe/{idNovedad}")
+    public ResponseEntity<?> aprobarPorJefe(
+            @PathVariable Long idNovedad,
+            @RequestBody Map<String, Long> body) {
+        try {
+            Long idUsuarioJefe = body.get("idUsuarioJefe");
+            Novedad aprobada = novedadService.aprobarPorJefe(idNovedad, idUsuarioJefe);
+            
+            if (aprobada == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se pudo aprobar la novedad"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Novedad aprobada por Jefe Inmediato",
+                "idNovedad", aprobada.getIdNovedad(),
+                "aprobacionJefe", aprobada.getAprobacionJefe()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Aprobar novedad por Operaciones Clínicas
+     * POST /api/novedades/aprobar-operaciones/{idNovedad}
+     * Body: { idUsuarioOperaciones }
+     */
+    @PostMapping("/aprobar-operaciones/{idNovedad}")
+    public ResponseEntity<?> aprobarPorOperaciones(
+            @PathVariable Long idNovedad,
+            @RequestBody Map<String, Long> body) {
+        try {
+            Long idUsuarioOperaciones = body.get("idUsuarioOperaciones");
+            Novedad aprobada = novedadService.aprobarPorOperaciones(idNovedad, idUsuarioOperaciones);
+            
+            if (aprobada == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se pudo aprobar la novedad"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Novedad aprobada por Operaciones Clínicas - Alerta de malla generada",
+                "idNovedad", aprobada.getIdNovedad(),
+                "aprobacionOperaciones", aprobada.getAprobacionOperaciones()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Aprobar novedad por Recursos Humanos
+     * POST /api/novedades/aprobar-rrhh/{idNovedad}
+     * Body: { idUsuarioRRHH }
+     */
+    @PostMapping("/aprobar-rrhh/{idNovedad}")
+    public ResponseEntity<?> aprobarPorRRHH(
+            @PathVariable Long idNovedad,
+            @RequestBody Map<String, Long> body) {
+        try {
+            Long idUsuarioRRHH = body.get("idUsuarioRRHH");
+            Novedad aprobada = novedadService.aprobarPorRRHH(idNovedad, idUsuarioRRHH);
+            
+            if (aprobada == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se pudo aprobar la novedad"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Novedad aprobada por RRHH - Proceso completado",
+                "idNovedad", aprobada.getIdNovedad(),
+                "estado", aprobada.getEstado(),
+                "aprobacionRrhh", aprobada.getAprobacionRrhh()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Rechazar novedad en cualquier nivel
+     * POST /api/novedades/rechazar-nivel/{idNovedad}
+     * Body: { idUsuario, motivo, nivel }
+     */
+    @PostMapping("/rechazar-nivel/{idNovedad}")
+    public ResponseEntity<?> rechazarEnNivel(
+            @PathVariable Long idNovedad,
+            @RequestBody Map<String, Object> body) {
+        try {
+            Long idUsuario = Long.valueOf(body.get("idUsuario").toString());
+            String motivo = (String) body.get("motivo");
+            String nivel = (String) body.get("nivel");
+
+            Novedad rechazada = novedadService.rechazarEnNivel(idNovedad, idUsuario, motivo, nivel);
+            
+            if (rechazada == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se pudo rechazar la novedad"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Novedad rechazada por " + nivel,
+                "idNovedad", rechazada.getIdNovedad(),
+                "estado", rechazada.getEstado()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Obtener novedades pendientes de aprobación por Jefe
+     * GET /api/novedades/pendientes-jefe
+     */
+    @GetMapping("/pendientes-jefe")
+    public ResponseEntity<?> obtenerPendientesJefe() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesJefe();
+            return ResponseEntity.ok(novedades);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Obtener novedades pendientes de aprobación por Operaciones
+     * GET /api/novedades/pendientes-operaciones
+     */
+    @GetMapping("/pendientes-operaciones")
+    public ResponseEntity<?> obtenerPendientesOperaciones() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesOperaciones();
+            return ResponseEntity.ok(novedades);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Obtener novedades pendientes de aprobación por RRHH
+     * GET /api/novedades/pendientes-rrhh
+     */
+    @GetMapping("/pendientes-rrhh")
+    public ResponseEntity<?> obtenerPendientesRRHH() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesRRHH();
+            return ResponseEntity.ok(novedades);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

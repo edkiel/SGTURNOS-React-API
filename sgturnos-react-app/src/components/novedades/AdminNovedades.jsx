@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../api';
+import { api, API_BASE_URL } from '../../api';
+import AprobadorVacaciones from './AprobadorVacaciones';
+import AprobadorPermisos from './AprobadorPermisos';
+import AdminAprobadorCambios from './AdminAprobadorCambios';
+import PageHeader from '../common/PageHeader';
 
 /**
  * Componente para que administradores aprueben o rechacen novedades
  */
-const AdminNovedades = ({ usuarioAdminId }) => {
+const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
+  const [activeTab, setActiveTab] = useState('vacaciones'); // vacaciones, permisos, cambios
   const [novedades, setNovedades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('todas'); // todas, pendientes, aprobadas, rechazadas
@@ -15,6 +19,35 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterTipo, setFilterTipo] = useState('todos'); // todos, vacaciones, incapacidades, etc.
+
+  const adminCards = [
+    {
+      id: 'vacaciones',
+      title: 'Aprobación de Vacaciones',
+      description: 'Revisa y valida las solicitudes de vacaciones con sus aprobaciones en cadena.',
+      icon: '🏖️',
+      color: 'from-blue-500 to-indigo-600',
+      matchKey: 'vac'
+    },
+    {
+      id: 'permisos',
+      title: 'Aprobación de Permisos',
+      description: 'Gestiona permisos especiales y licencias solicitadas por el personal.',
+      icon: '✅',
+      color: 'from-emerald-500 to-teal-600',
+      matchKey: 'perm'
+    },
+    {
+      id: 'cambios',
+      title: 'Cambios de Turno',
+      description: 'Coordina el flujo multirrol para autorizar cambios de turno.',
+      icon: '🔄',
+      color: 'from-purple-500 to-fuchsia-600'
+    }
+  ];
+
+  // Rol administrativo para aprobar Cambios de Turno
+  const [rolCambios, setRolCambios] = useState('jefe'); // 'jefe' | 'operaciones' | 'rrhh'
 
   const [tipos, setTipos] = useState([]);
 
@@ -30,13 +63,7 @@ const AdminNovedades = ({ usuarioAdminId }) => {
 
   const cargarTipos = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/novedades/tipos/disponibles`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/novedades/tipos/disponibles`);
       setTipos(response.data);
     } catch (err) {
       console.error('Error cargando tipos:', err);
@@ -46,13 +73,7 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   const cargarNovedades = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/novedades/todas`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/novedades/todas`);
       setNovedades(response.data);
     } catch (err) {
       console.error('Error cargando novedades:', err);
@@ -64,13 +85,9 @@ const AdminNovedades = ({ usuarioAdminId }) => {
 
   const handleAprobar = async (idNovedad) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_BASE_URL}/novedades/aprobar/${idNovedad}`,
-        { idUsuarioAdmin: usuarioAdminId },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      await api.post(
+        `/novedades/aprobar/${idNovedad}`,
+        { idUsuarioAdmin: usuarioAdminId }
       );
       setSuccess('Novedad aprobada exitosamente');
       cargarNovedades();
@@ -88,15 +105,11 @@ const AdminNovedades = ({ usuarioAdminId }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_BASE_URL}/novedades/rechazar/${selectedNovedad.idNovedad}`,
+      await api.post(
+        `/novedades/rechazar/${selectedNovedad.idNovedad}`,
         {
           idUsuarioAdmin: usuarioAdminId,
           motivo: motivoRechazo
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
         }
       );
       setSuccess('Novedad rechazada exitosamente');
@@ -123,6 +136,16 @@ const AdminNovedades = ({ usuarioAdminId }) => {
     }
   };
 
+  const obtenerStatsPorTipo = (matchKey) => {
+    if (!matchKey) return null;
+    const normalizado = (valor) => (valor || '').toString().toLowerCase();
+    const coincidencias = novedades.filter((n) => normalizado(n.tipo?.nombre).includes(matchKey));
+    return {
+      total: coincidencias.length,
+      pendientes: coincidencias.filter((n) => n.estado === 'PENDIENTE').length
+    };
+  };
+
   const novedadesFiltradas = novedades.filter(n => {
     let pasa = true;
 
@@ -138,15 +161,88 @@ const AdminNovedades = ({ usuarioAdminId }) => {
   });
 
   return (
-    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Gestión de Novedades</h1>
-          <p className="text-gray-600 mt-2">Aprueba o rechaza solicitudes de personal</p>
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
+        <PageHeader
+          title="Gestión de Aprobaciones de Novedades"
+          subtitle="Revisa y aprueba solicitudes según tu rol administrativo"
+          userName={userName}
+          roleLabel={userRol || ''}
+        />
+
+        {/* Navegación con icon cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {adminCards.map((card) => {
+            const stats = obtenerStatsPorTipo(card.matchKey);
+            const isActive = activeTab === card.id;
+            return (
+              <button
+                key={card.id}
+                onClick={() => setActiveTab(card.id)}
+                className={`relative overflow-hidden rounded-xl shadow-md transition-all duration-300 text-left border border-white/20 ${
+                  isActive ? 'ring-2 ring-offset-2 ring-purple-300 scale-[1.01]' : 'hover:scale-[1.01] hover:shadow-lg'
+                }`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-90`}></div>
+                <div className="absolute inset-0 bg-white/5"></div>
+                <div className="relative p-6 text-white flex flex-col h-full gap-3 min-h-[200px]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-4xl">{card.icon}</div>
+                    {isActive && <span className="px-3 py-1 text-xs font-semibold bg-white/20 rounded-full">Activo</span>}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold leading-tight">{card.title}</h3>
+                    <p className="text-sm text-white/90 mt-2 leading-relaxed">{card.description}</p>
+                  </div>
+                  {stats && (
+                    <div className="mt-auto flex flex-wrap gap-2 text-xs">
+                      <span className="bg-white/20 px-3 py-1 rounded-full">Pendientes: {stats.pendientes}</span>
+                      <span className="bg-white/10 px-3 py-1 rounded-full">Total: {stats.total}</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Mensajes de estado */}
+        {/* Contenido según tab activo */}
+        {activeTab === 'vacaciones' && (
+          <AprobadorVacaciones usuarioId={usuarioAdminId} userName={userName} tipoAprobador={userRol} />
+        )}
+        {activeTab === 'permisos' && (
+          <AprobadorPermisos usuarioId={usuarioAdminId} userName={userName} tipoAprobador={userRol} />
+        )}
+        {activeTab === 'cambios' && (
+          <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Selecciona tu rol de aprobación</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRolCambios('jefe')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'jefe' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  👔 Jefe Inmediato
+                </button>
+                <button
+                  onClick={() => setRolCambios('operaciones')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'operaciones' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  🏥 Operaciones Clínicas
+                </button>
+                <button
+                  onClick={() => setRolCambios('rrhh')}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${rolCambios === 'rrhh' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  👥 Recursos Humanos
+                </button>
+              </div>
+            </div>
+
+            <AdminAprobadorCambios usuarioId={usuarioAdminId} userName={userName} rolAdmin={rolCambios} />
+          </div>
+        )}
+
+        {/* Mensajes de estado - REMOVIDOS porque ahora están en los componentes específicos */}
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
             {error}
@@ -241,36 +337,54 @@ const AdminNovedades = ({ usuarioAdminId }) => {
                   n.estado === 'PENDIENTE' ? 'border-yellow-500 border-l-4' : 'border-gray-200'
                 }`}
               >
-                <div className="grid grid-cols-3 gap-4 items-center mb-4">
-                  {/* Información principal */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {n.usuario?.nombres} {n.usuario?.apellidos}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  {/* Información del usuario */}
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Usuario</p>
+                    <h3 className="text-lg font-semibold text-gray-800 mt-1">
+                      {n.usuario?.primerNombre} {n.usuario?.primerApellido}
                     </h3>
-                    <p className="text-gray-600 text-sm mt-1">
-                      {n.usuario?.email}
+                    <p className="text-gray-600 text-xs mt-1">
+                      {n.usuario?.correo}
                     </p>
+                    <div className="mt-2">
+                      <span className="inline-block text-blue-600 text-xs font-semibold bg-blue-50 px-2 py-1 rounded">
+                        {n.usuario?.rol?.rol || 'Sin rol'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Tipo y fechas */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Tipo</p>
-                    <p className="text-lg text-gray-800">{n.tipo?.nombre}</p>
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Tipo de Novedad</p>
+                    <p className="text-lg text-gray-800 font-semibold mt-1">{n.tipo?.nombre}</p>
 
                     {n.fechaInicio && n.fechaFin && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        {n.fechaInicio} al {n.fechaFin}
+                      <p className="text-xs text-gray-600 mt-2">
+                        📅 {n.fechaInicio} al {n.fechaFin}
                       </p>
                     )}
                   </div>
 
+                  {/* ID Documento e ID Novedad */}
+                  <div className="col-span-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Datos</p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      <span className="font-semibold">ID Usuario:</span> {n.usuario?.idUsuario}
+                    </p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      <span className="font-semibold">ID Novedad:</span> {n.idNovedad}
+                    </p>
+                  </div>
+
                   {/* Estado y fecha */}
-                  <div className="text-right">
-                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold border ${obtenerEstadoColor(n.estado)}`}>
+                  <div className="col-span-1 text-right">
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-2">Estado</p>
+                    <span className={`inline-block px-3 py-2 rounded-full text-sm font-semibold border ${obtenerEstadoColor(n.estado)}`}>
                       {n.estado}
                     </span>
                     <p className="text-gray-600 text-xs mt-2">
-                      {new Date(n.fechaSolicitud).toLocaleDateString('es-ES')}
+                      🗓️ {new Date(n.fechaSolicitud).toLocaleDateString('es-ES')}
                     </p>
                   </div>
                 </div>
@@ -325,9 +439,10 @@ const AdminNovedades = ({ usuarioAdminId }) => {
             ))
           )}
         </div>
-      </div>
 
       {/* Modal para rechazar */}
+
+        {/* Modal para rechazar */}
       {showRejectModal && selectedNovedad && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">

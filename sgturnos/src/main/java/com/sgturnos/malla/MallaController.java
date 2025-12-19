@@ -87,7 +87,8 @@ public class MallaController {
     public ResponseEntity<?> getPublished(@RequestParam("roleId") String roleId, @RequestParam("month") String month) {
         try {
             java.util.Map<String, Object> info = mallaService.getPublishedInfo(roleId, month);
-            if (info == null) return ResponseEntity.notFound().build();
+            // Si no hay malla publicada, devolver 200 con null en lugar de 404
+            // Esto evita que el frontend lance errores cuando no hay datos
             return ResponseEntity.ok(info);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());

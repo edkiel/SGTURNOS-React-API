@@ -86,6 +86,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // Configura las reglas de autorización
             .authorizeHttpRequests(auth -> auth
+                // Permite todas las solicitudes preflight OPTIONS para CORS
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 // Permite acceso público a las rutas de autenticación y registro
                 .requestMatchers("/api/auth/**").permitAll()
                 // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para production.
@@ -124,12 +126,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite peticiones solo desde el frontend en desarrollo
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-        // Permite métodos HTTP específicos
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Permite encabezados específicos
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // Permite peticiones desde el frontend en desarrollo (localhost) y amplía compatibilidad
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        // Permite todos los métodos HTTP necesarios para preflight y llamadas reales
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // Permite todos los encabezados para evitar fallos de preflight (403)
+        configuration.addAllowedHeader("*");
         // Permite credenciales (cookies, encabezados de autorización)
         configuration.setAllowCredentials(true);
         // Expone el encabezado de autorización al frontend
