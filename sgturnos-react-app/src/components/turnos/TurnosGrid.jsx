@@ -1,6 +1,27 @@
 import React from 'react';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 
+// Función para determinar el color según el tipo de turno
+const getTurnoColorClasses = (turnoValue) => {
+  if (!turnoValue) return { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' };
+  
+  const val = String(turnoValue).toLowerCase().trim();
+  
+  // Mapeo de palabras clave a colores - colores diferenciados para fácil identificación
+  // Día: cubrir "dia", "día" y abreviaturas
+  if (val.includes('diurno') || val.includes('dia') || val.includes('día') || val === 'd' || val === 'd1') return { bg: 'bg-amber-400', text: 'text-gray-900', border: 'border-amber-500' };
+  // Noche: cubrir "noche" y abreviaturas
+  if (val.includes('nocturno') || val.includes('noche') || val === 'n' || val === 'n1') return { bg: 'bg-purple-700', text: 'text-white', border: 'border-purple-800' };
+  if (val.includes('libre')) return { bg: 'bg-emerald-200', text: 'text-emerald-900', border: 'border-emerald-300' };
+  if (val.includes('descanso') || val === 'desc' || val === 'x') return { bg: 'bg-gray-300', text: 'text-gray-700', border: 'border-gray-400' };
+  if (val.includes('posturno') || val.includes('post')) return { bg: 'bg-rose-400', text: 'text-white', border: 'border-rose-500' };
+  if (val.includes('extra')) return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600' };
+  if (val.includes('apoyo') || val.includes('admin') || val === 'adm') return { bg: 'bg-teal-600', text: 'text-white', border: 'border-teal-700' };
+  
+  // Default para valores desconocidos
+  return { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' };
+};
+
 const TurnosGrid = ({ data, month }) => {
   if (!data || data.length === 0) return <p className="text-gray-500">No hay datos. Genera la malla.</p>;
 
@@ -84,11 +105,18 @@ const TurnosGrid = ({ data, month }) => {
                   .map((row) => (
                     <tr key={`${row.id}-w-${wi}`}> 
                       <td className="border p-2 font-medium w-40">{row.name}</td>
-                      {w.map((day, di) => (
-                        <td key={`${row.id}-${wi}-${di}`} className="border p-1 text-center align-top text-sm">
-                          {day ? row[`d${day}`] : ''}
-                        </td>
-                      ))}
+                      {w.map((day, di) => {
+                        const turnoValue = day ? row[`d${day}`] : '';
+                        const colorClasses = getTurnoColorClasses(turnoValue);
+                        return (
+                          <td 
+                            key={`${row.id}-${wi}-${di}`} 
+                            className={`border p-1 text-center align-middle text-sm font-semibold ${colorClasses.bg} ${colorClasses.text} border-2 ${colorClasses.border}`}
+                          >
+                            {turnoValue || ''}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
               </tbody>

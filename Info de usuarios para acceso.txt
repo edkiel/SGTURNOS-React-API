@@ -48,7 +48,7 @@ camila fernanda zuluaga pombo
 camilazuluaga@paliacare.com
 zuluaga9988
 
-
+************************************************************************************************************************************************************************************
 TERAPIA
 Veronica Luciana Lara Carranza	11122	veeronicalara@paliacare.com	TERAPIA	_
 
@@ -78,6 +78,7 @@ Angelica Milena Prada Cañón	1103103101	angelicaprada@paliacare.com	TERAPIA	_
 
 
 Julia Fernanda Araujo Henao	1110110113	juliaaraujo@paliacare.com	TERAPIA	_
+		
 
 
 Marcela Panqueva Rios	1110110121	marcelapanqueva@paliacare.com	TERAPIA	_
@@ -107,6 +108,7 @@ Ramon Federico Jirafales Barriga	1101246975	ramonjirafales@paliacare.com	MEDICO	
 
 
 Melissa Andrea Solano Patiño	1102102101	melissasolano@paliacare.com	MEDICO	_
+	Pass:   solano2101
 
 
 Carlos Andrés Rodríguez Ochoa	1105105104	carlosrodriguez@paliacare.com	MEDICO	_

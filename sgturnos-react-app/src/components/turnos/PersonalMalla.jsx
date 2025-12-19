@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import TurnosGrid from './TurnosGrid';
+import CodigoColoresMalla from './CodigoColoresMalla';
 import PageHeader from '../common/PageHeader';
 
 const PersonalMalla = ({ user }) => {
@@ -143,8 +144,38 @@ const PersonalMalla = ({ user }) => {
             className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1"
             onClick={async () => {
               try {
-                // Export the visible malla (wrap TurnosGrid in container with id 'personal-malla-table')
-                const blob = await exportGridToPdf('personal-malla-table', `malla_${new Date().toISOString().slice(0,7)}.pdf`, { returnBlob: true });
+                // Crear un contenedor temporal que incluya leyenda + malla
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.left = '-10000px';
+                tempContainer.style.top = '0';
+                tempContainer.style.visibility = 'hidden';
+                tempContainer.style.backgroundColor = 'white';
+                tempContainer.style.padding = '20px';
+                
+                // Clonar la leyenda
+                const legendElement = document.querySelector('[class*="mb-4 p-4 rounded-xl border-indigo-100"]');
+                if (legendElement) {
+                  const legendClone = legendElement.cloneNode(true);
+                  tempContainer.appendChild(legendClone);
+                }
+                
+                // Clonar la malla
+                const mallaElement = document.getElementById('personal-malla-table');
+                if (mallaElement) {
+                  const mallaClone = mallaElement.cloneNode(true);
+                  mallaClone.id = 'temp-malla-for-pdf';
+                  tempContainer.appendChild(mallaClone);
+                }
+                
+                document.body.appendChild(tempContainer);
+                
+                // Exportar PDF
+                const blob = await exportGridToPdf('temp-malla-for-pdf', `malla_${new Date().toISOString().slice(0,7)}.pdf`, { returnBlob: true });
+                
+                // Limpiar
+                document.body.removeChild(tempContainer);
+                
                 if (blob) {
                   const url = URL.createObjectURL(blob);
                   window.open(url, '_blank');
@@ -181,25 +212,8 @@ const PersonalMalla = ({ user }) => {
 
         {/* Visible grid view (TurnosGrid) for conventional users - always show calendar/week cards */}
         <div id="personal-malla-table" className="p-6 bg-white">
-          {/* Indicadores de turno */}
-          <div className="mb-4 flex gap-4 flex-wrap justify-center bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-blue-500 rounded-md shadow-md"></span>
-              <span className="text-sm text-gray-700 font-semibold">Turno Diurno</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-indigo-800 rounded-md shadow-md"></span>
-              <span className="text-sm text-gray-700 font-semibold">Turno Nocturno</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-emerald-500 rounded-md shadow-md"></span>
-              <span className="text-sm text-gray-700 font-semibold">Disponible</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-gray-300 rounded-md shadow-md"></span>
-              <span className="text-sm text-gray-700 font-semibold">Descanso</span>
-            </div>
-          </div>
+          {/* Código de colores reutilizable */}
+          <CodigoColoresMalla />
 
           {/* Grid de turnos */}
           {/* Always render TurnosGrid for day-column data */}
