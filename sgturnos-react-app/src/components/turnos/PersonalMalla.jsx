@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import TurnosGrid from './TurnosGrid';
+import PageHeader from '../common/PageHeader';
 
 const PersonalMalla = ({ user }) => {
   const [malla, setMalla] = useState(null);
@@ -90,6 +91,12 @@ const PersonalMalla = ({ user }) => {
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-md shadow" style={{ maxWidth: '1400px' }}>
+      <PageHeader
+        title="Consultar mi malla de turno"
+        subtitle="Visualiza tu malla publicada y descárgala cuando la necesites"
+        userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
+        roleLabel={getRoleName()}
+      />
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-bold">
           {isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : `Malla de turno - ${getRoleName()}`}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
+import PageHeader from '../common/PageHeader';
 
 /**
  * Componente mejorado para solicitudes de vacaciones
  * Incluye selección de aprobadores y visualización del flujo de aprobación
  */
-const VacacionesModuleV2 = ({ usuarioId, userName }) => {
+const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '' }) => {
   const [vacaciones, setVacaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -144,20 +145,12 @@ const VacacionesModuleV2 = ({ usuarioId, userName }) => {
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Gestión de Vacaciones</h1>
-            <p className="text-gray-600 mt-1">Usuario: {userName}</p>
-            <p className="text-sm text-gray-500 mt-1">Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-          >
-            {showForm ? 'Cancelar' : 'Nueva Solicitud'}
-          </button>
-        </div>
+        <PageHeader
+          title="Gestión de Vacaciones"
+          subtitle="Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos"
+          userName={userName}
+          roleLabel={userRole}
+        />
 
         {/* Mensajes */}
         {error && (

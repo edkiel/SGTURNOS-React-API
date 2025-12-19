@@ -3,6 +3,7 @@ import { api, API_BASE_URL } from '../../api';
 import AprobadorVacaciones from './AprobadorVacaciones';
 import AprobadorPermisos from './AprobadorPermisos';
 import AdminAprobadorCambios from './AdminAprobadorCambios';
+import PageHeader from '../common/PageHeader';
 
 /**
  * Componente para que administradores aprueben o rechacen novedades
@@ -18,6 +19,32 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterTipo, setFilterTipo] = useState('todos'); // todos, vacaciones, incapacidades, etc.
+
+  const adminCards = [
+    {
+      id: 'vacaciones',
+      title: 'Aprobación de Vacaciones',
+      description: 'Revisa y valida las solicitudes de vacaciones con sus aprobaciones en cadena.',
+      icon: '🏖️',
+      color: 'from-blue-500 to-indigo-600',
+      matchKey: 'vac'
+    },
+    {
+      id: 'permisos',
+      title: 'Aprobación de Permisos',
+      description: 'Gestiona permisos especiales y licencias solicitadas por el personal.',
+      icon: '✅',
+      color: 'from-emerald-500 to-teal-600',
+      matchKey: 'perm'
+    },
+    {
+      id: 'cambios',
+      title: 'Cambios de Turno',
+      description: 'Coordina el flujo multirrol para autorizar cambios de turno.',
+      icon: '🔄',
+      color: 'from-purple-500 to-fuchsia-600'
+    }
+  ];
 
   // Rol administrativo para aprobar Cambios de Turno
   const [rolCambios, setRolCambios] = useState('jefe'); // 'jefe' | 'operaciones' | 'rrhh'
@@ -109,6 +136,16 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     }
   };
 
+  const obtenerStatsPorTipo = (matchKey) => {
+    if (!matchKey) return null;
+    const normalizado = (valor) => (valor || '').toString().toLowerCase();
+    const coincidencias = novedades.filter((n) => normalizado(n.tipo?.nombre).includes(matchKey));
+    return {
+      total: coincidencias.length,
+      pendientes: coincidencias.filter((n) => n.estado === 'PENDIENTE').length
+    };
+  };
+
   const novedadesFiltradas = novedades.filter(n => {
     let pasa = true;
 
@@ -125,44 +162,47 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">👨‍💼 Gestión de Aprobaciones de Novedades</h1>
-          <p className="text-gray-600 mt-2">Revisa y aprueba solicitudes de personal según tu rol administrativo</p>
-        </div>
+        <PageHeader
+          title="Gestión de Aprobaciones de Novedades"
+          subtitle="Revisa y aprueba solicitudes según tu rol administrativo"
+          userName={userName}
+          roleLabel={userRol || ''}
+        />
 
-        {/* Tabs de navegación */}
-        <div className="mb-8 flex gap-4 bg-white rounded-lg shadow-md p-2">
-          <button
-            onClick={() => setActiveTab('vacaciones')}
-            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
-              activeTab === 'vacaciones'
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            📅 Aprobación de Vacaciones
-          </button>
-          <button
-            onClick={() => setActiveTab('permisos')}
-            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
-              activeTab === 'permisos'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🔐 Aprobación de Permisos
-          </button>
-          <button
-            onClick={() => setActiveTab('cambios')}
-            className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
-              activeTab === 'cambios'
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🕒 Aprobación de Cambios de Turno
-          </button>
+        {/* Navegación con icon cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {adminCards.map((card) => {
+            const stats = obtenerStatsPorTipo(card.matchKey);
+            const isActive = activeTab === card.id;
+            return (
+              <button
+                key={card.id}
+                onClick={() => setActiveTab(card.id)}
+                className={`relative overflow-hidden rounded-xl shadow-md transition-all duration-300 text-left border border-white/20 ${
+                  isActive ? 'ring-2 ring-offset-2 ring-purple-300 scale-[1.01]' : 'hover:scale-[1.01] hover:shadow-lg'
+                }`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-90`}></div>
+                <div className="absolute inset-0 bg-white/5"></div>
+                <div className="relative p-6 text-white flex flex-col h-full gap-3 min-h-[200px]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-4xl">{card.icon}</div>
+                    {isActive && <span className="px-3 py-1 text-xs font-semibold bg-white/20 rounded-full">Activo</span>}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold leading-tight">{card.title}</h3>
+                    <p className="text-sm text-white/90 mt-2 leading-relaxed">{card.description}</p>
+                  </div>
+                  {stats && (
+                    <div className="mt-auto flex flex-wrap gap-2 text-xs">
+                      <span className="bg-white/20 px-3 py-1 rounded-full">Pendientes: {stats.pendientes}</span>
+                      <span className="bg-white/10 px-3 py-1 rounded-full">Total: {stats.total}</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Contenido según tab activo */}

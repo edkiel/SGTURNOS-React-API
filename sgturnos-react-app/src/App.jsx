@@ -105,7 +105,6 @@ const UserManagement = () => {
 const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('home'); // Estado para controlar la pestana activa
   const [novedadesTab, setNovedadesTab] = useState('vacaciones'); // Tab para módulo de novedades
-  const [expandNovedades, setExpandNovedades] = useState(false); // Estado para expandir/contraer submenu de novedades
 
   // Verificar si el usuario es administrador
   const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
@@ -165,11 +164,13 @@ const Dashboard = ({ user, onLogout }) => {
             <SelectorNovedades 
               onSelect={setNovedadesTab}
               selectedTab={novedadesTab}
+              userName={`${user?.primerNombre} ${user?.primerApellido}`}
+              userRole={getRoleName()}
             />
 
             {/* Contenido según tab seleccionado */}
             {novedadesTab === 'vacaciones' && (
-              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRole={getRoleName()} />
             )}
             {novedadesTab === 'incapacidades' && (
               <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
@@ -275,47 +276,11 @@ const Dashboard = ({ user, onLogout }) => {
             </li>
             <li>
               <button
-                onClick={() => setExpandNovedades(!expandNovedades)}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 flex justify-between items-center ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                onClick={() => setActiveTab('news')}
+                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
-                <span>Gestión de Novedades</span>
-                <span className={`transition-transform duration-200 ${expandNovedades ? 'rotate-180' : ''}`}>▼</span>
+                Gestión de Novedades
               </button>
-              {expandNovedades && (
-                <div className="ml-4 mt-2 space-y-2 border-l-2 border-blue-400 pl-2">
-                  <button
-                    onClick={() => { setActiveTab('news'); setExpandNovedades(false); }}
-                    className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'news' ? 'bg-blue-500 text-white' : 'hover:bg-gray-700'}`}
-                  >
-                    📋 Solicitar Novedad
-                  </button>
-                  {/* Nuevos botones de aprobación por rol */}
-                  {user?.rol?.rol === 'Jefe Inmediato' && (
-                    <button
-                      onClick={() => { setActiveTab('jefe-novedades'); setExpandNovedades(false); }}
-                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'jefe-novedades' ? 'bg-indigo-500 text-white' : 'hover:bg-gray-700'}`}
-                    >
-                      👔 Aprobar como Jefe
-                    </button>
-                  )}
-                  {user?.rol?.rol === 'Operaciones Clínicas' && (
-                    <button
-                      onClick={() => { setActiveTab('operaciones-novedades'); setExpandNovedades(false); }}
-                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'operaciones-novedades' ? 'bg-cyan-500 text-white' : 'hover:bg-gray-700'}`}
-                    >
-                      🏥 Aprobar como Operaciones
-                    </button>
-                  )}
-                  {user?.rol?.rol === 'Recursos Humanos' && (
-                    <button
-                      onClick={() => { setActiveTab('rrhh-novedades'); setExpandNovedades(false); }}
-                      className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200 ${activeTab === 'rrhh-novedades' ? 'bg-emerald-500 text-white' : 'hover:bg-gray-700'}`}
-                    >
-                      💼 Aprobar como RRHH
-                    </button>
-                  )}
-                </div>
-              )}
             </li>
             
             {/* Menú de roles administrativos */}

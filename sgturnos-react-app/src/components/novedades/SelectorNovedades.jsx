@@ -1,10 +1,11 @@
 import React from 'react';
+import PageHeader from '../common/PageHeader';
 
 /**
  * Componente elegante y empresarial para seleccionar tipo de novedad
  * Muestra todas las novedades disponibles en un grid profesional
  */
-const SelectorNovedades = ({ onSelect, selectedTab }) => {
+const SelectorNovedades = ({ onSelect, selectedTab, userName = '', userRole = '' }) => {
   const novedades = [
     {
       id: 'vacaciones',
@@ -70,11 +71,13 @@ const SelectorNovedades = ({ onSelect, selectedTab }) => {
 
   return (
     <div className="space-y-6">
-      {/* Encabezado elegante */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Novedades</h2>
-        <p className="text-gray-600 text-lg">Selecciona el tipo de novedad que deseas solicitar</p>
-      </div>
+      {/* Encabezado con info de usuario */}
+      <PageHeader
+        title="Gestión de Novedades"
+        subtitle="Selecciona el tipo de novedad que deseas solicitar"
+        userName={userName}
+        roleLabel={userRole}
+      />
 
       {/* Grid de opciones */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
