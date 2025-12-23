@@ -15,25 +15,34 @@ import React from 'react';
  */
 const CodigoColoresMalla = ({ className = '', inline = false }) => {
   const colores = [
-    { label: 'Diurno', bg: 'bg-amber-400', hex: '#fbbf24' },
-    { label: 'Nocturno', bg: 'bg-purple-700', hex: '#7e22ce' },
-    { label: 'Libre', bg: 'bg-emerald-200', hex: '#a7f3d0' },
-    { label: 'Descanso', bg: 'bg-gray-300', hex: '#d1d5db' },
-    { label: 'Posturno', bg: 'bg-rose-400', hex: '#f87171' },
-    { label: 'Extra', bg: 'bg-orange-500', hex: '#f97316' },
-    { label: 'Apoyo Admin', bg: 'bg-teal-600', hex: '#0d9488' },
+    { label: 'Turno Día', hex: '#4A90E2' },
+    { label: 'Turno Noche', hex: '#2C3E50' },
+    { label: 'Apoyo', hex: '#2E8B57' },
+    { label: 'Libre', hex: '#ECF0F1' },
+    { label: 'Posturno', hex: '#9B8ACF' },
   ];
 
+  // Compact inline legend (chip + label) used near headers
   if (inline) {
     return (
-      <div className={`flex gap-3 flex-wrap justify-center ${className}`} style={{ breakInside: 'avoid' }}>
+      <div className={`flex gap-4 flex-wrap items-center ${className}`} style={{ breakInside: 'avoid' }}>
         {colores.map((color) => (
-          <div key={color.label} className="flex items-center gap-2" style={{ minWidth: '140px' }}>
-            <span 
-              className={`w-6 h-6 ${color.bg} rounded-md shadow-md`}
-              style={{ backgroundColor: color.hex, flexShrink: 0 }}
-            ></span>
-            <span className="text-sm font-semibold text-gray-700">{color.label}</span>
+          <div key={color.label} className="flex items-center gap-2" style={{ whiteSpace: 'nowrap' }}>
+            <span
+              role="img"
+              aria-hidden="false"
+              title={color.label}
+              style={{
+                backgroundColor: color.hex,
+                width: 14,
+                height: 14,
+                borderRadius: 4,
+                display: 'inline-block',
+                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.06)'
+              }}
+            />
+            <span className="text-xs font-medium" style={{ color: '#2C3E50' }}>{color.label}</span>
           </div>
         ))}
       </div>
@@ -53,25 +62,24 @@ const CodigoColoresMalla = ({ className = '', inline = false }) => {
       <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2" style={{ marginBottom: '12px' }}>
         <span>🎨</span> Código de Colores
       </h5>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
         {colores.map((color) => (
-          <div 
-            key={color.label} 
-            className="flex items-center gap-2"
-            style={{ minWidth: '110px', pageBreakInside: 'avoid' }}
-          >
-            <span 
-              className={`w-6 h-6 ${color.bg} rounded-md shadow-md`}
-              style={{ 
+          <div key={color.label} style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+            <span
+              role="img"
+              aria-hidden="false"
+              title={color.label}
+              style={{
                 backgroundColor: color.hex,
-                width: '24px',
-                height: '24px',
-                borderRadius: '4px',
-                flexShrink: 0,
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                width: 18,
+                height: 18,
+                borderRadius: 6,
+                display: 'inline-block',
+                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.06)'
               }}
-            ></span>
-            <span className="text-xs text-gray-700 font-semibold">{color.label}</span>
+            />
+            <span className="text-xs font-medium" style={{ color: '#2C3E50' }}>{color.label}</span>
           </div>
         ))}
       </div>
