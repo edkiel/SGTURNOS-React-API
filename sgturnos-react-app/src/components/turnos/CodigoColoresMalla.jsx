@@ -13,7 +13,7 @@ import React from 'react';
  * - Extra: Naranja (#f97316)
  * - Apoyo Admin: Cian (#06b6d4)
  */
-const CodigoColoresMalla = ({ className = '', inline = false }) => {
+const CodigoColoresMalla = ({ className = '', inline = false, showTitle = true }) => {
   const colores = [
     { label: 'Turno Día', hex: '#4A90E2' },
     { label: 'Turno Noche', hex: '#2C3E50' },
@@ -59,9 +59,11 @@ const CodigoColoresMalla = ({ className = '', inline = false }) => {
         breakInside: 'avoid'
       }}
     >
-      <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2" style={{ marginBottom: '12px' }}>
-        <span>🎨</span> Código de Colores
-      </h5>
+      {showTitle && (
+        <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2" style={{ marginBottom: '12px' }}>
+          <span>🎨</span> Código de Colores
+        </h5>
+      )}
       <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
         {colores.map((color) => (
           <div key={color.label} style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>

@@ -89,18 +89,18 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         YearMonth ym = YearMonth.parse(month);
         int days = ym.lengthOfMonth();
 
-            // derive coverage requirements from business rules (confirmed by user)
-            // Per day (diurno)
+            // derive coverage requirements from business rules
+            // Per day (diurno): 2 médicos, 3 enfermeros (JEF mapped), 8 auxiliares, 2 terapeutas
             Map<String, Integer> coverageDay = new HashMap<>();
-            coverageDay.put("JEF", 2);
             coverageDay.put("MED", 2);
+            coverageDay.put("JEF", 3);
             coverageDay.put("AUX", 8);
             coverageDay.put("TER", 2);
 
-            // Per night (nocturno)
+            // Per night (nocturno): 1 médico, 2 enfermeros, 8 auxiliares, 2 terapeutas
             Map<String, Integer> coverageNight = new HashMap<>();
-            coverageNight.put("JEF", 2);
             coverageNight.put("MED", 1);
+            coverageNight.put("JEF", 2);
             coverageNight.put("AUX", 8);
             coverageNight.put("TER", 2);
 
@@ -208,29 +208,74 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         // Helper: select next available user from list respecting max turns and night streak
         class Selector {
             Usuario select(List<Usuario> pool, boolean night, int dayIndex, String roleCode, boolean isWeekend) {
-                // sort pool by currently assigned turns (ascending) to be equitable
-                pool.sort(Comparator.comparingInt(u -> assignedTurns.getOrDefault(u.getIdUsuario(), 0)));
-                if (isWeekend) {
-                    int start = weekendIndex.getOrDefault(roleCode, 0);
-                    int n = pool.size();
-                    for (int i = 0; i < n; i++) {
-                        Usuario cand = pool.get((start + i) % n);
-                        long id = cand.getIdUsuario();
-                        if (assignedTurns.getOrDefault(id, 0) >= 16) continue;
-                        if (night && nightStreak.getOrDefault(id, 0) >= 2) continue;
-                        // rotate start for next weekend assignment
-                        weekendIndex.put(roleCode, (start + 1) % Math.max(1, n));
-                        return cand;
+                // sort pool by currently assigned turns (ascending) but prefer
+                // candidates with larger existing consecutive free days (to avoid long free streaks)
+                pool.sort((u1, u2) -> {
+                    int a = assignedTurns.getOrDefault(u1.getIdUsuario(), 0);
+                    int b = assignedTurns.getOrDefault(u2.getIdUsuario(), 0);
+                    if (a != b) return Integer.compare(a, b);
+                    // tie-breaker: prefer user with larger consecutive free days around dayIndex
+                    int cf1 = consecutiveFreeDays(u1.getIdUsuario(), dayIndex, rows);
+                    int cf2 = consecutiveFreeDays(u2.getIdUsuario(), dayIndex, rows);
+                    return Integer.compare(cf2, cf1); // larger free days first
+                });
+
+                int start = weekendIndex.getOrDefault(roleCode, 0);
+                int n = Math.max(1, pool.size());
+
+                for (int i = 0; i < n; i++) {
+                    Usuario cand = pool.get((start + i) % pool.size());
+                    long id = cand.getIdUsuario();
+                    if (assignedTurns.getOrDefault(id, 0) >= 16) continue; // limit 16 turnos
+                    // Night selection: avoid 3 consecutive nights
+                    if (night && nightStreak.getOrDefault(id, 0) >= 2) continue;
+
+                    // Day selection: ensure previous day is not a night (no noche->día)
+                    if (!night && dayIndex > 1) {
+                        Object prev = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 1))).orElse(null);
+                        String prevStr = prev == null ? "" : prev.toString().toLowerCase();
+                        if (prevStr.contains("noche")) continue; // do not assign Día after Noche
+
+                        // avoid creating 3 consecutive days: check previous two days
+                        boolean prevDay1 = false, prevDay2 = false;
+                        Object p1 = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 1))).orElse(null);
+                        Object p2 = dayIndex > 2 ? rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 2))).orElse(null) : null;
+                        String p1s = p1 == null ? "" : p1.toString().toLowerCase();
+                        String p2s = p2 == null ? "" : p2.toString().toLowerCase();
+                        if (p1s.contains("día")) prevDay1 = true;
+                        if (p2s.contains("día")) prevDay2 = true;
+                        if (prevDay1 && prevDay2) continue; // would create 3 días seguidos
                     }
-                } else {
-                    for (Usuario cand : pool) {
-                        long id = cand.getIdUsuario();
-                        if (assignedTurns.getOrDefault(id, 0) >= 16) continue; // limit 16 turnos
-                        if (night && nightStreak.getOrDefault(id, 0) >= 2) continue; // avoid 3 nights
-                        return cand;
-                    }
+
+                    // Weekend rotation: advance start when used on weekends
+                    if (isWeekend) weekendIndex.put(roleCode, (start + 1) % Math.max(1, pool.size()));
+                    return cand;
                 }
                 return null;
+            }
+
+            // compute consecutive free days around dayIndex for candidate id
+            private int consecutiveFreeDays(long userId, int dayIndex, List<Map<String, Object>> rowsRef) {
+                Map<String, Object> row = rowsRef.stream().filter(r -> ((Number) r.get("id")).longValue() == userId).findFirst().orElse(null);
+                if (row == null) return 0;
+                int daysTotal = 0;
+                // count backward free days
+                int before = 0;
+                for (int d = dayIndex - 1; d >= 1; d--) {
+                    Object c = row.get("d" + d);
+                    String s = c == null ? "" : c.toString().toLowerCase();
+                    if (s.isBlank() || s.equals("libre")) before++; else break;
+                }
+                // count forward free days
+                int after = 0;
+                for (int d = dayIndex; d <= 31; d++) { // safe upper bound
+                    Object c = row.get("d" + d);
+                    if (c == null) { after++; continue; }
+                    String s = c.toString().toLowerCase();
+                    if (s.isBlank() || s.equals("libre")) after++; else break;
+                }
+                daysTotal = before + after;
+                return daysTotal;
             }
         }
 
@@ -398,6 +443,24 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             else hours = assignedTurns.getOrDefault(id, 0) * 12;
 
             int remaining = 192 - hours;
+
+            // compute current apoyo hours already present in the row (sum numeric values in "Apoyo (...)h")
+            int currentApoyoHours = 0;
+            for (int d = 1; d <= days; d++) {
+                Object cell = row.get("d" + d);
+                if (cell == null) continue;
+                String s = cell.toString().toLowerCase();
+                if (s.contains("apoyo")) {
+                    // extract digits (e.g., "apoyo (12h)" or "apoyo (6h)")
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(s);
+                    if (m.find()) {
+                        try { currentApoyoHours += Integer.parseInt(m.group(1)); } catch (Exception ex) { }
+                    } else {
+                        // default assume 12h if unspecified
+                        currentApoyoHours += 12;
+                    }
+                }
+            }
             if (remaining <= 0) {
                 // already satisfied
                 row.put("horas", Math.max(0, hours));
@@ -407,52 +470,44 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             // Helper: use private method findDayForExtra(...) defined below
 
             // Add full 12h Apoyo shifts while possible (weekday-only; try to distribute across month)
-            while (remaining >= 12) {
+            // Only allow up to 12h of apoyo per user
+            while (remaining >= 12 && currentApoyoHours < 12) {
                 int day = findBestWeekdayForApoyo(row, ym, days, rows);
                 if (day == -1) break; // no available weekday
-                row.put("d" + day, "Apoyo (12h)");
-                hours += 12;
-                remaining -= 12;
+                // ensure we don't overwrite existing Día/Noche/Posturno
+                Object exist = row.get("d" + day);
+                String existStr = exist == null ? "" : exist.toString().toLowerCase();
+                if (existStr.contains("día") || existStr.contains("noche") || existStr.contains("posturno")) break;
+                int assignHours = Math.min(12 - currentApoyoHours, 12);
+                row.put("d" + day, "Apoyo (" + assignHours + "h)");
+                hours += assignHours;
+                remaining -= assignHours;
+                currentApoyoHours += assignHours;
             }
 
             // If some hours remain (<12), try to append to an existing shift first (prefer weekdays), else put on a free day
-            if (remaining > 0) {
-                boolean appended = false;
-                // try append to existing shift (non-LIBRE) preferring weekdays
-                for (int d = 1; d <= days && !appended; d++) {
+            if (remaining > 0 && currentApoyoHours < 12) {
+                // Only place partial apoyo on free weekdays (do NOT append to existing Día/Noche/Posturno)
+                int toAssign = Math.min(remaining, 12 - currentApoyoHours);
+                boolean placed = false;
+                for (int d = 1; d <= days && !placed; d++) {
                     LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
                     DayOfWeek dow = date.getDayOfWeek();
                     boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
-                    if (isWeekend) continue; // prefer weekdays for partials
+                    if (isWeekend) continue; // prefer weekdays
                     Object cell = row.get("d" + d);
                     String cellStr = cell == null ? "" : cell.toString();
-                    if (!cellStr.isBlank() && !cellStr.toUpperCase().contains("APOYO") && !cellStr.equalsIgnoreCase("LIBRE") && !cellStr.equalsIgnoreCase("POSTURNO")) {
-                        row.put("d" + d, cellStr + " + Apoyo (" + remaining + "h)");
-                        hours += remaining;
-                        remaining = 0;
-                        appended = true;
+                    // only place on truly free cells (blank or LIBRE)
+                    if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) {
+                        row.put("d" + d, "Apoyo (" + toAssign + "h)");
+                        hours += toAssign;
+                        remaining -= toAssign;
+                        currentApoyoHours += toAssign;
+                        placed = true;
                         break;
                     }
                 }
-                // if not appended, try any weekday free day
-                if (!appended) {
-                    for (int d = 1; d <= days && !appended; d++) {
-                        LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-                        DayOfWeek dow = date.getDayOfWeek();
-                        boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
-                        if (isWeekend) continue;
-                        Object cell = row.get("d" + d);
-                        String cellStr = cell == null ? "" : cell.toString();
-                        if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.equalsIgnoreCase("POSTURNO")) {
-                            row.put("d" + d, "Apoyo (" + remaining + "h)");
-                            hours += remaining;
-                            remaining = 0;
-                            appended = true;
-                            break;
-                        }
-                    }
-                }
-                // Do not place partial Apoyo on weekends (policy: avoid weekends). If not appended on weekdays, leave remaining.
+                // If couldn't place on weekdays, do not place parcial apoyo on weekends (policy)
             }
 
             // store updated hours
@@ -627,8 +682,8 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
 
             Object cell = row.get("d" + d);
             String cellStr = cell == null ? "" : cell.toString();
-            // prefer empty/LIBRE/POSTURNO cells
-            if (!(cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.equalsIgnoreCase("POSTURNO"))) continue;
+            // prefer empty/LIBRE cells (do NOT use POSTURNO)
+            if (!(cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE"))) continue;
 
             // compute distance score: min distance to existing myApoyoDays (if none, prefer central days)
             int score;

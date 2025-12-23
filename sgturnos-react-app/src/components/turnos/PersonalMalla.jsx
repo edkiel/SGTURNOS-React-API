@@ -98,10 +98,7 @@ const PersonalMalla = ({ user }) => {
         userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
         roleLabel={getRoleName()}
       />
-      {/* Leyenda compacta debajo del título (convenciones de color) - centrada */}
-      <div className="mb-4 flex justify-center">
-        <CodigoColoresMalla inline />
-      </div>
+      
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <span className="text-3xl">📅</span>
@@ -113,6 +110,10 @@ const PersonalMalla = ({ user }) => {
           </div>
         </div>
         {isOfficial && <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold px-4 py-2 rounded-full shadow-md text-sm flex items-center gap-1"><span>✓</span> Oficial</span>}
+      </div>
+      {/* Código de colores: centrado inmediatamente debajo del título de la malla */}
+      <div className="mb-4 flex justify-center">
+        <CodigoColoresMalla inline={true} showTitle={false} />
       </div>
 
       <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -216,8 +217,7 @@ const PersonalMalla = ({ user }) => {
 
         {/* Visible grid view (TurnosGrid) for conventional users - always show calendar/week cards */}
         <div id="personal-malla-table" className="p-6 bg-white">
-          {/* Código de colores reutilizable */}
-          <CodigoColoresMalla />
+          {/* código de colores mostrado arriba, eliminado aquí para evitar duplicados */}
 
           {/* Grid de turnos */}
           {/* Always render TurnosGrid for day-column data */}
