@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../api';
  * Permite a los usuarios solicitar cambios de turno con compañeros del mismo rol
  * Requiere aprobación del compañero y administradores (Jefe, Operaciones, RRHH)
  */
-const CambiosTurnosModule = ({ usuarioId, userName }) => {
+const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
   const [cambios, setCambios] = useState([]);
   const [compañerosDisponibles, setCompañerosDisponibles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +32,13 @@ const CambiosTurnosModule = ({ usuarioId, userName }) => {
     cargarCambios();
     cargarCompañeros();
   }, [usuarioId]);
+
+  // Abrir formulario cuando se solicita crear desde el selector
+  useEffect(() => {
+    if (openCreateSignal) {
+      setShowForm(true);
+    }
+  }, [openCreateSignal]);
 
   const cargarCambios = async () => {
     try {

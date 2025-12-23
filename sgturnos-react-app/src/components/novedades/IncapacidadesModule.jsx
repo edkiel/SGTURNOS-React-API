@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../api';
  * Permite a los usuarios crear solicitudes de incapacidad (médica o licencia)
  * El rol de administrador valida y aprueba/rechaza
  */
-const IncapacidadesModule = ({ usuarioId, userName }) => {
+const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
   const [incapacidades, setIncapacidades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +30,13 @@ const IncapacidadesModule = ({ usuarioId, userName }) => {
   useEffect(() => {
     cargarIncapacidades();
   }, [usuarioId]);
+
+  // Abrir formulario cuando se solicita crear desde el selector
+  useEffect(() => {
+    if (openCreateSignal) {
+      setShowForm(true);
+    }
+  }, [openCreateSignal]);
 
   const cargarIncapacidades = async () => {
     try {

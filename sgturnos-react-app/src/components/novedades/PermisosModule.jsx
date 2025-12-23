@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../api';
  * Permite a los usuarios crear solicitudes de permiso con fecha definida
  * Incluye selección de los 3 aprobadores (Jefe, Operaciones, RRHH)
  */
-const PermisosModule = ({ usuarioId, userName }) => {
+const PermisosModule = ({ usuarioId, userName, openCreateSignal }) => {
   const [permisos, setPermisos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,13 @@ const PermisosModule = ({ usuarioId, userName }) => {
     cargarPermisos();
     cargarUsuarios();
   }, [usuarioId]);
+
+  // Abrir formulario cuando se solicita crear desde el selector
+  useEffect(() => {
+    if (openCreateSignal) {
+      setShowForm(true);
+    }
+  }, [openCreateSignal]);
 
   const cargarUsuarios = async () => {
     try {
