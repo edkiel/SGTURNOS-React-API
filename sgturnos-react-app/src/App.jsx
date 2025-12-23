@@ -105,6 +105,7 @@ const UserManagement = () => {
 const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('home'); // Estado para controlar la pestana activa
   const [novedadesTab, setNovedadesTab] = useState('vacaciones'); // Tab para módulo de novedades
+  const [createSignal, setCreateSignal] = useState(0); // señal para abrir formulario de creación
 
   // Verificar si el usuario es administrador
   const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
@@ -163,6 +164,7 @@ const Dashboard = ({ user, onLogout }) => {
             {/* Selector elegante de novedades */}
             <SelectorNovedades 
               onSelect={setNovedadesTab}
+              onCreate={(id) => { setNovedadesTab(id); setCreateSignal(Date.now()); }}
               selectedTab={novedadesTab}
               userName={`${user?.primerNombre} ${user?.primerApellido}`}
               userRole={getRoleName()}
@@ -170,19 +172,19 @@ const Dashboard = ({ user, onLogout }) => {
 
             {/* Contenido según tab seleccionado */}
             {novedadesTab === 'vacaciones' && (
-              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRole={getRoleName()} />
+              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRole={getRoleName()} openCreateSignal={createSignal} />
             )}
             {novedadesTab === 'incapacidades' && (
-              <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+              <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
             )}
             {novedadesTab === 'permisos' && (
-              <PermisosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+              <PermisosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
             )}
             {novedadesTab === 'cambios' && (
-              <CambiosTurnosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+              <CambiosTurnosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
             )}
             {novedadesTab === 'calamidad' && (
-              <CalamidadModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />
+              <CalamidadModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
             )}
           </div>
         );

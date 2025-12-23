@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../../api';
  * Componente para gestionar reportes de calamidad
  * Permite a los usuarios reportar situaciones de calamidad personal o familiar
  */
-const CalamidadModule = ({ usuarioId, userName }) => {
+const CalamidadModule = ({ usuarioId, userName, openCreateSignal }) => {
   const [calamidades, setCalamidades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +29,13 @@ const CalamidadModule = ({ usuarioId, userName }) => {
   useEffect(() => {
     cargarCalamidades();
   }, [usuarioId]);
+
+  // Abrir formulario cuando se solicita crear desde el selector
+  useEffect(() => {
+    if (openCreateSignal) {
+      setShowForm(true);
+    }
+  }, [openCreateSignal]);
 
   const cargarCalamidades = async () => {
     try {

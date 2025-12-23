@@ -5,7 +5,7 @@ import PageHeader from '../common/PageHeader';
  * Componente elegante y empresarial para seleccionar tipo de novedad
  * Muestra todas las novedades disponibles en un grid profesional
  */
-const SelectorNovedades = ({ onSelect, selectedTab, userName = '', userRole = '' }) => {
+const SelectorNovedades = ({ onSelect, onCreate, selectedTab, userName = '', userRole = '' }) => {
   const novedades = [
     {
       id: 'vacaciones',
@@ -82,12 +82,14 @@ const SelectorNovedades = ({ onSelect, selectedTab, userName = '', userRole = ''
       {/* Grid de opciones */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {novedades.map((novedad) => (
-          <button
+          <div
             key={novedad.id}
-            onClick={() => onSelect(novedad.id)}
-            className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer group ${
+            className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 group ${
               selectedTab === novedad.id ? 'ring-2 ring-offset-2 ring-slate-400' : ''
             }`}
+            onClick={() => onSelect && onSelect(novedad.id)}
+            role="button"
+            tabIndex={0}
           >
             {/* Fondo degradado */}
             <div className={`absolute inset-0 bg-gradient-to-br ${novedad.color} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
@@ -96,7 +98,7 @@ const SelectorNovedades = ({ onSelect, selectedTab, userName = '', userRole = ''
             <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity"></div>
 
             {/* Contenido */}
-            <div className="relative p-6 text-white flex flex-col items-center justify-center h-full min-h-[200px]">
+            <div className="relative p-6 text-white flex flex-col items-center justify-center h-full min-h-[220px]">
               {/* Icono grande */}
               <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
                 {novedad.icono}
@@ -117,8 +119,19 @@ const SelectorNovedades = ({ onSelect, selectedTab, userName = '', userRole = ''
                   <span className="text-xs font-semibold">Seleccionado</span>
                 </div>
               )}
+
+              {/* Acciones */}
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onCreate && onCreate(novedad.id); }}
+                  className="bg-white text-slate-900 hover:bg-slate-100 text-sm font-semibold px-3 py-1 rounded-lg"
+                  title="Crear nueva solicitud"
+                >
+                  Crear nueva solicitud
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 

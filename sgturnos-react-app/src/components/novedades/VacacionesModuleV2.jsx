@@ -6,7 +6,7 @@ import PageHeader from '../common/PageHeader';
  * Componente mejorado para solicitudes de vacaciones
  * Incluye selección de aprobadores y visualización del flujo de aprobación
  */
-const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '' }) => {
+const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSignal }) => {
   const [vacaciones, setVacaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,13 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '' }) => {
     cargarVacaciones();
     cargarUsuarios();
   }, [usuarioId]);
+
+  // Abrir formulario cuando se solicita crear desde el selector
+  useEffect(() => {
+    if (openCreateSignal) {
+      setShowForm(true);
+    }
+  }, [openCreateSignal]);
 
   const cargarUsuarios = async () => {
     try {
