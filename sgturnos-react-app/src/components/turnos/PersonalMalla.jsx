@@ -98,6 +98,10 @@ const PersonalMalla = ({ user }) => {
         userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
         roleLabel={getRoleName()}
       />
+      {/* Leyenda compacta debajo del título (convenciones de color) - centrada */}
+      <div className="mb-4 flex justify-center">
+        <CodigoColoresMalla inline />
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <span className="text-3xl">📅</span>

@@ -1,6 +1,20 @@
 import React from 'react';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 
+// Devuelve un color de texto ('#2C3E50' o '#ffffff') según la luminancia del hex de fondo
+const getContrastText = (hex) => {
+  if (!hex) return undefined;
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const bigint = parseInt(full, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  // Luminancia aproximada
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 200 ? '#2C3E50' : '#ffffff';
+};
+
 // Función para determinar el color según el tipo de turno
 const getTurnoColorClasses = (turnoValue) => {
   if (!turnoValue) return { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' };
@@ -9,14 +23,14 @@ const getTurnoColorClasses = (turnoValue) => {
   
   // Mapeo de palabras clave a colores - colores diferenciados para fácil identificación
   // Día: cubrir "dia", "día" y abreviaturas
-  if (val.includes('diurno') || val.includes('dia') || val.includes('día') || val === 'd' || val === 'd1') return { bg: 'bg-amber-400', text: 'text-gray-900', border: 'border-amber-500' };
+  if (val.includes('diurno') || val.includes('dia') || val.includes('día') || val === 'd' || val === 'd1') return { bg: 'bg-amber-400', text: 'text-gray-900', border: 'border-amber-500', bgHex: '#4A90E2', textHex: getContrastText('#4A90E2'), borderHex: '#4A90E2' };
   // Noche: cubrir "noche" y abreviaturas
-  if (val.includes('nocturno') || val.includes('noche') || val === 'n' || val === 'n1') return { bg: 'bg-purple-700', text: 'text-white', border: 'border-purple-800' };
-  if (val.includes('libre')) return { bg: 'bg-emerald-200', text: 'text-emerald-900', border: 'border-emerald-300' };
+  if (val.includes('nocturno') || val.includes('noche') || val === 'n' || val === 'n1') return { bg: 'bg-purple-700', text: 'text-white', border: 'border-purple-800', bgHex: '#2C3E50', textHex: getContrastText('#2C3E50'), borderHex: '#2C3E50' };
+  if (val.includes('libre')) return { bg: 'bg-emerald-200', text: 'text-emerald-900', border: 'border-emerald-300', bgHex: '#ECF0F1', textHex: getContrastText('#ECF0F1'), borderHex: '#d0d6d9' };
   if (val.includes('descanso') || val === 'desc' || val === 'x') return { bg: 'bg-gray-300', text: 'text-gray-700', border: 'border-gray-400' };
-  if (val.includes('posturno') || val.includes('post')) return { bg: 'bg-rose-400', text: 'text-white', border: 'border-rose-500' };
+  if (val.includes('posturno') || val.includes('post')) return { bg: 'bg-rose-400', text: 'text-white', border: 'border-rose-500', bgHex: '#9B8ACF', textHex: getContrastText('#9B8ACF'), borderHex: '#8f7fbd' };
   if (val.includes('extra')) return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600' };
-  if (val.includes('apoyo') || val.includes('admin') || val === 'adm') return { bg: 'bg-teal-600', text: 'text-white', border: 'border-teal-700' };
+  if (val.includes('apoyo') || val.includes('admin') || val === 'adm') return { bg: 'bg-teal-600', text: 'text-white', border: 'border-teal-700', bgHex: '#2E8B57', textHex: getContrastText('#2E8B57'), borderHex: '#276b47' };
   
   // Default para valores desconocidos
   return { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' };
@@ -70,8 +84,32 @@ const TurnosGrid = ({ data, month }) => {
   // encabezados de días
   const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
+  // Leyenda de tipos de turno (hex y label)
+  const legendItems = [
+    { label: 'Turno Día', hex: '#4A90E2' },
+    { label: 'Turno Noche', hex: '#2C3E50' },
+    { label: 'Apoyo', hex: '#2E8B57' },
+    { label: 'Libre', hex: '#ECF0F1' },
+    { label: 'Posturno', hex: '#9B8ACF' },
+  ];
+
   return (
     <div>
+      {/* Leyenda profesional de tipos de turno */}
+      <div className="mb-4">
+        <div className="flex flex-wrap items-center gap-4">
+          {legendItems.map((it) => {
+            // Forzamos etiqueta oscura y accesible; aumentamos tamaño del chip
+            const forcedTextCol = '#2C3E50';
+            return (
+              <div key={it.label} className="flex items-center gap-2 text-sm" title={it.label} aria-label={`Leyenda ${it.label}`}>
+                <div role="img" aria-hidden="false" title={it.label} style={{ width: 22, height: 22, backgroundColor: it.hex, borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)' }} />
+                <div style={{ color: forcedTextCol, fontWeight: 600 }}>{it.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
       {/* Export buttons removed from the inline grid view per UX request */}
 
       <div id={containerId} className="space-y-6">
@@ -112,6 +150,7 @@ const TurnosGrid = ({ data, month }) => {
                           <td 
                             key={`${row.id}-${wi}-${di}`} 
                             className={`border p-1 text-center align-middle text-sm font-semibold ${colorClasses.bg} ${colorClasses.text} border-2 ${colorClasses.border}`}
+                            style={{ backgroundColor: colorClasses.bgHex || undefined, borderColor: colorClasses.borderHex || undefined, color: colorClasses.textHex || undefined }}
                           >
                             {turnoValue || ''}
                           </td>
