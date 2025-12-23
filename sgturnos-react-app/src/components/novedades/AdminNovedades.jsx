@@ -3,6 +3,9 @@ import { api, API_BASE_URL } from '../../api';
 import AprobadorVacaciones from './AprobadorVacaciones';
 import AprobadorPermisos from './AprobadorPermisos';
 import AdminAprobadorCambios from './AdminAprobadorCambios';
+import JefeNovedadesRevisor from './JefeNovedadesRevisor';
+import OperacionesNovedadesRevisor from './OperacionesNovedadesRevisor';
+import RRHHNovedadesRevisor from './RRHHNovedadesRevisor';
 import PageHeader from '../common/PageHeader';
 
 /**
@@ -23,23 +26,43 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
   const adminCards = [
     {
       id: 'vacaciones',
-      title: 'Aprobación de Vacaciones',
+      title: 'Gestión de Vacaciones',
       description: 'Revisa y valida las solicitudes de vacaciones con sus aprobaciones en cadena.',
       icon: '🏖️',
       color: 'from-blue-500 to-indigo-600',
-      matchKey: 'vac'
+      matchKey: 'vac',
+      typeName: 'Vacaciones'
     },
     {
       id: 'permisos',
-      title: 'Aprobación de Permisos',
+      title: 'Gestión de Permisos',
       description: 'Gestiona permisos especiales y licencias solicitadas por el personal.',
       icon: '✅',
       color: 'from-emerald-500 to-teal-600',
-      matchKey: 'perm'
+      matchKey: 'perm',
+      typeName: 'Permisos'
+    },
+    {
+      id: 'incapacidades',
+      title: 'Gestión de Incapacidades',
+      description: 'Administra y valida incapacidades presentadas por los colaboradores.',
+      icon: '🏥',
+      color: 'from-rose-500 to-red-600',
+      matchKey: 'incap',
+      typeName: 'Incapacidades'
+    },
+    {
+      id: 'calamidad',
+      title: 'Gestión de Calamidad',
+      description: 'Revisa reportes de calamidad personal o familiar para su trámite.',
+      icon: '⚠️',
+      color: 'from-orange-500 to-amber-600',
+      matchKey: 'calam',
+      typeName: 'Calamidad'
     },
     {
       id: 'cambios',
-      title: 'Cambios de Turno',
+      title: 'Gestión de Cambios de Turno',
       description: 'Coordina el flujo multirrol para autorizar cambios de turno.',
       icon: '🔄',
       color: 'from-purple-500 to-fuchsia-600'
@@ -136,13 +159,18 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     }
   };
 
-  const obtenerStatsPorTipo = (matchKey) => {
-    if (!matchKey) return null;
-    const normalizado = (valor) => (valor || '').toString().toLowerCase();
-    const coincidencias = novedades.filter((n) => normalizado(n.tipo?.nombre).includes(matchKey));
+  const obtenerStatsPorTipo = (card) => {
+    if (!card) return null;
+    const norm = (v) => (v || '').toString().toLowerCase();
+    let coincidencias = novedades;
+    if (card.typeName) {
+      coincidencias = novedades.filter((n) => norm(n.tipo?.nombre) === norm(card.typeName));
+    } else if (card.matchKey) {
+      coincidencias = novedades.filter((n) => norm(n.tipo?.nombre).includes(card.matchKey));
+    }
     return {
       total: coincidencias.length,
-      pendientes: coincidencias.filter((n) => n.estado === 'PENDIENTE').length
+      pendientes: coincidencias.filter((n) => n.estado === 'PENDIENTE').length,
     };
   };
 
@@ -172,12 +200,17 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
         {/* Navegación con icon cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {adminCards.map((card) => {
-            const stats = obtenerStatsPorTipo(card.matchKey);
+            const stats = obtenerStatsPorTipo(card);
             const isActive = activeTab === card.id;
             return (
               <button
                 key={card.id}
-                onClick={() => setActiveTab(card.id)}
+                onClick={() => {
+                  setActiveTab(card.id);
+                  if (card.id === 'incapacidades') setFilterTipo('Incapacidades');
+                  else if (card.id === 'calamidad') setFilterTipo('Calamidad');
+                  else setFilterTipo('todos');
+                }}
                 className={`relative overflow-hidden rounded-xl shadow-md transition-all duration-300 text-left border border-white/20 ${
                   isActive ? 'ring-2 ring-offset-2 ring-purple-300 scale-[1.01]' : 'hover:scale-[1.01] hover:shadow-lg'
                 }`}
@@ -240,6 +273,52 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
 
             <AdminAprobadorCambios usuarioId={usuarioAdminId} userName={userName} rolAdmin={rolCambios} />
           </div>
+        )}
+
+        {/* Vista de filtros guiada para Incapacidades y Calamidad (usa lista genérica inferior) */}
+        {activeTab === 'incapacidades' && (
+          <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
+            <h2 className="text-lg font-semibold text-gray-800">Incapacidades</h2>
+            <p className="text-sm text-gray-600 mt-1">Se muestran solo solicitudes de tipo Incapacidades. Usa los filtros si necesitas ajustar.</p>
+          </div>
+        )}
+        {activeTab === 'calamidad' && (
+          <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
+            <h2 className="text-lg font-semibold text-gray-800">Calamidad</h2>
+            <p className="text-sm text-gray-600 mt-1">Se muestran solo reportes de Calamidad. Usa los filtros si necesitas ajustar.</p>
+          </div>
+        )}
+
+        {/* Acceso rápido a aprobadores por nivel */}
+        <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Aprobadores por Nivel</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button onClick={() => setActiveTab('revisor-jefe')} className="p-4 rounded-lg border hover:shadow transition">
+              <div className="text-2xl">👔</div>
+              <div className="font-semibold mt-2">Jefe Inmediato</div>
+              <div className="text-xs text-gray-600">Revisa y decide en primera instancia</div>
+            </button>
+            <button onClick={() => setActiveTab('revisor-operaciones')} className="p-4 rounded-lg border hover:shadow transition">
+              <div className="text-2xl">🏥</div>
+              <div className="font-semibold mt-2">Operaciones Clínicas</div>
+              <div className="text-xs text-gray-600">Valida impacto operativo y malla</div>
+            </button>
+            <button onClick={() => setActiveTab('revisor-rrhh')} className="p-4 rounded-lg border hover:shadow transition">
+              <div className="text-2xl">👥</div>
+              <div className="font-semibold mt-2">Recursos Humanos</div>
+              <div className="text-xs text-gray-600">Cierre y control de nómina</div>
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'revisor-jefe' && (
+          <JefeNovedadesRevisor usuarioId={usuarioAdminId} userName={userName} />
+        )}
+        {activeTab === 'revisor-operaciones' && (
+          <OperacionesNovedadesRevisor usuarioId={usuarioAdminId} userName={userName} />
+        )}
+        {activeTab === 'revisor-rrhh' && (
+          <RRHHNovedadesRevisor usuarioId={usuarioAdminId} userName={userName} />
         )}
 
         {/* Mensajes de estado - REMOVIDOS porque ahora están en los componentes específicos */}
