@@ -15,8 +15,10 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
   // Formulario
   const [form, setForm] = useState({
-    fechaInicio: '',
-    fechaFin: '',
+    periodoCumplidoInicio: '',
+    periodoCumplidoFin: '',
+    periodoVacacionInicio: '',
+    periodoVacacionFin: '',
     descripcion: '',
     idJefeInmediato: '',
     idOperacionesClinicas: '',
@@ -25,6 +27,19 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Calcular fecha máxima para periodo cumplido (año anterior)
+  const getMaxFechaPeriodoCumplido = () => {
+    const hoy = new Date();
+    const anioAnterior = new Date(hoy.getFullYear() - 1, 11, 31); // 31 de diciembre del año anterior
+    return anioAnterior.toISOString().split('T')[0];
+  };
+
+  // Fecha mínima para periodo vacacional (fecha actual)
+  const getMinFechaPeriodoVacacional = () => {
+    const hoy = new Date();
+    return hoy.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     cargarVacaciones();
@@ -66,7 +81,95 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    if (name === 'periodoCumplidoInicio') {
+      // Calcular 1 año - 1 día para el periodo cumplido
+      const fechaFinCalculada = calcularFechaFin(value);
+      setForm({ ...form, periodoCumplidoInicio: value, periodoCumplidoFin: fechaFinCalculada });
+      return;
+    }
+    
+    if (name === 'periodoVacacionInicio') {
+      // Calcular 15 días laborales para el periodo vacacional
+      const fechaFinCalculada = calcular15DiasLaborales(value);
+      setForm({ ...form, periodoVacacionInicio: value, periodoVacacionFin: fechaFinCalculada });
+      return;
+    }
+    
     setForm({ ...form, [name]: value });
+  };
+
+  const calcularFechaFin = (fechaInicio) => {
+    if (!fechaInicio) return '';
+    const start = new Date(`${fechaInicio}T00:00:00`);
+    if (Number.isNaN(start.getTime())) return '';
+    const end = new Date(start);
+    end.setFullYear(end.getFullYear() + 1);
+    end.setDate(end.getDate() - 1);
+    return end.toISOString().split('T')[0];
+  };
+
+  // Festivos colombianos para 2024-2026 (ajustar según necesidad)
+  const festivos = [
+    '2024-01-01', '2024-01-08', '2024-03-25', '2024-03-28', '2024-03-29',
+    '2024-05-01', '2024-05-13', '2024-06-03', '2024-06-10', '2024-07-01',
+    '2024-07-20', '2024-08-07', '2024-08-19', '2024-10-14', '2024-11-04',
+    '2024-11-11', '2024-12-08', '2024-12-25',
+    '2025-01-01', '2025-01-06', '2025-03-24', '2025-04-17', '2025-04-18',
+    '2025-05-01', '2025-06-02', '2025-06-23', '2025-06-30', '2025-07-20',
+    '2025-08-07', '2025-08-18', '2025-10-13', '2025-11-03', '2025-11-17',
+    '2025-12-08', '2025-12-25',
+    '2026-01-01', '2026-01-12', '2026-03-23', '2026-04-02', '2026-04-03',
+    '2026-05-01', '2026-05-18', '2026-06-08', '2026-06-15', '2026-06-29',
+    '2026-07-20', '2026-08-07', '2026-08-17', '2026-10-12', '2026-11-02',
+    '2026-11-16', '2026-12-08', '2026-12-25'
+  ];
+
+  const calcularDiasSolicitados = (fechaInicio, fechaFin) => {
+    if (!fechaInicio || !fechaFin) return 0;
+    const inicio = new Date(`${fechaInicio}T00:00:00`);
+    const fin = new Date(`${fechaFin}T00:00:00`);
+    if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) return 0;
+    if (inicio > fin) return 0;
+
+    let dias = 0;
+    const current = new Date(inicio);
+
+    while (current <= fin) {
+      const diaSemana = current.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+      const fechaStr = current.toISOString().split('T')[0];
+      
+      // Contar si es lunes a sábado (1-6) y no es festivo
+      if (diaSemana >= 1 && diaSemana <= 6 && !festivos.includes(fechaStr)) {
+        dias++;
+      }
+      
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dias;
+  };
+
+  const calcular15DiasLaborales = (fechaInicio) => {
+    if (!fechaInicio) return '';
+    const inicio = new Date(`${fechaInicio}T00:00:00`);
+    if (Number.isNaN(inicio.getTime())) return '';
+
+    let diasContados = 0;
+    const current = new Date(inicio);
+
+    while (diasContados < 15) {
+      current.setDate(current.getDate() + 1);
+      const diaSemana = current.getDay();
+      const fechaStr = current.toISOString().split('T')[0];
+      
+      // Contar si es lunes a sábado (1-6) y no es festivo
+      if (diaSemana >= 1 && diaSemana <= 6 && !festivos.includes(fechaStr)) {
+        diasContados++;
+      }
+    }
+
+    return current.toISOString().split('T')[0];
   };
 
   const handleSubmit = async (e) => {
@@ -75,13 +178,24 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
     setSuccess('');
 
     // Validar fechas
-    if (!form.fechaInicio || !form.fechaFin) {
-      setError('Las fechas de inicio y fin son requeridas');
+    if (!form.periodoVacacionInicio || !form.periodoVacacionFin) {
+      setError('Las fechas de inicio y fin del periodo vacacional son requeridas');
       return;
     }
 
-    if (new Date(form.fechaInicio) > new Date(form.fechaFin)) {
+    if (!form.periodoCumplidoInicio || !form.periodoCumplidoFin) {
+      setError('Las fechas del periodo cumplido son requeridas');
+      return;
+    }
+
+    if (new Date(form.periodoVacacionInicio) > new Date(form.periodoVacacionFin)) {
       setError('La fecha de inicio debe ser anterior a la fecha de fin');
+      return;
+    }
+
+    const fechaFinEsperada = calcularFechaFin(form.periodoCumplidoInicio);
+    if (form.periodoCumplidoFin !== fechaFinEsperada) {
+      setError(`La fecha final del periodo cumplido debe ser el día anterior del año siguiente: ${fechaFinEsperada}`);
       return;
     }
 
@@ -97,8 +211,8 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
         {
           idUsuario: usuarioId,
           idTipo: 1, // ID para Vacaciones
-          fechaInicio: form.fechaInicio,
-          fechaFin: form.fechaFin,
+          fechaInicio: form.periodoVacacionInicio,
+          fechaFin: form.periodoVacacionFin,
           descripcion: form.descripcion
         }
       );
@@ -118,8 +232,10 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
       setSuccess('Solicitud de vacaciones creada exitosamente. Pendiente de 3 aprobaciones.');
       setForm({
-        fechaInicio: '',
-        fechaFin: '',
+        periodoCumplidoInicio: '',
+        periodoCumplidoFin: '',
+        periodoVacacionInicio: '',
+        periodoVacacionFin: '',
         descripcion: '',
         idJefeInmediato: '',
         idOperacionesClinicas: '',
@@ -176,6 +292,45 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud de Vacaciones</h2>
             <form onSubmit={handleSubmit}>
+              {/* Bloque destacado para periodo cumplido */}
+              <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-xl p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-indigo-800 mb-4">Peridodo cumplido</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Periodo cumplido - Inicio
+                    </label>
+                    <input
+                      type="date"
+                      name="periodoCumplidoInicio"
+                      value={form.periodoCumplidoInicio}
+                      onChange={handleInputChange}
+                      max={getMaxFechaPeriodoCumplido()}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Periodo cumplido - Fin
+                    </label>
+                    <input
+                      type="date"
+                      name="periodoCumplidoFin"
+                      value={form.periodoCumplidoFin}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                    {form.periodoCumplidoInicio && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Debe ser el día anterior del año siguiente al inicio ({calcularFechaFin(form.periodoCumplidoInicio)}).
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Fechas */}
                 <div>
@@ -184,9 +339,10 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                   </label>
                   <input
                     type="date"
-                    name="fechaInicio"
-                    value={form.fechaInicio}
+                    name="periodoVacacionInicio"
+                    value={form.periodoVacacionInicio}
                     onChange={handleInputChange}
+                    min={getMinFechaPeriodoVacacional()}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -198,12 +354,34 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                   </label>
                   <input
                     type="date"
-                    name="fechaFin"
-                    value={form.fechaFin}
+                    name="periodoVacacionFin"
+                    value={form.periodoVacacionFin}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
+                  {form.periodoVacacionInicio && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Calculado automáticamente: 15 días laborales desde el inicio.
+                    </p>
+                  )}
+                </div>
+
+                {/* Días solicitados */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Días solicitados
+                  </label>
+                  <input
+                    type="text"
+                    value={calcularDiasSolicitados(form.periodoVacacionInicio, form.periodoVacacionFin)}
+                    readOnly
+                    className="w-full px-4 py-2 bg-blue-50 border border-blue-300 rounded-lg text-lg font-bold text-blue-700 text-center"
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Cálculo: Lunes a sábado (sin domingos ni festivos)
+                  </p>
                 </div>
 
                 {/* Selección de aprobadores */}
