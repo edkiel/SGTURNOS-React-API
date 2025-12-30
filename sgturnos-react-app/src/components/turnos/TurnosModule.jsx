@@ -15,6 +15,9 @@ const TurnosModule = ({ user }) => {
   const [gridData, setGridData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(true);
+  // Parámetros para generación de malla (cantidad de pacientes y auxiliares)
+  const [patientsCount, setPatientsCount] = useState(0);
+  const [auxiliariesCount, setAuxiliariesCount] = useState(0);
 
   const getRoleLabel = () => {
     if (!user || !user.rol) return '';
@@ -99,7 +102,7 @@ const TurnosModule = ({ user }) => {
     setLoading(true);
     try {
       // Call backend generator to get preview built from DB users
-      const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`;
+      const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}&patients=${encodeURIComponent(patientsCount)}&auxiliaries=${encodeURIComponent(auxiliariesCount)}`;
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch(`/api/mallas/generate${qs}`, { method: 'POST', headers });
@@ -122,7 +125,7 @@ const TurnosModule = ({ user }) => {
       const grid = employees.map((emp) => {
         const row = { id: emp.id, name: emp.name };
         for (let d = 1; d <= daysInMonth; d++) {
-          row[`d${d}`] = (d % 2 === 0) ? 'Día (07-19)' : 'Noche (19-07)';
+          row[`d${d}`] = (d % 2 === 0) ? 'TD' : 'TN';
         }
         return row;
       });
@@ -160,7 +163,7 @@ const TurnosModule = ({ user }) => {
   
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '1400px' }}>
+    <div className="w-full p-4 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
       <PageHeader
         title="Planificación de Turnos"
         subtitle="Genera, revisa y publica las mallas de cada rol"
@@ -170,7 +173,7 @@ const TurnosModule = ({ user }) => {
 
       {/* Role buttons moved to Inicio (PersonalMalla) per UX request */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Mes</label>
           <input
@@ -186,6 +189,30 @@ const TurnosModule = ({ user }) => {
           <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
             {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
+        </div>
+        <div>
+          {role && String(role).toLowerCase().includes('aux') ? (
+            <>
+              <label className="block text-sm font-medium text-gray-700">Pacientes</label>
+              <input
+                type="number"
+                min="0"
+                value={patientsCount}
+                onChange={(e) => setPatientsCount(Number(e.target.value))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+              />
+              <label className="block text-sm font-medium text-gray-700 mt-2">Auxiliares</label>
+              <input
+                type="number"
+                min="0"
+                value={auxiliariesCount}
+                onChange={(e) => setAuxiliariesCount(Number(e.target.value))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+              />
+            </>
+          ) : (
+            <div className="text-sm text-gray-500">Parámetros opcionales para auxiliares</div>
+          )}
         </div>
         <div className="flex items-end space-x-2">
           <button onClick={handleGenerate} disabled={loading} title="Generar Malla - Solo previsualización para revisión" className="bg-blue-600 disabled:opacity-60 text-white px-4 py-2 rounded-md">Generar (Previsualización)</button>
@@ -250,7 +277,7 @@ const TurnosModule = ({ user }) => {
       </div>
 
       {preview && (
-        <div id="turnos-grid" className="overflow-auto">
+        <div id="turnos-grid" className="overflow-x-auto" style={{ maxWidth: '100vw' }}>
           <TurnosGrid data={gridData} month={month} />
         </div>
       )}

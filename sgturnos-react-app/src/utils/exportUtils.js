@@ -213,7 +213,7 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
     table.style.margin = '0 auto';
-    table.style.fontSize = '12px';
+    table.style.fontSize = '10px';
 
     const ths = table.querySelectorAll('th');
     ths.forEach((th) => {
@@ -273,8 +273,8 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
     clone.style.width = `${targetCssWidth}px`;
     clone.style.maxWidth = 'none';
 
-    // Ajustes de presentación para impresión: aumentar texto y reducir paddings para que la letra se vea más grande
-    const desiredFontSize = options.fontSize || '14px';
+    // Ajustes de presentación para impresión: usar tamaño de fuente más compacto por defecto
+    const desiredFontSize = options.fontSize || '10px';
     clone.style.fontSize = desiredFontSize;
 
     // Reducir paddings en celdas para que el texto ocupe más espacio relativo
@@ -284,11 +284,11 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
       table.style.lineHeight = '1.05';
       const ths = table.querySelectorAll('th');
       ths.forEach((th) => {
-        th.style.padding = '6px 8px';
+        th.style.padding = '4px 6px';
       });
       const tds = table.querySelectorAll('td');
       tds.forEach((td) => {
-        td.style.padding = '4px 6px';
+        td.style.padding = '2px 4px';
       });
     });
 

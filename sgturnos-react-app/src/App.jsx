@@ -345,8 +345,8 @@ const Dashboard = ({ user, onLogout }) => {
       </aside>
 
       {/* Contenido principal */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex justify-center">
-        <div className="w-full" style={{ maxWidth: '1400px' }}>
+      <main className="flex-1 overflow-y-auto p-2 sm:p-3 lg:p-4 flex justify-center">
+        <div className="w-full" style={{ maxWidth: '100%' }}>
           {renderContent()}
         </div>
       </main>
