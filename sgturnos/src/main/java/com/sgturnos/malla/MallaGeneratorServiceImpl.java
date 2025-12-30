@@ -1,22 +1,48 @@
 package com.sgturnos.malla;
 
-import com.sgturnos.model.Usuario;
-import com.sgturnos.repository.UsuarioRepository;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.time.YearMonth;
-import java.time.LocalDate;
-import java.time.DayOfWeek;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.sgturnos.model.Usuario;
+import com.sgturnos.repository.UsuarioRepository;
 
+/**
+ * ALGORITMO DE GENERACIÓN DE MALLA v3.0
+ * 
+ * OBJETIVOS PRINCIPALES:
+ * 1. PRIORIDAD: Completar 192 horas mensuales usando turnos DÍA (12D) y NOCHE (12N) principalmente
+ * 2. COMITÉ PRIMARIO (CMP): 3 horas de capacitación (incluidas en las 192h)
+ * 3. APOYO: Solo para completar horas faltantes (NUNCA exceder 192h), siempre en DÍA
+ * 4. DINAMISMO: Permitir dupletas (día-día, noche-noche, día-noche)
+ * 5. RESTRICCIONES:
+ *    - NO tripletas (3+ días seguidos o 3+ noches seguidas)
+ *    - NO noche→día (sería 24h continuas)
+ *    - Después de NOCHE: mínimo 12h descanso (POSTURNO)
+ *    - CMP (3h) + APOYO <= 12 horas en un mismo día
+ * 6. ECUACIÓN: Turnos DÍA + Turnos NOCHE + Comité Primario (3h) + APOYO = 192 horas
+ * 7. COBERTURA:
+ *    - DÍA: 2 médicos, 3 enfermeros, 8-9 auxiliares (1/6 pacientes), 2 terapeutas
+ *    - NOCHE: 1 médico, 2 enfermeros, 8-9 auxiliares (1/6 pacientes), 2 terapeutas
+ */
 @Service
 public class MallaGeneratorServiceImpl implements MallaGeneratorService {
 
@@ -25,6 +51,15 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
     @Value("${malla.storage.path:./mallas}")
     private String storagePath;
 
+    private Integer auxCoverageOverride = null;
+    private Integer patientLoad = null;
+
+    // Constantes de horas
+    private static final int TARGET_HOURS_PER_USER = 192;  // Horas totales mensuales
+    private static final int FULL_SHIFT_HOURS = 12;        // Turno completo (día o noche)
+    private static final int CMP_HOURS = 3;                 // Comité primario
+    private static final int MAX_CONSECUTIVE_SAME = 2;      // Máximo de turnos iguales seguidos (dupletas OK, tripletas NO)
+
     public MallaGeneratorServiceImpl(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
@@ -32,17 +67,42 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
     @Override
     public File generateAndSave(String roleId, String month) throws Exception {
         List<Map<String, Object>> preview = preview(roleId, month);
-        // build excel
+        
+        // Build Excel
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Malla");
 
+        // Crear estilos de colores
+        CellStyle styleDia = workbook.createCellStyle();
+        styleDia.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+        styleDia.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle styleNoche = workbook.createCellStyle();
+        styleNoche.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.getIndex());
+        styleNoche.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle styleApoyo = workbook.createCellStyle();
+        styleApoyo.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        styleApoyo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle styleLibre = workbook.createCellStyle();
+        styleLibre.setFillForegroundColor(IndexedColors.WHITE.getIndex());
+        styleLibre.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle stylePosturno = workbook.createCellStyle();
+        stylePosturno.setFillForegroundColor(IndexedColors.LAVENDER.getIndex());
+        stylePosturno.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        CellStyle styleCMP = workbook.createCellStyle();
+        styleCMP.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+        styleCMP.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
         if (preview.isEmpty()) {
-            // create header only
             Row header = sheet.createRow(0);
             Cell c = header.createCell(0);
             c.setCellValue("No data");
         } else {
-            // header row
+            // Header row
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("Empleado");
             Map<String, Object> first = preview.get(0);
@@ -51,20 +111,49 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 if (k.startsWith("d")) days++;
             }
             for (int d = 1; d <= days; d++) header.createCell(d).setCellValue("d" + d);
+            
+            // Summary columns
+            header.createCell(days + 1).setCellValue("Turnos");
+            header.createCell(days + 2).setCellValue("Horas");
 
             int r = 1;
             for (Map<String, Object> row : preview) {
                 Row excelRow = sheet.createRow(r++);
                 excelRow.createCell(0).setCellValue(String.valueOf(row.get("name")));
+                
                 for (int d = 1; d <= days; d++) {
                     Object v = row.get("d" + d);
-                    excelRow.createCell(d).setCellValue(v == null ? "" : v.toString());
+                    String cellValue = v == null ? "" : v.toString();
+                    Cell cell = excelRow.createCell(d);
+                    cell.setCellValue(cellValue);
+                    
+                    // Aplicar colores según el tipo de turno
+                    if (cellValue.equals("TD")) {
+                        cell.setCellStyle(styleDia);
+                    } else if (cellValue.equals("TN")) {
+                        cell.setCellStyle(styleNoche);
+                    } else if (cellValue.startsWith("AP") || cellValue.equals("AP")) {
+                        cell.setCellStyle(styleApoyo);
+                    } else if (cellValue.equals("PT")) {
+                        cell.setCellStyle(stylePosturno);
+                    } else if (cellValue.equals("CP")) {
+                        cell.setCellStyle(styleCMP);
+                    } else if (cellValue.contains("CP") && cellValue.contains("AP") && cellValue.contains("+")) {
+                        // Combinación CP+AP - usar estilo mixto (CMP como base)
+                        cell.setCellStyle(styleCMP);
+                    } else {
+                        cell.setCellStyle(styleLibre);
+                    }
                 }
+                
+                Object turnos = row.get("turnos");
+                Object horas = row.get("horas");
+                excelRow.createCell(days + 1).setCellValue(turnos == null ? "" : turnos.toString());
+                excelRow.createCell(days + 2).setCellValue(horas == null ? "" : horas.toString());
             }
         }
 
-        YearMonth ym = YearMonth.parse(month);
-        String filename = String.format("malla_%s_%s.xlsx", roleId, month);
+        String filename = String.format("malla_%s_%s.xlsx", roleId, YearMonth.parse(month));
         File dir = new File(storagePath);
         if (!dir.exists()) dir.mkdirs();
         File out = new File(dir, filename);
@@ -75,103 +164,370 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         return out;
     }
 
-    // allow controller to override storage path when user specifies location
     public void setStoragePath(String path) {
         if (path != null && !path.isBlank()) this.storagePath = path;
     }
 
     @Override
     public List<Map<String, Object>> preview(String roleId, String month) throws Exception {
-        // Normalize and collect users from repository so we include real employees (e.g., Melissa)
         List<Usuario> allRepoUsers = usuarioRepository.findAll();
         if (allRepoUsers == null || allRepoUsers.isEmpty()) return List.of();
 
         YearMonth ym = YearMonth.parse(month);
         int days = ym.lengthOfMonth();
 
-            // derive coverage requirements from business rules
-            // Per day (diurno): 2 médicos, 3 enfermeros (JEF mapped), 8 auxiliares, 2 terapeutas
-            Map<String, Integer> coverageDay = new HashMap<>();
-            coverageDay.put("MED", 2);
-            coverageDay.put("JEF", 3);
-            coverageDay.put("AUX", 8);
-            coverageDay.put("TER", 2);
+        // Calcular auxiliares necesarios
+        int auxNeeded = 8;
+        if (patientLoad != null && patientLoad > 0) {
+            auxNeeded = (int) Math.ceil(patientLoad / 6.0);
+            System.out.println("[MALLA] Auxiliares calculados: " + patientLoad + " pacientes / 6 = " + auxNeeded + " auxiliares");
+        } else if (auxCoverageOverride != null && auxCoverageOverride > 0) {
+            auxNeeded = auxCoverageOverride;
+            System.out.println("[MALLA] Auxiliares override: " + auxNeeded);
+        }
 
-            // Per night (nocturno): 1 médico, 2 enfermeros, 8 auxiliares, 2 terapeutas
-            Map<String, Integer> coverageNight = new HashMap<>();
-            coverageNight.put("MED", 1);
-            coverageNight.put("JEF", 2);
-            coverageNight.put("AUX", 8);
-            coverageNight.put("TER", 2);
+        // Requerimientos de cobertura
+        Map<String, Integer> coverageDay = Map.of("MED", 2, "JEF", 3, "AUX", auxNeeded, "TER", 2);
+        Map<String, Integer> coverageNight = Map.of("MED", 1, "JEF", 2, "AUX", auxNeeded, "TER", 2);
+        
+        System.out.println("[MALLA] COBERTURA REQUERIDA - Día: " + coverageDay + ", Noche: " + coverageNight);
 
-        // Map repository users into role codes (MED, JEF, AUX, TER) using role name or id heuristics
+        // Clasificar usuarios por rol
+        Map<String, List<Usuario>> byCode = classifyUsersByRole(allRepoUsers);
+        System.out.println("[MALLA] Pools - MED: " + byCode.getOrDefault("MED", List.of()).size() + 
+                          ", JEF: " + byCode.getOrDefault("JEF", List.of()).size() +
+                          ", AUX: " + byCode.getOrDefault("AUX", List.of()).size() +
+                          ", TER: " + byCode.getOrDefault("TER", List.of()).size());
+
+        // Obtener usuarios objetivo
+        List<Usuario> targetUsers = getTargetUsers(allRepoUsers, byCode, roleId);
+        System.out.println("[MALLA] Usuarios objetivo: " + targetUsers.size());
+
+        // Inicializar malla (filas)
+        List<Map<String, Object>> rows = new ArrayList<>();
+        Map<Long, Integer> hoursByUser = new HashMap<>();
+        Map<Long, Integer> turnsByUser = new HashMap<>();
+        Map<Long, Integer> consecutiveDays = new HashMap<>();
+        Map<Long, Integer> consecutiveNights = new HashMap<>();
+        Map<Long, Boolean> hasCMP = new HashMap<>();
+
+        for (Usuario u : targetUsers) {
+            long id = u.getIdUsuario();
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", id);
+            row.put("name", u.getPrimerNombre() + " " + (u.getPrimerApellido() == null ? "" : u.getPrimerApellido()));
+            for (int d = 1; d <= days; d++) {
+                row.put("d" + d, "");
+            }
+            rows.add(row);
+
+            hoursByUser.put(id, 0);
+            turnsByUser.put(id, 0);
+            consecutiveDays.put(id, 0);
+            consecutiveNights.put(id, 0);
+            hasCMP.put(id, false);
+        }
+
+        // ========== FASE 1: ASIGNAR TURNOS DE 12H PRIORIZANDO COBERTURA Y EQUIDAD ==========
+        System.out.println("[MALLA] FASE 1: Asignando turnos de 12h priorizando cobertura completa...");
+        
+        // ESTRATEGIA: Primero garantizar cobertura completa cada día, 
+        // luego seguir asignando turnos hasta que la mayoría tenga ~16 turnos (192h)
+        int maxIterations = 200; // Aumentar iteraciones para garantizar distribución completa
+        
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
+            boolean anyAssigned = false;
+            
+            for (int d = 1; d <= days; d++) {
+                // Asignar turnos DÍA
+                for (String roleCode : List.of("MED", "JEF", "AUX", "TER")) {
+                    int needDay = coverageDay.getOrDefault(roleCode, 0);
+                    int assignedDay = countAssignedForDay(rows, d, "Día", roleCode, byCode);
+                    
+                    while (assignedDay < needDay) {
+                        Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, false, 
+                                                                 rows, hoursByUser, consecutiveDays, 
+                                                                 consecutiveNights);
+                        if (candidate == null) break;
+                        
+                        assignShiftV3(candidate.getIdUsuario(), d, "TD", rows, hoursByUser, 
+                                     turnsByUser, consecutiveDays, consecutiveNights, FULL_SHIFT_HOURS, false);
+                        assignedDay++;
+                        anyAssigned = true;
+                    }
+                }
+
+                // Asignar turnos NOCHE
+                for (String roleCode : List.of("MED", "JEF", "AUX", "TER")) {
+                    int needNight = coverageNight.getOrDefault(roleCode, 0);
+                    int assignedNight = countAssignedForDay(rows, d, "Noche", roleCode, byCode);
+                    
+                    while (assignedNight < needNight) {
+                        Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, true, 
+                                                                 rows, hoursByUser, consecutiveDays, 
+                                                                 consecutiveNights);
+                        if (candidate == null) break;
+                        
+                        assignShiftV3(candidate.getIdUsuario(), d, "TN", rows, hoursByUser, 
+                                     turnsByUser, consecutiveDays, consecutiveNights, FULL_SHIFT_HOURS, true);
+                        assignedNight++;
+                        anyAssigned = true;
+                    }
+                }
+            }
+            
+            // Verificar progreso: contar cuántos usuarios están cerca de completar 192h con solo turnos de 12h
+            int usersCompleted = 0;
+            int usersNearTarget = 0;
+            for (Map<String, Object> row : rows) {
+                Number nid = (Number) row.get("id");
+                if (nid != null) {
+                    int hours = hoursByUser.getOrDefault(nid.longValue(), 0);
+                    if (hours >= TARGET_HOURS_PER_USER) usersCompleted++;
+                    if (hours >= (TARGET_HOURS_PER_USER - 24)) usersNearTarget++; // Dentro de 2 turnos
+                }
+            }
+            
+            System.out.println("[MALLA] Iteración " + (iteration + 1) + 
+                             ": " + usersCompleted + " usuarios ≥192h, " + 
+                             usersNearTarget + " usuarios cerca del objetivo");
+            
+            // Detener si la mayoría de usuarios está completa o no se pueden asignar más turnos
+            if (!anyAssigned || usersNearTarget >= (targetUsers.size() * 0.8)) {
+                System.out.println("[MALLA] Distribución de turnos completada (cobertura garantizada)");
+                break;
+            }
+        }
+
+        System.out.println("[MALLA] FASE 1 completada");
+
+        // ========== FASE 2: ASIGNAR POSTURNO DESPUÉS DE NOCHES ==========
+        System.out.println("[MALLA] FASE 2: Asignando POSTURNO después de noches...");
+        
+        for (Map<String, Object> row : rows) {
+            Number nid = (Number) row.get("id");
+            if (nid == null || nid.longValue() < 1) continue;
+            
+            for (int d = 1; d <= days; d++) {
+                String key = "d" + d;
+                Object cell = row.get(key);
+                String cellStr = cell == null ? "" : cell.toString();
+
+                if (cellStr.isEmpty() || cellStr.isBlank()) {
+                    if (d > 1) {
+                        Object prev = row.get("d" + (d - 1));
+                        String prevStr = prev == null ? "" : prev.toString();
+                        if (prevStr.equals("TN")) {
+                            row.put(key, "PT");
+                        } else {
+                            row.put(key, "LB");
+                        }
+                    } else {
+                        row.put(key, "LB");
+                    }
+                }
+            }
+        }
+
+        System.out.println("[MALLA] FASE 2 completada");
+
+        // ========== FASE 3: ASIGNAR COMITÉ PRIMARIO (CMP) - 3 HORAS ==========
+        System.out.println("[MALLA] FASE 3: Asignando Comité Primario (CMP - 3h)...");
+        
+        for (Map<String, Object> row : rows) {
+            Number nid = (Number) row.get("id");
+            if (nid == null || nid.longValue() < 1) continue;
+            long id = nid.longValue();
+
+            // Buscar un día LB para asignar CP
+            for (int d = 1; d <= days; d++) {
+                String key = "d" + d;
+                Object cell = row.get(key);
+                String cellStr = cell == null ? "" : cell.toString();
+
+                if (cellStr.equals("LB")) {
+                    // Marcar que tiene CP pero no asignar aún, se combinará con AP si es necesario
+                    row.put(key, "CP");
+                    hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + CMP_HOURS);
+                    hasCMP.put(id, true);
+                    break;
+                }
+            }
+        }
+
+        System.out.println("[MALLA] FASE 3 completada");
+
+        // ========== FASE 4: ASIGNAR APOYO SOLO SI ES NECESARIO PARA COMPLETAR 192H ==========
+        System.out.println("[MALLA] FASE 4: Asignando APOYO MÍNIMO para completar exactamente 192 horas...");
+        
+        for (Map<String, Object> row : rows) {
+            Number nid = (Number) row.get("id");
+            if (nid == null || nid.longValue() < 1) continue;
+            long id = nid.longValue();
+
+            int currentHours = hoursByUser.getOrDefault(id, 0);
+            int remaining = TARGET_HOURS_PER_USER - currentHours;
+
+            if (remaining <= 0) {
+                System.out.println("[MALLA] Usuario " + row.get("name") + ": " + currentHours + 
+                                 "h - Ya completó sus horas");
+                continue;
+            }
+
+            System.out.println("[MALLA] Usuario " + row.get("name") + ": " + currentHours + 
+                             "h, faltan " + remaining + "h para 192h");
+
+            // Estrategia: Primero intentar combinar con CP si existe, luego buscar LB
+            boolean apoyoAsignado = false;
+            
+            // 1. Buscar día con CP y agregar AP en el mismo día (RESTRICCIÓN: CP + AP <= 12h)
+            for (int d = 1; d <= days && remaining > 0; d++) {
+                String key = "d" + d;
+                Object cell = row.get(key);
+                String cellStr = cell == null ? "" : cell.toString();
+
+                if (cellStr.equals("CP")) {
+                    // CP = 3h, entonces AP máximo = 9h para no exceder 12h por día
+                    int maxApoyoThisDay = Math.min(remaining, 12 - CMP_HOURS); // máximo 9h
+                    
+                    if (maxApoyoThisDay > 0) {
+                        String combinado = "CP" + CMP_HOURS + "h+AP" + maxApoyoThisDay + "h";
+                        row.put(key, combinado);
+                        hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + maxApoyoThisDay);
+                        remaining -= maxApoyoThisDay;
+                        
+                        System.out.println("[MALLA] Usuario " + row.get("name") + 
+                                         " - Combinado: " + combinado + " (total día: " + (CMP_HOURS + maxApoyoThisDay) + "h, quedan " + remaining + "h)");
+                        
+                        if (remaining == 0) {
+                            apoyoAsignado = true;
+                        }
+                    }
+                }
+            }
+            
+            // 2. Si aún faltan horas, buscar días LB para asignar AP (máximo 12h por día)
+            for (int d = 1; d <= days && remaining > 0; d++) {
+                String key = "d" + d;
+                Object cell = row.get(key);
+                String cellStr = cell == null ? "" : cell.toString();
+
+                if (cellStr.equals("LB")) {
+                    // En un día solo LB, podemos asignar hasta 12h de APOYO
+                    int apoyoThisDay = Math.min(remaining, 12);
+                    
+                    row.put(key, "AP" + apoyoThisDay + "h");
+                    hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + apoyoThisDay);
+                    remaining -= apoyoThisDay;
+                    
+                    System.out.println("[MALLA] Usuario " + row.get("name") + 
+                                     " - APOYO asignado: AP" + apoyoThisDay + "h (quedan " + remaining + "h)");
+                    
+                    if (remaining == 0) {
+                        apoyoAsignado = true;
+                    }
+                }
+            }
+
+            if (!apoyoAsignado && remaining > 0) {
+                System.out.println("[MALLA] WARNING: Usuario " + row.get("name") + 
+                                 " no pudo completar 192h, faltan " + remaining + "h (sin días LB disponibles o límite de 12h/día alcanzado)");
+            }
+        }
+
+        System.out.println("[MALLA] FASE 4 completada");
+
+        // ========== CALCULAR ESTADÍSTICAS FINALES ==========
+        System.out.println("[MALLA] Calculando estadísticas finales...");
+        
+        for (Map<String, Object> row : rows) {
+            Number nid = (Number) row.get("id");
+            if (nid == null || nid.longValue() < 1) continue;
+            long id = nid.longValue();
+
+            int horas = hoursByUser.getOrDefault(id, 0);
+            int turnos = 0;
+            for (int d = 1; d <= days; d++) {
+                Object cell = row.get("d" + d);
+                String s = cell == null ? "" : cell.toString();
+                // Contar turnos: TD, TN, AP (con o sin horas), CP+AP
+                if (s.equals("TD") || s.equals("TN") || s.equals("AP") || s.startsWith("AP") || 
+                    (s.contains("CP") && s.contains("AP"))) {
+                    turnos++;
+                }
+            }
+
+            row.put("horas", horas);
+            row.put("turnos", turnos);
+
+            System.out.println("[MALLA] " + row.get("name") + ": " + turnos + " turnos, " + 
+                             horas + " horas" + (hasCMP.get(id) ? " (incluye CMP)" : ""));
+        }
+
+        return rows;
+    }
+
+    // ========== MÉTODOS AUXILIARES ==========
+
+    private Map<String, List<Usuario>> classifyUsersByRole(List<Usuario> users) {
         Map<String, List<Usuario>> byCode = new HashMap<>();
-        for (Usuario u : allRepoUsers) {
-            String code = "AUX"; // default
+        for (Usuario u : users) {
+            String code = "AUX";
             if (u.getRol() != null) {
                 String idr = u.getRol().getIdRol() != null ? u.getRol().getIdRol().toLowerCase() : "";
                 String rname = u.getRol().getRol() != null ? u.getRol().getRol().toLowerCase() : "";
+                
                 if (idr.contains("med") || rname.contains("med")) code = "MED";
                 else if (idr.contains("jef") || rname.contains("jef") || rname.contains("jefe")) code = "JEF";
                 else if (idr.contains("aux") || rname.contains("aux")) code = "AUX";
-                else if (idr.contains("ter") || rname.contains("terap") || rname.contains("ter") ) code = "TER";
-                else if (rname.contains("enfer") || idr.contains("enf")) {
-                    // map enfermero/enfermera into JEF (enfermeras jefe) to match coverage keys
-                    code = "JEF";
-                }
+                else if (idr.contains("ter") || rname.contains("terap") || rname.contains("ter")) code = "TER";
+                else if (rname.contains("enfer") || idr.contains("enf")) code = "JEF";
             }
             byCode.computeIfAbsent(code, k -> new ArrayList<>()).add(u);
         }
+        return byCode;
+    }
 
-        // Determine the target pool based on roleId parameter (accept code, id, or role name)
-        String param = roleId == null ? "" : roleId.trim();
-        String targetCode = null;
-        if (!param.isEmpty()) {
-            String p = param.toLowerCase();
-            if (p.equals("med") || p.contains("medico") || p.contains("med")) targetCode = "MED";
-            else if (p.equals("jef") || p.contains("jefe")) targetCode = "JEF";
-            else if (p.equals("aux") || p.contains("auxiliar")) targetCode = "AUX";
-            else if (p.equals("ter") || p.contains("terap")) targetCode = "TER";
-            else if (p.contains("enf")) targetCode = "ENF";
-        }
-
-        // If roleId corresponds to an exact id_rol in the DB, prefer repository query for accuracy
+    private List<Usuario> getTargetUsers(List<Usuario> allUsers, Map<String, List<Usuario>> byCode, String roleId) {
         List<Usuario> targetUsers = new ArrayList<>();
-        if (param != null && !param.isBlank()) {
-            // Try exact idRol match using repository method
+        String param = roleId == null ? "" : roleId.trim();
+
+        if (!param.isEmpty()) {
             try {
                 List<Usuario> byExact = usuarioRepository.findAllByRol_IdRol(param);
                 if (byExact != null && !byExact.isEmpty()) {
                     targetUsers.addAll(byExact);
                 }
             } catch (Exception ex) {
-                // ignore and fallback to heuristics
+                // Fallback
             }
         }
 
         if (targetUsers.isEmpty()) {
-            if (targetCode != null) {
-                targetUsers.addAll(byCode.getOrDefault(targetCode, List.of()));
-            } else {
-                // attempt match by idRol or role name containing param
-                for (Usuario u : allRepoUsers) {
+            String p = param.toLowerCase();
+            if (p.equals("med") || p.contains("medico")) {
+                targetUsers.addAll(byCode.getOrDefault("MED", List.of()));
+            } else if (p.equals("jef") || p.contains("jefe")) {
+                targetUsers.addAll(byCode.getOrDefault("JEF", List.of()));
+            } else if (p.equals("aux") || p.contains("auxiliar")) {
+                targetUsers.addAll(byCode.getOrDefault("AUX", List.of()));
+            } else if (p.equals("ter") || p.contains("terap")) {
+                targetUsers.addAll(byCode.getOrDefault("TER", List.of()));
+            } else if (!p.isEmpty()) {
+                for (Usuario u : allUsers) {
                     if (u.getRol() != null) {
                         String idr = u.getRol().getIdRol() != null ? u.getRol().getIdRol().toLowerCase() : "";
                         String rname = u.getRol().getRol() != null ? u.getRol().getRol().toLowerCase() : "";
-                        if (idr.contains(param.toLowerCase()) || rname.contains(param.toLowerCase())) {
+                        if (idr.contains(p) || rname.contains(p)) {
                             targetUsers.add(u);
                         }
                     }
                 }
+            } else {
+                targetUsers.addAll(allUsers);
             }
         }
 
-        if (targetUsers.isEmpty()) {
-            // fallback: if no specific param, include all users
-            targetUsers.addAll(allRepoUsers);
-        }
-
-        // Exclude administrador role users explicitly (idRol 'adm05' or rol contains 'admin')
         targetUsers.removeIf(u -> {
             if (u.getRol() == null) return false;
             String idr = u.getRol().getIdRol() == null ? "" : u.getRol().getIdRol().toLowerCase();
@@ -179,529 +535,138 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             return idr.equals("adm05") || rname.contains("admin");
         });
 
-        // Create preview rows for all users in the target set
-        List<Usuario> allUsers = new ArrayList<>(targetUsers);
-        List<Map<String, Object>> rows = new ArrayList<>();
-    Map<Long, Integer> nightStreak = new HashMap<>();
-    Map<Long, Integer> assignedTurns = new HashMap<>();
+        return targetUsers;
+    }
 
-    // track weekend rotation start index per role code
-    Map<String, Integer> weekendIndex = new HashMap<>();
+    private int countAssignedForDay(List<Map<String, Object>> rows, int day, String shiftType, 
+                                    String roleCode, Map<String, List<Usuario>> byCode) {
+        Set<Long> assignedIds = new HashSet<>();
 
-        for (Usuario u : allUsers) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("id", u.getIdUsuario());
-            row.put("name", u.getPrimerNombre() + " " + (u.getPrimerApellido() == null ? "" : u.getPrimerApellido()));
-            for (int d = 1; d <= days; d++) row.put("d" + d, "");
-            rows.add(row);
-            nightStreak.put(u.getIdUsuario(), 0);
-            assignedTurns.put(u.getIdUsuario(), 0);
-        }
-
-        // build a set of target user ids (rows contain only users we should schedule)
-        Set<Long> targetIds = new HashSet<>();
         for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid != null) targetIds.add(nid.longValue());
-        }
-
-        // Helper: select next available user from list respecting max turns and night streak
-        class Selector {
-            Usuario select(List<Usuario> pool, boolean night, int dayIndex, String roleCode, boolean isWeekend) {
-                // sort pool by currently assigned turns (ascending) but prefer
-                // candidates with larger existing consecutive free days (to avoid long free streaks)
-                pool.sort((u1, u2) -> {
-                    int a = assignedTurns.getOrDefault(u1.getIdUsuario(), 0);
-                    int b = assignedTurns.getOrDefault(u2.getIdUsuario(), 0);
-                    if (a != b) return Integer.compare(a, b);
-                    // tie-breaker: prefer user with larger consecutive free days around dayIndex
-                    int cf1 = consecutiveFreeDays(u1.getIdUsuario(), dayIndex, rows);
-                    int cf2 = consecutiveFreeDays(u2.getIdUsuario(), dayIndex, rows);
-                    return Integer.compare(cf2, cf1); // larger free days first
-                });
-
-                int start = weekendIndex.getOrDefault(roleCode, 0);
-                int n = Math.max(1, pool.size());
-
-                for (int i = 0; i < n; i++) {
-                    Usuario cand = pool.get((start + i) % pool.size());
-                    long id = cand.getIdUsuario();
-                    if (assignedTurns.getOrDefault(id, 0) >= 16) continue; // limit 16 turnos
-                    // Night selection: avoid 3 consecutive nights
-                    if (night && nightStreak.getOrDefault(id, 0) >= 2) continue;
-
-                    // Day selection: ensure previous day is not a night (no noche->día)
-                    if (!night && dayIndex > 1) {
-                        Object prev = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 1))).orElse(null);
-                        String prevStr = prev == null ? "" : prev.toString().toLowerCase();
-                        if (prevStr.contains("noche")) continue; // do not assign Día after Noche
-
-                        // avoid creating 3 consecutive days: check previous two days
-                        boolean prevDay1 = false, prevDay2 = false;
-                        Object p1 = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 1))).orElse(null);
-                        Object p2 = dayIndex > 2 ? rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().map(r -> r.get("d" + (dayIndex - 2))).orElse(null) : null;
-                        String p1s = p1 == null ? "" : p1.toString().toLowerCase();
-                        String p2s = p2 == null ? "" : p2.toString().toLowerCase();
-                        if (p1s.contains("día")) prevDay1 = true;
-                        if (p2s.contains("día")) prevDay2 = true;
-                        if (prevDay1 && prevDay2) continue; // would create 3 días seguidos
-                    }
-
-                    // Weekend rotation: advance start when used on weekends
-                    if (isWeekend) weekendIndex.put(roleCode, (start + 1) % Math.max(1, pool.size()));
-                    return cand;
+            Object cell = row.get("d" + day);
+            String cellStr = cell == null ? "" : cell.toString();
+            
+            if (shiftType.equals("Día") && cellStr.equals("TD")) {
+                Number id = (Number) row.get("id");
+                if (id != null && belongsToRole(id.longValue(), roleCode, byCode)) {
+                    assignedIds.add(id.longValue());
                 }
-                return null;
-            }
-
-            // compute consecutive free days around dayIndex for candidate id
-            private int consecutiveFreeDays(long userId, int dayIndex, List<Map<String, Object>> rowsRef) {
-                Map<String, Object> row = rowsRef.stream().filter(r -> ((Number) r.get("id")).longValue() == userId).findFirst().orElse(null);
-                if (row == null) return 0;
-                int daysTotal = 0;
-                // count backward free days
-                int before = 0;
-                for (int d = dayIndex - 1; d >= 1; d--) {
-                    Object c = row.get("d" + d);
-                    String s = c == null ? "" : c.toString().toLowerCase();
-                    if (s.isBlank() || s.equals("libre")) before++; else break;
-                }
-                // count forward free days
-                int after = 0;
-                for (int d = dayIndex; d <= 31; d++) { // safe upper bound
-                    Object c = row.get("d" + d);
-                    if (c == null) { after++; continue; }
-                    String s = c.toString().toLowerCase();
-                    if (s.isBlank() || s.equals("libre")) after++; else break;
-                }
-                daysTotal = before + after;
-                return daysTotal;
-            }
-        }
-
-        Selector selector = new Selector();
-
-        // For each day, assign required counts per role
-        for (int d = 1; d <= days; d++) {
-            // day shift
-            for (Map.Entry<String, Integer> e : coverageDay.entrySet()) {
-                String rname = e.getKey();
-                int need = e.getValue();
-                // only consider users that exist in the target rows
-                List<Usuario> pool = byCode.getOrDefault(rname, List.of()).stream()
-                        .filter(u -> targetIds.contains(u.getIdUsuario()))
-                        .collect(Collectors.toList());
-                for (int k = 0; k < need; k++) {
-                    LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-                    boolean isWeekend = date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
-                    Usuario sel = selector.select(pool, false, d, rname, isWeekend);
-                    if (sel == null) break;
-                    long id = sel.getIdUsuario();
-                    Map<String, Object> row = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().orElse(null);
-                    if (row != null) row.put("d" + d, "Día (07-19)");
-                    assignedTurns.put(id, assignedTurns.getOrDefault(id, 0) + 1);
-                    nightStreak.put(id, 0);
-                }
-            }
-
-            // night shift
-            for (Map.Entry<String, Integer> e : coverageNight.entrySet()) {
-                String rname = e.getKey();
-                int need = e.getValue();
-                // only consider users that exist in the target rows
-                List<Usuario> pool = byCode.getOrDefault(rname, List.of()).stream()
-                        .filter(u -> targetIds.contains(u.getIdUsuario()))
-                        .collect(Collectors.toList());
-                for (int k = 0; k < need; k++) {
-                    LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-                    boolean isWeekend = date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
-                    Usuario sel = selector.select(pool, true, d, rname, isWeekend);
-                    if (sel == null) break;
-                    long id = sel.getIdUsuario();
-                    Map<String, Object> row = rows.stream().filter(r -> ((Number) r.get("id")).longValue() == id).findFirst().orElse(null);
-                    if (row != null) row.put("d" + d, "Noche (19-07)");
-                    assignedTurns.put(id, assignedTurns.getOrDefault(id, 0) + 1);
-                    nightStreak.put(id, nightStreak.getOrDefault(id, 0) + 1);
+            } else if (shiftType.equals("Noche") && cellStr.equals("TN")) {
+                Number id = (Number) row.get("id");
+                if (id != null && belongsToRole(id.longValue(), roleCode, byCode)) {
+                    assignedIds.add(id.longValue());
                 }
             }
         }
 
-        // Second pass: ensure daily minima are strictly attempted to be met.
-        // Build quick lookup of rows by user id
-        Map<Long, Map<Integer, String>> scheduleByUserDay = new HashMap<>();
-        for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid == null) continue;
-            long id = nid.longValue();
-            Map<Integer, String> daysMap = new HashMap<>();
-            for (int d = 1; d <= days; d++) {
-                Object cell = row.get("d" + d);
-                daysMap.put(d, cell == null ? "" : cell.toString());
-            }
-            scheduleByUserDay.put(id, daysMap);
-        }
+        return assignedIds.size();
+    }
 
-        // For each day and each role, check if assigned < need and try to assign extra users
-        for (int d = 1; d <= days; d++) {
-            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-            boolean isWeekend = date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
-            for (String roleCode : List.of("MED", "JEF", "AUX", "TER")) {
-                int needDay = coverageDay.getOrDefault(roleCode, 0);
-                int needNight = coverageNight.getOrDefault(roleCode, 0);
+    private boolean belongsToRole(long userId, String roleCode, Map<String, List<Usuario>> byCode) {
+        List<Usuario> pool = byCode.getOrDefault(roleCode, List.of());
+        return pool.stream().anyMatch(u -> u.getIdUsuario() == userId);
+    }
 
-                // count currently assigned day
-                int assignedDayCount = 0;
-                int assignedNightCount = 0;
-                for (Map<String, Object> row : rows) {
-                    Number nid = (Number) row.get("id");
-                    if (nid == null || nid.longValue() < 1) continue;
-                    String cell = (String) row.get("d" + d);
-                    if (cell != null && cell.toLowerCase().contains("día")) assignedDayCount++;
-                    if (cell != null && cell.toLowerCase().contains("noche")) assignedNightCount++;
-                }
-
-        // only consider users that have schedule maps (present in target rows)
+    private Usuario selectBestCandidateV3(List<Usuario> targetUsers, Map<String, List<Usuario>> byCode,
+                                         String roleCode, int day, boolean isNight, 
+                                         List<Map<String, Object>> rows,
+                                         Map<Long, Integer> hoursByUser, 
+                                         Map<Long, Integer> consecutiveDays,
+                                         Map<Long, Integer> consecutiveNights) {
         List<Usuario> pool = byCode.getOrDefault(roleCode, List.of()).stream()
-            .filter(u -> scheduleByUserDay.containsKey(u.getIdUsuario()))
+            .filter(u -> targetUsers.contains(u))
             .collect(Collectors.toList());
 
-                // fill day shortages
-                while (assignedDayCount < needDay) {
-                    Usuario candidate = null;
-                    for (Usuario u : pool) {
-                        long id = u.getIdUsuario();
-                        if (assignedTurns.getOrDefault(id, 0) >= 16) continue;
-                        String cell = scheduleByUserDay.getOrDefault(id, Map.of()).get(d);
-                        if (cell == null || cell.isEmpty()) {
-                            candidate = u; break;
-                        }
-                    }
-                    if (candidate == null) break; // cannot fill more
-                    long id = candidate.getIdUsuario();
-                    Map<String, Object> row = rows.stream().filter(r -> { Number nid=(Number)r.get("id"); return nid!=null && nid.longValue()==id; }).findFirst().orElse(null);
-                    if (row!=null) row.put("d"+d, "Día (07-19)");
-                    assignedTurns.put(id, assignedTurns.getOrDefault(id, 0)+1);
-                    nightStreak.put(id, 0);
-                    scheduleByUserDay.get(id).put(d, "Día (07-19)");
-                    assignedDayCount++;
-                }
+        if (pool.isEmpty()) return null;
 
-                // fill night shortages
-                while (assignedNightCount < needNight) {
-                    Usuario candidate = null;
-                    for (Usuario u : pool) {
-                        long id = u.getIdUsuario();
-                        if (assignedTurns.getOrDefault(id, 0) >= 16) continue;
-                        String cell = scheduleByUserDay.getOrDefault(id, Map.of()).get(d);
-                        if (cell == null || cell.isEmpty()) {
-                            // ensure we don't create 3rd consecutive night
-                            if (nightStreak.getOrDefault(id,0) >= 2) continue;
-                            candidate = u; break;
-                        }
-                    }
-                    if (candidate == null) break;
-                    long id = candidate.getIdUsuario();
-                    Map<String, Object> row = rows.stream().filter(r -> { Number nid=(Number)r.get("id"); return nid!=null && nid.longValue()==id; }).findFirst().orElse(null);
-                    if (row!=null) row.put("d"+d, "Noche (19-07)");
-                    assignedTurns.put(id, assignedTurns.getOrDefault(id, 0)+1);
-                    nightStreak.put(id, nightStreak.getOrDefault(id,0)+1);
-                    scheduleByUserDay.get(id).put(d, "Noche (19-07)");
-                    assignedNightCount++;
-                }
+        // Ordenar por:
+        // 1. Menos horas acumuladas (equidad)
+        // 2. No violar restricciones
+        pool.sort((u1, u2) -> {
+            long id1 = u1.getIdUsuario();
+            long id2 = u2.getIdUsuario();
+            int h1 = hoursByUser.getOrDefault(id1, 0);
+            int h2 = hoursByUser.getOrDefault(id2, 0);
+            
+            // Priorizar quien tiene menos horas
+            return Integer.compare(h1, h2);
+        });
+
+        for (Usuario u : pool) {
+            long id = u.getIdUsuario();
+            Map<String, Object> row = rows.stream()
+                .filter(r -> ((Number) r.get("id")).longValue() == id)
+                .findFirst().orElse(null);
+
+            if (row == null) continue;
+
+            Object cell = row.get("d" + day);
+            String cellStr = cell == null ? "" : cell.toString();
+
+            // Ya tiene turno asignado
+            if (!cellStr.isEmpty() && !cellStr.isBlank()) continue;
+
+            // VALIDACIÓN 1: NO noche → día (sería 24h continuas)
+            if (!isNight && day > 1) {
+                Object prev = row.get("d" + (day - 1));
+                String prevStr = prev == null ? "" : prev.toString();
+                if (prevStr.equals("TN")) continue; // Skip: no puede ser día después de noche
             }
+
+            // VALIDACIÓN 2: NO tripletas de días (máximo 2 días seguidos)
+            if (!isNight) {
+                int consecut = consecutiveDays.getOrDefault(id, 0);
+                if (consecut >= MAX_CONSECUTIVE_SAME) continue; // Ya tiene 2 días seguidos
+            }
+
+            // VALIDACIÓN 3: NO tripletas de noches (máximo 2 noches seguidas)
+            if (isNight) {
+                int consecut = consecutiveNights.getOrDefault(id, 0);
+                if (consecut >= MAX_CONSECUTIVE_SAME) continue; // Ya tiene 2 noches seguidas
+            }
+
+            // VALIDACIÓN 4: No exceder 189 horas (dejar espacio para CMP de 3h)
+            int currentHours = hoursByUser.getOrDefault(id, 0);
+            if (currentHours + FULL_SHIFT_HOURS > 189) continue;
+
+            // Candidato válido
+            return u;
         }
 
-        // After filling shortages, recalc per-user turns/hours
-        for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid==null || nid.longValue()<1) continue;
-            long id = nid.longValue();
-            int turns = 0;
-            for (int d=1; d<=days; d++) {
-                Object cell = row.get("d"+d);
-                if (cell!=null && !cell.toString().isBlank()) {
-                    String s = cell.toString();
-                    if (!s.toUpperCase().contains("APOYO")) turns += 1; // count full shifts
-                }
-            }
-            assignedTurns.put(id, turns);
-            row.put("turnos", turns);
-            row.put("horas", turns * 12);
-        }
-
-    // Ensure every user reaches 192 hours by adding APOYO (support) assignments.
-    // Prefer adding full 12h apoyo shifts on weekdays; if <12 remaining, append partial apoyo to an existing shift
-        for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid == null || nid.longValue() < 1) continue;
-            long id = nid.longValue();
-
-            // compute current hours: if 'horas' field exists use it, otherwise compute from assignedTurns
-            int hours = 0;
-            Object horasObj = row.get("horas");
-            if (horasObj instanceof Number) hours = ((Number) horasObj).intValue();
-            else hours = assignedTurns.getOrDefault(id, 0) * 12;
-
-            int remaining = 192 - hours;
-
-            // compute current apoyo hours already present in the row (sum numeric values in "Apoyo (...)h")
-            int currentApoyoHours = 0;
-            for (int d = 1; d <= days; d++) {
-                Object cell = row.get("d" + d);
-                if (cell == null) continue;
-                String s = cell.toString().toLowerCase();
-                if (s.contains("apoyo")) {
-                    // extract digits (e.g., "apoyo (12h)" or "apoyo (6h)")
-                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(s);
-                    if (m.find()) {
-                        try { currentApoyoHours += Integer.parseInt(m.group(1)); } catch (Exception ex) { }
-                    } else {
-                        // default assume 12h if unspecified
-                        currentApoyoHours += 12;
-                    }
-                }
-            }
-            if (remaining <= 0) {
-                // already satisfied
-                row.put("horas", Math.max(0, hours));
-                continue;
-            }
-
-            // Helper: use private method findDayForExtra(...) defined below
-
-            // Add full 12h Apoyo shifts while possible (weekday-only; try to distribute across month)
-            // Only allow up to 12h of apoyo per user
-            while (remaining >= 12 && currentApoyoHours < 12) {
-                int day = findBestWeekdayForApoyo(row, ym, days, rows);
-                if (day == -1) break; // no available weekday
-                // ensure we don't overwrite existing Día/Noche/Posturno
-                Object exist = row.get("d" + day);
-                String existStr = exist == null ? "" : exist.toString().toLowerCase();
-                if (existStr.contains("día") || existStr.contains("noche") || existStr.contains("posturno")) break;
-                int assignHours = Math.min(12 - currentApoyoHours, 12);
-                row.put("d" + day, "Apoyo (" + assignHours + "h)");
-                hours += assignHours;
-                remaining -= assignHours;
-                currentApoyoHours += assignHours;
-            }
-
-            // If some hours remain (<12), try to append to an existing shift first (prefer weekdays), else put on a free day
-            if (remaining > 0 && currentApoyoHours < 12) {
-                // Only place partial apoyo on free weekdays (do NOT append to existing Día/Noche/Posturno)
-                int toAssign = Math.min(remaining, 12 - currentApoyoHours);
-                boolean placed = false;
-                for (int d = 1; d <= days && !placed; d++) {
-                    LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-                    DayOfWeek dow = date.getDayOfWeek();
-                    boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
-                    if (isWeekend) continue; // prefer weekdays
-                    Object cell = row.get("d" + d);
-                    String cellStr = cell == null ? "" : cell.toString();
-                    // only place on truly free cells (blank or LIBRE)
-                    if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) {
-                        row.put("d" + d, "Apoyo (" + toAssign + "h)");
-                        hours += toAssign;
-                        remaining -= toAssign;
-                        currentApoyoHours += toAssign;
-                        placed = true;
-                        break;
-                    }
-                }
-                // If couldn't place on weekdays, do not place parcial apoyo on weekends (policy)
-            }
-
-            // store updated hours
-            row.put("horas", hours);
-
-            // Recompute turnos by counting non-LIBRE/POSTURNO cells (Apoyo(12h) counts as full turno)
-            int newTurns = 0;
-            for (int d = 1; d <= days; d++) {
-                Object cell = row.get("d" + d);
-                String s = cell == null ? "" : cell.toString();
-                if (s.isBlank()) continue;
-                String up = s.toUpperCase();
-                if (up.contains("LIBRE") || up.contains("POSTURNO")) continue;
-                // count as a turno; if partial hour we still count as part of horas but not full turno
-                if (up.contains("APOYO (12H)" ) || !up.contains("APOYO")) {
-                    // APOYO(12h) or regular shift -> count as full turno
-                    newTurns++;
-                } else if (up.contains("APOYO") ) {
-                    // partial apoyo doesn't increment full turno count
-                }
-            }
-            row.put("turnos", newTurns);
-        }
-
-    // NOTE: horas/turnos are updated above after applying APOYO assignments; do not overwrite here.
-
-        // Post-processing: set empty cells to LIBRE or POSTURNO (if previous day was a night shift for that user)
-        for (Map<String, Object> row : rows) {
-            Number nid = (Number) row.get("id");
-            if (nid == null || nid.longValue() < 1) continue;
-            for (int d = 1; d <= days; d++) {
-                String key = "d" + d;
-                Object cell = row.get(key);
-                if (cell == null || cell.toString().isBlank()) {
-                    // look at previous day
-                    if (d > 1) {
-                        Object prev = row.get("d" + (d - 1));
-                        if (prev != null && prev.toString().toLowerCase().contains("noche")) {
-                            row.put(key, "POSTURNO");
-                            continue;
-                        }
-                    }
-                    row.put(key, "LIBRE");
-                }
-            }
-        }
-
-        // (helper moved to class scope)
-
-        // Build summary row with pool sizes and shortages
-        Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("id", -1);
-        summary.put("name", "SUMMARY");
-        for (String code : List.of("MED", "JEF", "AUX", "TER")) {
-            int pool = byCode.getOrDefault(code, List.of()).size();
-            int needDay = coverageDay.getOrDefault(code, 0);
-            int needNight = coverageNight.getOrDefault(code, 0);
-            summary.put(code + "_pool", pool);
-            summary.put(code + "_needDay", needDay);
-            summary.put(code + "_needNight", needNight);
-            boolean shortage = pool < Math.max(needDay, needNight);
-            summary.put(code + "_shortage", shortage);
-        }
-        // compute simple equity statistics per role: min/max/avg/stddev of assigned turns
-        Map<String, Object> equity = new LinkedHashMap<>();
-        for (String code : List.of("MED", "JEF", "AUX", "TER")) {
-            List<Usuario> pool = byCode.getOrDefault(code, List.of());
-            List<Integer> vals = new ArrayList<>();
-            for (Usuario u : pool) vals.add(assignedTurns.getOrDefault(u.getIdUsuario(), 0));
-            if (vals.isEmpty()) {
-                equity.put(code + "_min", 0);
-                equity.put(code + "_max", 0);
-                equity.put(code + "_avg", 0);
-                equity.put(code + "_std", 0);
-            } else {
-                int min = vals.stream().mapToInt(Integer::intValue).min().orElse(0);
-                int max = vals.stream().mapToInt(Integer::intValue).max().orElse(0);
-                double avg = vals.stream().mapToInt(Integer::intValue).average().orElse(0.0);
-                double variance = vals.stream().mapToDouble(i -> (i - avg) * (i - avg)).sum() / vals.size();
-                equity.put(code + "_min", min);
-                equity.put(code + "_max", max);
-                equity.put(code + "_avg", Math.round(avg * 100.0) / 100.0);
-                equity.put(code + "_std", Math.round(Math.sqrt(variance) * 100.0) / 100.0);
-            }
-        }
-
-        rows.add(0, summary);
-        // Add warnings if any shortages per day/night found
-        List<String> warnings = new ArrayList<>();
-        for (String code : List.of("MED", "JEF", "AUX", "TER")) {
-            int pool = byCode.getOrDefault(code, List.of()).size();
-            int need = Math.max(coverageDay.getOrDefault(code, 0), coverageNight.getOrDefault(code, 0));
-            if (pool < need) warnings.add("Shortage for role " + code + ": pool=" + pool + " need=" + need);
-        }
-        if (!warnings.isEmpty()) {
-            Map<String, Object> warnRow = new LinkedHashMap<>();
-            warnRow.put("id", -3);
-            warnRow.put("name", "WARNINGS");
-            warnRow.put("warnings", warnings);
-            rows.add(0, warnRow);
-        }
-        // attach equity as a metadata map at the front (not a row) by adding a map with id=-2
-        Map<String, Object> equityRow = new LinkedHashMap<>();
-        equityRow.put("id", -2);
-        equityRow.put("name", "EQUITY_STATS");
-        equityRow.putAll(equity);
-        rows.add(0, equityRow);
-
-        return rows;
+        return null;
     }
 
-    // helper: find a day index where an extra/full 12h can be placed for the given user row
-    private int findDayForExtra(Map<String, Object> row, YearMonth ym, int days, boolean requireFree) {
-        // First try weekdays
-        for (int d = 1; d <= days; d++) {
-            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-            DayOfWeek dow = date.getDayOfWeek();
-            boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
-            if (isWeekend) continue;
-            Object cell = row.get("d" + d);
-            String cellStr = cell == null ? "" : cell.toString();
-            if (requireFree) {
-                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) return d;
-            } else {
-                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.toUpperCase().contains("POSTURNO")) return d;
-            }
+    private void assignShiftV3(long userId, int day, String shiftCode, List<Map<String, Object>> rows,
+                              Map<Long, Integer> hoursByUser, Map<Long, Integer> turnsByUser,
+                              Map<Long, Integer> consecutiveDays, Map<Long, Integer> consecutiveNights,
+                              int hours, boolean isNight) {
+        Map<String, Object> row = rows.stream()
+            .filter(r -> ((Number) r.get("id")).longValue() == userId)
+            .findFirst().orElse(null);
+
+        if (row == null) return;
+
+        row.put("d" + day, shiftCode);
+        hoursByUser.put(userId, hoursByUser.getOrDefault(userId, 0) + hours);
+        turnsByUser.put(userId, turnsByUser.getOrDefault(userId, 0) + 1);
+
+        // Actualizar racha de días/noches consecutivas
+        if (isNight) {
+            consecutiveNights.put(userId, consecutiveNights.getOrDefault(userId, 0) + 1);
+            consecutiveDays.put(userId, 0); // Reset días
+        } else {
+            consecutiveDays.put(userId, consecutiveDays.getOrDefault(userId, 0) + 1);
+            consecutiveNights.put(userId, 0); // Reset noches
         }
-        // Then try weekends
-        for (int d = 1; d <= days; d++) {
-            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-            DayOfWeek dow = date.getDayOfWeek();
-            boolean isWeekend = (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY);
-            if (!isWeekend) continue;
-            Object cell = row.get("d" + d);
-            String cellStr = cell == null ? "" : cell.toString();
-            if (requireFree) {
-                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE")) return d;
-            } else {
-                if (cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE") || cellStr.toUpperCase().contains("POSTURNO")) return d;
-            }
-        }
-        return -1;
     }
 
-    private int findBestWeekdayForApoyo(Map<String, Object> row, YearMonth ym, int days, List<Map<String, Object>> rows) {
-        // collect days already used by this user for Apoyo
-        List<Integer> myApoyoDays = new ArrayList<>();
-        for (int d = 1; d <= days; d++) {
-            Object cell = row.get("d" + d);
-            if (cell != null && cell.toString().toLowerCase().contains("apoyo")) myApoyoDays.add(d);
-        }
-
-        // helper to check if any other row has Apoyo on day d
-        java.util.function.Predicate<Integer> dayHasApoyo = (d) -> {
-            for (Map<String, Object> r : rows) {
-                Object c = r.get("d" + d);
-                if (c != null && c.toString().toLowerCase().contains("apoyo")) return true;
-            }
-            return false;
-        };
-
-        int bestDay = -1;
-        int bestScore = -1; // larger is better (distance to nearest myApoyoDays)
-
-        for (int d = 1; d <= days; d++) {
-            LocalDate date = LocalDate.of(ym.getYear(), ym.getMonthValue(), d);
-            DayOfWeek dow = date.getDayOfWeek();
-            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue; // skip weekends
-
-            // skip if other rows already have Apoyo that day
-            if (dayHasApoyo.test(d)) continue;
-
-            Object cell = row.get("d" + d);
-            String cellStr = cell == null ? "" : cell.toString();
-            // prefer empty/LIBRE cells (do NOT use POSTURNO)
-            if (!(cellStr.isBlank() || cellStr.equalsIgnoreCase("LIBRE"))) continue;
-
-            // compute distance score: min distance to existing myApoyoDays (if none, prefer central days)
-            int score;
-            if (myApoyoDays.isEmpty()) {
-                score = days/2 - Math.abs(d - (days/2));
-            } else {
-                int minDist = Integer.MAX_VALUE;
-                for (int ad : myApoyoDays) minDist = Math.min(minDist, Math.abs(d - ad));
-                score = minDist;
-            }
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestDay = d;
-            }
-        }
-
-        return bestDay;
+    @Override
+    public void setAuxCoverageOverride(Integer auxiliaries) {
+        this.auxCoverageOverride = auxiliaries;
     }
 
+    @Override
+    public void setPatientLoad(Integer patients) {
+        this.patientLoad = patients;
+    }
 }

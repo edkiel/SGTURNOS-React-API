@@ -33,8 +33,13 @@ public class MallaController {
         }
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<?> generateMalla(@RequestParam("roleId") String roleId, @RequestParam("month") String month, @RequestParam(value = "path", required = false) String path) {
+        @PostMapping("/generate")
+        public ResponseEntity<?> generateMalla(
+            @RequestParam("roleId") String roleId, 
+            @RequestParam("month") String month, 
+            @RequestParam(value = "path", required = false) String path,
+            @RequestParam(value = "patients", required = false, defaultValue = "0") Integer patients,
+            @RequestParam(value = "auxiliaries", required = false, defaultValue = "0") Integer auxiliaries) {
         try {
             // Only administrators may generate mallas. Disallow medicos, auxiliares, enfermeras, terapeutas.
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -49,12 +54,24 @@ public class MallaController {
                 // allow controller to set a custom storage path temporarily
                 mallaGeneratorService.setStoragePath(path);
             }
+
+            // Propagar parámetros de negocio al generador (cobertura auxiliares / carga de pacientes)
+            mallaGeneratorService.setAuxCoverageOverride(auxiliaries);
+            mallaGeneratorService.setPatientLoad(patients);
+
+            // Log de parámetros recibidos para auxiliares (puedes ajustar la lógica según necesites)
+            if (roleId != null && roleId.toLowerCase().contains("aux")) {
+                System.out.println("Generando malla para auxiliares con: pacientes=" + patients + ", auxiliares=" + auxiliaries);
+            }
+
             File saved = mallaGeneratorService.generateAndSave(roleId, month);
             java.util.List<java.util.Map<String, Object>> preview = mallaGeneratorService.preview(roleId, month);
             java.util.Map<String, Object> resp = new java.util.HashMap<>();
             resp.put("file", saved.getName());
             resp.put("preview", preview);
             resp.put("path", saved.getAbsolutePath());
+            resp.put("patients", patients);
+            resp.put("auxiliaries", auxiliaries);
             return ResponseEntity.ok(resp);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
