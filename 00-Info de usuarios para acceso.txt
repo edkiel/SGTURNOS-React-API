@@ -63,7 +63,6 @@ Paula Gabriela Molina Terrence	44455566	paulamolina@paliacare.com	TERAPIA	_
 
 
 Claudia Marcela Quintana Fajardo	66677788	claudiaquintana@paliacare.com	TERAPIA	_
-	quintana7788
 
 
 Ricardo Hasam Peña Gareca	77788899	ricardopena@paliacare.com	TERAPIA	_
@@ -76,13 +75,12 @@ Genny Carolina Murcia Vargas	110681104	gennymurcia@paliacare.com	TERAPIA	_
 
 
 Angelica Milena Prada Cañón	1103103101	angelicaprada@paliacare.com	TERAPIA	_
+	prada3101
 
 
 Julia Fernanda Araujo Henao	1110110113	juliaaraujo@paliacare.com	TERAPIA	_
+	araujo0113
 		
-
-
-Marcela Panqueva Rios	1110110121	marcelapanqueva@paliacare.com	TERAPIA	_
 
 
 Coni luz Camelo Frias	6546341122	conicamelo@paliacare.com	TERAPIA	_
