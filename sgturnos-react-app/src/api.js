@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-// Base URL utilizada por el frontend (usa variable de entorno o localhost por defecto)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api';
+// Base URL utilizada por el frontend
+// En producción (Netlify) usa la URL del backend de Render
+// En desarrollo usa localhost
+const isProduction = window.location.hostname.includes('netlify.app');
+export const API_BASE_URL = isProduction 
+  ? 'https://sgturnos-backend.onrender.com/api'
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api');
 
 // Creamos una instancia de Axios para configurar los headers globalmente
 export const api = axios.create({
