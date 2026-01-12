@@ -91,7 +91,7 @@ const PersonalMalla = ({ user }) => {
   if (!malla || malla.length === 0) return <div className="bg-white p-4 rounded-md shadow">No hay malla generada para tu rol.</div>;
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-md shadow" style={{ maxWidth: '1400px' }}>
+    <div className="w-full p-4 sm:p-6 lg:p-8 bg-white rounded-md shadow">
       <PageHeader
         title="Consultar mi malla de turno"
         subtitle="Visualiza tu malla publicada y descárgala cuando la necesites"

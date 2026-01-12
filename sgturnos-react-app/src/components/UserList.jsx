@@ -162,7 +162,7 @@ const UserList = () => {
   const roleEntries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-5" style={{ maxWidth: '1400px' }}>
+    <div className="w-full p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
       {/* Modal de confirmación de eliminación */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

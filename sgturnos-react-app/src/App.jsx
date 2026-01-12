@@ -123,29 +123,28 @@ const Dashboard = ({ user, onLogout }) => {
 
     switch (activeTab) {
       case 'home':
-        return (
-          <div className="space-y-6">
-            <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-              <h2 className="text-3xl font-medium text-gray-800 mb-4">
-                Bienvenido, {user?.primerNombre} 
-                {user?.rol && <span className="text-sm text-gray-500 ml-2">({getRoleName()})</span>}
-              </h2>
-              <p className="text-lg text-gray-600">
-                {isAdmin ? 'Este es tu panel de control de administrador.' : 'Consulta tu malla de turno publicada.'}
-              </p>
-            </div>
-            
-            {/* Mostrar alertas solo para administradores */}
-            {isAdmin && (
-              <div className="mb-6">
+        if (isAdmin) {
+          return (
+            <div className="w-full p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
+              <div className="mb-4">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  Bienvenido, {user?.primerNombre} 
+                  {user?.rol && <span className="text-sm text-gray-500 ml-2">({getRoleName()})</span>}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Este es tu panel de control de administrador.
+                </p>
+              </div>
+              
+              <div className="mb-4">
                 <AlertasMalla usuarioId={user?.idUsuario} />
               </div>
-            )}
-            
-            {isAdmin ? <AdminPublishedMallas /> : <PersonalMalla user={user} />}
-          </div>
-          
-        );
+              
+              <AdminPublishedMallas />
+            </div>
+          );
+        }
+        return <PersonalMalla user={user} />;
       case 'myinfo':
         return <MyAccount user={user} />;
       case 'users':
@@ -198,13 +197,6 @@ const Dashboard = ({ user, onLogout }) => {
         return <RRHHNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
       case 'rrhh-revisor':
         return <RecursosHumanosRevisor usuarioId={user?.idUsuario} />;
-      case 'other':
-        return (
-          <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Otros Modulos</h2>
-            <p className="text-lg text-gray-600 mt-4">Proximamente podras ver mas modulos aqui.</p>
-          </div>
-        );
       default:
         return null;
     }
@@ -326,15 +318,6 @@ const Dashboard = ({ user, onLogout }) => {
               }
               return null;
             })()}
-            
-            <li>
-              <button
-                onClick={() => setActiveTab('other')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'other' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
-              >
-                Otros Módulos
-              </button>
-            </li>
           </ul>
         </nav>
         <div className="mt-auto">
@@ -345,8 +328,8 @@ const Dashboard = ({ user, onLogout }) => {
       </aside>
 
       {/* Contenido principal */}
-      <main className="flex-1 overflow-y-auto p-2 sm:p-3 lg:p-4 flex justify-center">
-        <div className="w-full" style={{ maxWidth: '100%' }}>
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="w-full">
           {renderContent()}
         </div>
       </main>
