@@ -163,7 +163,8 @@ Victor Pablo Guerrero Libano	12233445	victorguerrero@paliacare.com	AUXILIAR	_
 Pedro camilo Sanchez tolosa	13579246	pedrosanchez@paliacare.com	AUXILIAR	_
 
 
-Isabel Alejandra Muñoz Aguilar	14142135	isabelmunoz@paliacare.com	AUXILIAR	_
+Isabel Alejandra Muñoz Aguilar	14142135	isabelmunoz@paliacare.com
+munoz2135	AUXILIAR	_
 
 
 Miguel Camilo Ruiz Treller	16180339	miguelruiz@paliacare.com	AUXILIAR	_
