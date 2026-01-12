@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL utilizada por el frontend
-export const API_BASE_URL = 'http://localhost:8085/api';
+// Base URL utilizada por el frontend (usa variable de entorno o localhost por defecto)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api';
 
 // Creamos una instancia de Axios para configurar los headers globalmente
 export const api = axios.create({
