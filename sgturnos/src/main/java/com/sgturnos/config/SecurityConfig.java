@@ -92,8 +92,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para production.
                 .requestMatchers("/api/usuarios/**").permitAll()
-                // Permitimos temporalmente acceso público a los endpoints de mallas para pruebas locales.
-                .requestMatchers("/api/mallas/**").permitAll()
+                // Permitimos GET a mallas (lectura) pero POST/PUT requiere autenticación
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mallas/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/mallas/**").authenticated()
                 // Permite acceso público a los endpoints de descarga de soportes PDF
                 .requestMatchers("/api/novedades/*/soporte").permitAll()
                 // Todas las demás rutas requieren autenticación
