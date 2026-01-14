@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TurnosGrid from './TurnosGrid';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import PageHeader from '../common/PageHeader';
+import { API_BASE_URL } from '../../api';
 
 // months list removed (we use input type="month")
 
@@ -40,7 +41,7 @@ const TurnosModule = ({ user }) => {
 
     const fetchRoles = async () => {
       try {
-        const res = await fetch('/api/usuarios/roles');
+        const res = await fetch(`${API_BASE_URL}/usuarios/roles`);
         if (!res.ok) throw new Error('no roles');
         const data = await res.json();
         // map backend roles to our allowed list when id matches
@@ -78,7 +79,7 @@ const TurnosModule = ({ user }) => {
 
     const fetchPublished = async () => {
       try {
-        const pubRes = await fetch(`/api/mallas/published?roleId=${encodeURIComponent(r)}&month=${encodeURIComponent(month)}`);
+        const pubRes = await fetch(`${API_BASE_URL}/mallas/published?roleId=${encodeURIComponent(r)}&month=${encodeURIComponent(month)}`);
         if (!pubRes.ok) {
           // no published malla
           setGridData([]);
@@ -105,7 +106,7 @@ const TurnosModule = ({ user }) => {
       const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}&patients=${encodeURIComponent(patientsCount)}&auxiliaries=${encodeURIComponent(auxiliariesCount)}`;
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch(`/api/mallas/generate${qs}`, { method: 'POST', headers });
+      const res = await fetch(`${API_BASE_URL}/mallas/generate${qs}`, { method: 'POST', headers });
       if (!res.ok) throw new Error('Error generando en servidor: ' + res.statusText);
       const json = await res.json();
       // server returns { file, preview }
@@ -130,7 +131,7 @@ const TurnosModule = ({ user }) => {
     try {
       // backend expects roleId and month as request params (form or query string)
       const qs = `?roleId=${encodeURIComponent(role)}&month=${encodeURIComponent(month)}`;
-      const res = await fetch(`/api/mallas/publish${qs}`, { method: 'POST', headers });
+      const res = await fetch(`${API_BASE_URL}/mallas/publish${qs}`, { method: 'POST', headers });
       if (!res.ok) {
         const txt = await res.text().catch(() => null);
         throw new Error(txt || ('Status ' + res.status));
@@ -240,7 +241,7 @@ const TurnosModule = ({ user }) => {
               if (!workbookBlob) return;
               const form = new FormData();
               form.append('file', workbookBlob, wbName);
-              const res = await fetch('/api/mallas/upload', { method: 'POST', body: form });
+              const res = await fetch(`${API_BASE_URL}/mallas/upload`, { method: 'POST', body: form });
               if (!res.ok) throw new Error('upload failed');
               const text = await res.text();
               alert('Malla guardada: ' + text);
