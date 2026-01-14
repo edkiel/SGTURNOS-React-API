@@ -113,24 +113,9 @@ const TurnosModule = ({ user }) => {
       // convert preview rows to the same shape expected by TurnosGrid (array of objects with d1..dN)
       setGridData(previewData);
     } catch (err) {
-      console.warn('Fallo al generar desde servidor, usando fallback local', err);
-      // fallback: create simple mock like before so UI still shows something
-      const [y, m] = month.split('-').map(Number);
-      const daysInMonth = new Date(y, m, 0).getDate();
-      const employees = [
-        { id: 1, name: 'Juan Perez' },
-        { id: 2, name: 'María Gómez' },
-        { id: 3, name: 'Carlos Ruiz' }
-      ];
-      const grid = employees.map((emp) => {
-        const row = { id: emp.id, name: emp.name };
-        for (let d = 1; d <= daysInMonth; d++) {
-          row[`d${d}`] = (d % 2 === 0) ? 'TD' : 'TN';
-        }
-        return row;
-      });
-      setGridData(grid);
-      alert('No se pudo generar la malla desde el servidor. Revisa la consola para más detalles.');
+      console.error('Error al generar la malla desde el servidor:', err);
+      setGridData([]);
+      alert('No se pudo generar la malla desde el servidor. Por favor verifica que el backend esté corriendo y la base de datos conectada.');
     } finally {
       setLoading(false);
     }
