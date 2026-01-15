@@ -15,6 +15,7 @@ import BadgeAlertas from './components/mallas/BadgeAlertas';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
+import { ToastProvider } from './components/common/ToastContainer';
 import TurnosModule from './components/turnos/TurnosModule';
 import PersonalMalla from './components/turnos/PersonalMalla';
 import AdminPublishedMallas from './components/turnos/AdminPublishedMallas';
@@ -421,7 +422,9 @@ export default function AppWrapper() {
   return (
     <Router>
       <ErrorBoundary>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </ErrorBoundary>
     </Router>
   );

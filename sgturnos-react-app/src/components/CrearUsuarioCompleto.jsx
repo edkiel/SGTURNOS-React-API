@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useToast } from './common/ToastContainer';
 
 /**
  * Componente para crear usuarios con diferentes tipos de roles
@@ -8,6 +9,8 @@ import { api } from '../api';
 const CrearUsuarioCompleto = ({ usuarioActual, onUsuarioCreado, variant = 'normal' }) => {
   const isAdminVariant = variant === 'admin';
   const allowToggle = !variant; // if variant provided, lock the mode
+  const { showToast } = useToast();
+  
   const [formData, setFormData] = useState({
     idUsuario: '',
     primerNombre: '',
@@ -186,7 +189,7 @@ const CrearUsuarioCompleto = ({ usuarioActual, onUsuarioCreado, variant = 'norma
         nombreRolMostrado = standardRole;
       }
 
-      await api.post('/auth/register', {
+      const payload = {
         idUsuario: formData.idUsuario,
         correo: formData.correo,
         contrasena: formData.contrasena,
@@ -195,9 +198,18 @@ const CrearUsuarioCompleto = ({ usuarioActual, onUsuarioCreado, variant = 'norma
         primerApellido: formData.primerApellido,
         segundoApellido: formData.segundoApellido || '',
         idRol: idRol
-      });
+      };
 
-      setMessage(`✅ Usuario creado exitosamente. Rol: ${nombreRolMostrado}`);
+      console.log('📤 Enviando datos de registro:', payload);
+
+      await api.post('/auth/register', payload);
+
+      console.log('✅ Usuario creado exitosamente');
+
+      // Mostrar toast de éxito
+      showToast('¡Usuario creado exitosamente!', 'success');
+
+      console.log('🔔 Toast llamado');
       
       // Limpiar formulario
       setFormData({
@@ -217,7 +229,18 @@ const CrearUsuarioCompleto = ({ usuarioActual, onUsuarioCreado, variant = 'norma
         onUsuarioCreado();
       }
     } catch (err) {
-      setError('Error al crear usuario: ' + (err.response?.data?.message || err.message));
+      console.error('❌ Error al crear usuario:', err);
+      console.error('Detalles de respuesta:', err.response?.data);
+      
+      const errorMsg = err.response?.data?.message 
+        || err.response?.data?.error
+        || err.response?.data 
+        || err.message 
+        || 'Error desconocido al crear usuario';
+      
+      // Mostrar toast de error
+      showToast(`Error: ${errorMsg}`, 'error');
+      setError(`Error al crear usuario: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
