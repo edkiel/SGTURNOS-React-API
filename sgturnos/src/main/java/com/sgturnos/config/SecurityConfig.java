@@ -127,11 +127,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite peticiones desde el frontend en desarrollo (localhost), producción (Netlify) y previews
+        // Permite peticiones desde el frontend en desarrollo (localhost), producción (Netlify, Vercel) y previews
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*", 
             "http://127.0.0.1:*",
-            "https://*.netlify.app"
+            "https://*.netlify.app",
+            "https://*.vercel.app"
         ));
         // Permite todos los métodos HTTP necesarios para preflight y llamadas reales
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
