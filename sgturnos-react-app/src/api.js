@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Determinar la URL base del API
 // En desarrollo local: http://localhost:8085/api
-// En producción (Vercel): usar VITE_API_URL o fallback a Render
+// En producción (Vercel): usar VITE_API_URL o VITE_API_BASE_URL
 let API_BASE_URL;
 
 if (typeof window !== 'undefined' && window.location) {
@@ -14,8 +14,10 @@ if (typeof window !== 'undefined' && window.location) {
     API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api';
   } else {
     // Producción (Vercel, Netlify, etc.)
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api';
-    API_BASE_URL = apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api';
+    // Intenta VITE_API_BASE_URL primero, luego VITE_API_URL, luego fallback
+    let apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api';
+    // Asegurar que termina con /api
+    API_BASE_URL = apiUrl.endsWith('/api') ? apiUrl : (apiUrl.endsWith('/') ? apiUrl + 'api' : apiUrl + '/api');
   }
 } else {
   // Fallback si window no está disponible
