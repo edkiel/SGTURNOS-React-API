@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { api } from '../api';
+import { api, API_BASE_URL } from '../api';
 import PageHeader from './common/PageHeader';
 
 const MyAccount = ({ user }) => {
@@ -50,7 +50,7 @@ const MyAccount = ({ user }) => {
         const token = localStorage.getItem('token');
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers.Authorization = `Bearer ${token}`;
-        res = await fetch('/api/usuarios/change-password', { method: 'POST', headers, body: JSON.stringify(payload) });
+        res = await fetch(`${API_BASE_URL}/usuarios/change-password`, { method: 'POST', headers, body: JSON.stringify(payload) });
         if (res.ok) {
           alert('Contraseña cambiada correctamente');
           setOldPassword(''); setNewPassword(''); setConfirmPassword('');

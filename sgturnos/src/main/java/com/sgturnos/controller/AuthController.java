@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -168,8 +169,11 @@ public class AuthController {
             Map<String, String> response = Collections.singletonMap("accessToken", token);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            // En caso de error de autenticación, devuelve un mensaje de error
-            return new ResponseEntity<>("Credenciales inválidas.", HttpStatus.UNAUTHORIZED);
+            // En caso de error de autenticación, devuelve un mensaje de error en JSON
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Credenciales inválidas.");
+            errorResponse.put("message", "El correo o la contraseña ingresados son incorrectos.");
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
     }
 

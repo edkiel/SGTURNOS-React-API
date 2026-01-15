@@ -1,0 +1,32 @@
+# Maven
+sgturnos/target/
+sgturnos/.mvn/
+sgturnos/mvnw
+sgturnos/mvnw.cmd
+
+# Node
+sgturnos-react-app/node_modules/
+sgturnos-react-app/dist/
+sgturnos-react-app/.env
+sgturnos-react-app/.env.local
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Archivos generados
+sgturnos/mallas/
+sgturnos/uploads/
+
+# Base de datos local
+*.db

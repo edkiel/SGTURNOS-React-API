@@ -92,8 +92,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // CUIDADO: Permite el acceso a TODAS las operaciones de usuarios (crear, listar). Esto es inseguro para production.
                 .requestMatchers("/api/usuarios/**").permitAll()
-                // Permitimos temporalmente acceso público a los endpoints de mallas para pruebas locales.
-                .requestMatchers("/api/mallas/**").permitAll()
+                // Permitimos GET a mallas (lectura) pero POST/PUT requiere autenticación
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mallas/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/mallas/**").authenticated()
                 // Permite acceso público a los endpoints de descarga de soportes PDF
                 .requestMatchers("/api/novedades/*/soporte").permitAll()
                 // Todas las demás rutas requieren autenticación
@@ -126,8 +127,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite peticiones desde el frontend en desarrollo (localhost) y amplía compatibilidad
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        // Permite peticiones desde el frontend en desarrollo (localhost), producción (Netlify) y previews
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*", 
+            "http://127.0.0.1:*",
+            "https://*.netlify.app"
+        ));
         // Permite todos los métodos HTTP necesarios para preflight y llamadas reales
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         // Permite todos los encabezados para evitar fallos de preflight (403)
