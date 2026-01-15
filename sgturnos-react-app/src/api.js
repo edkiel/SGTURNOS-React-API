@@ -1,14 +1,28 @@
 import axios from 'axios';
 
-// Base URL utilizada por el frontend
-// En producción (Vercel/Netlify) usa la URL del backend de Render
-// En desarrollo usa localhost
-const isProduction = window.location.hostname.includes('vercel.app') || 
-                     window.location.hostname.includes('netlify.app') ||
-                     window.location.hostname.includes('pages.github.io');
-export const API_BASE_URL = isProduction 
-  ? (import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api')
-  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api');
+// Determinar la URL base del API
+// En desarrollo local: http://localhost:8085/api
+// En producción (Vercel): usar VITE_API_URL o fallback a Render
+let API_BASE_URL;
+
+if (typeof window !== 'undefined' && window.location) {
+  const hostname = window.location.hostname;
+  const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
+  
+  if (isDevelopment) {
+    // Desarrollo local
+    API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api';
+  } else {
+    // Producción (Vercel, Netlify, etc.)
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api';
+    API_BASE_URL = apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api';
+  }
+} else {
+  // Fallback si window no está disponible
+  API_BASE_URL = 'https://sgturnos-backend.onrender.com/api';
+}
+
+export { API_BASE_URL };
 
 // Creamos una instancia de Axios para configurar los headers globalmente
 export const api = axios.create({
