@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Determinar la URL base del API
-// En desarrollo local: http://localhost:8085/api
-// En producción (Vercel): usar VITE_API_URL o fallback a Render
+// En desarrollo local: SIEMPRE usa localhost (prioridad sobre variables de entorno)
+// En producción (Vercel/Netlify): usa VITE_API_BASE_URL o fallback a Render
 let API_BASE_URL;
 
 if (typeof window !== 'undefined' && window.location) {
@@ -10,17 +10,22 @@ if (typeof window !== 'undefined' && window.location) {
   const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
   
   if (isDevelopment) {
-    // Desarrollo local
-    API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085/api';
+    // Desarrollo local: FORZAR localhost (ignorar variables de entorno)
+    API_BASE_URL = 'http://localhost:8085/api';
+    console.log('🔧 Modo desarrollo: forzando backend local');
   } else {
     // Producción (Vercel, Netlify, etc.)
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api';
-    API_BASE_URL = apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api';
+    // Intenta VITE_API_BASE_URL primero, luego VITE_API_URL, luego fallback
+    let apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://sgturnos-backend.onrender.com/api';
+    // Asegurar que termina con /api
+    API_BASE_URL = apiUrl.endsWith('/api') ? apiUrl : (apiUrl.endsWith('/') ? apiUrl + 'api' : apiUrl + '/api');
   }
 } else {
   // Fallback si window no está disponible
   API_BASE_URL = 'https://sgturnos-backend.onrender.com/api';
 }
+
+console.log('🌐 API_BASE_URL configurada como:', API_BASE_URL);
 
 export { API_BASE_URL };
 
@@ -36,6 +41,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    console.log('📤 Request:', config.method.toUpperCase(), config.url);
     return config;
   },
   (error) => {

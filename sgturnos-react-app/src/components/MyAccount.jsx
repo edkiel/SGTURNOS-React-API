@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { api, API_BASE_URL } from '../api';
 import PageHeader from './common/PageHeader';
+import { useToast } from './common/ToastContainer';
 
 const MyAccount = ({ user }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   const containerStyle = { maxWidth: '1400px', width: '100%' };
 
@@ -34,8 +36,14 @@ const MyAccount = ({ user }) => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (!oldPassword || !newPassword) return alert('Completa ambas contraseñas');
-    if (newPassword !== confirmPassword) return alert('La nueva contraseña y la confirmación no coinciden');
+    if (!oldPassword || !newPassword) {
+      showToast('Completa ambas contraseñas', 'warning');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('La nueva contraseña y la confirmación no coinciden', 'warning');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -52,7 +60,7 @@ const MyAccount = ({ user }) => {
         if (token) headers.Authorization = `Bearer ${token}`;
         res = await fetch(`${API_BASE_URL}/usuarios/change-password`, { method: 'POST', headers, body: JSON.stringify(payload) });
         if (res.ok) {
-          alert('Contraseña cambiada correctamente');
+          showToast('✅ Contraseña cambiada correctamente', 'success');
           setOldPassword(''); setNewPassword(''); setConfirmPassword('');
           setLoading(false);
           return;
@@ -61,14 +69,14 @@ const MyAccount = ({ user }) => {
       }
 
       if (res && res.data) {
-        alert('Contraseña cambiada correctamente');
+        showToast('✅ Contraseña cambiada correctamente', 'success');
         setOldPassword(''); setNewPassword(''); setConfirmPassword('');
       } else {
-        alert('Operación completada');
+        showToast('Operación completada', 'success');
       }
     } catch (err) {
       console.error(err);
-      alert('Error cambiando la contraseña. Revisa la consola.');
+      showToast('❌ Error cambiando la contraseña. Verifica que la contraseña actual sea correcta.', 'error');
     } finally {
       setLoading(false);
     }

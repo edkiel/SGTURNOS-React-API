@@ -142,7 +142,7 @@ const PersonalMalla = ({ user }) => {
             })}
           >
             <span>📊</span>
-            Exportar XLSX
+            Excel
           </button>
 
           <button
@@ -175,8 +175,21 @@ const PersonalMalla = ({ user }) => {
                 
                 document.body.appendChild(tempContainer);
                 
+                // Extraer mes y año del formato YYYY-MM
+                const [year, monthNum] = month.split('-');
+                const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const monthName = monthNames[parseInt(monthNum) - 1];
+                
                 // Exportar PDF
-                const blob = await exportGridToPdf('temp-malla-for-pdf', `malla_${new Date().toISOString().slice(0,7)}.pdf`, { returnBlob: true });
+                const blob = await exportGridToPdf('temp-malla-for-pdf', `malla_${month}.pdf`, { 
+                  returnBlob: true,
+                  headerInfo: {
+                    rolName: getRoleName(),
+                    month: monthName,
+                    year: year
+                  }
+                });
                 
                 // Limpiar
                 document.body.removeChild(tempContainer);
@@ -192,7 +205,7 @@ const PersonalMalla = ({ user }) => {
             }}
           >
             <span>📄</span>
-            Exportar PDF
+            PDF
           </button>
         </div>
       </div>

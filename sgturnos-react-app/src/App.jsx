@@ -15,86 +15,14 @@ import BadgeAlertas from './components/mallas/BadgeAlertas';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
+import { ToastProvider } from './components/common/ToastContainer';
 import TurnosModule from './components/turnos/TurnosModule';
 import PersonalMalla from './components/turnos/PersonalMalla';
 import AdminPublishedMallas from './components/turnos/AdminPublishedMallas';
 import MyAccount from './components/MyAccount';
 import UserList from './components/UserList';
+import LoginForm from './components/LoginForm';
 import ErrorBoundary from './ErrorBoundary';
-
-// Componente para el formulario de inicio de sesion
-const LoginForm = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      // Peticion para iniciar sesion usando la instancia api
-      const response = await api.post('/auth/login', { email, password });
-      
-      // Guarda el token de acceso en el almacenamiento local
-      localStorage.setItem('token', response.data.accessToken);
-      
-      // Llama a la funcion para manejar el exito del login
-      onLoginSuccess();
-    } catch (err) {
-      if (err.response && err.response.data) {
-        setError(err.response.data.message);
-      } else {
-        setError('Ocurrio un error de conexion con el servidor.');
-      }
-      console.error(err);
-    }
-  };
-
-  return (
-    <div className="relative w-full max-w-sm p-5 sm:p-6 bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-xl shadow-2xl">
-      {/* Titulos y subtitulos anadidos */}
-      <h1 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-900 mb-1 leading-tight">Sistema de Gestion de Turnos</h1>
-      <h2 className="text-base font-medium text-center text-gray-700 mb-3">SGTurnos</h2>
-
-      <img
-        src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png"
-        alt="Logo de la aplicacion"
-        className="h-16 sm:h-20 mx-auto mb-4"
-      />
-      <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-4">Iniciar Sesion</h3>
-      {error && <p className="text-red-500 text-center mb-4 font-semibold">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Correo:</label>
-          <input
-            className="shadow-inner appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Contrasena:</label>
-          <input
-            className="shadow-inner appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 rounded-lg focus:outline-none focus:ring-3 focus:ring-blue-300 w-full shadow-lg"
-          type="submit"
-        >
-          Entrar
-        </button>
-      </form>
-    </div>
-  );
-};
 
 // Componente para la gestion de usuarios (usa la version actualizada con formularios separados)
 const UserManagement = () => {
@@ -215,7 +143,7 @@ const Dashboard = ({ user, onLogout }) => {
             <li>
               <button
                 onClick={() => setActiveTab('home')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 flex items-center justify-between ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 flex items-center justify-between ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
                 <span>Inicio</span>
                 {isAdmin && <BadgeAlertas />}
@@ -229,18 +157,18 @@ const Dashboard = ({ user, onLogout }) => {
                   return (
                     <button
                       onClick={() => setActiveTab('users')}
-                      className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                      className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
                     >
-                      Gestion de Usuarios
+                      Usuarios
                     </button>
                   );
                 }
                 return (
                   <button
                     onClick={() => setActiveTab('myinfo')}
-                    className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'myinfo' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                    className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'myinfo' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
                   >
-                    INFORMACION DE MI USUARIO
+                    Información de mi usuario
                   </button>
                 );
               })()}
@@ -252,16 +180,16 @@ const Dashboard = ({ user, onLogout }) => {
                   return (
                     <button
                       onClick={() => setActiveTab('turns')}
-                      className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                      className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
                     >
-                      Gestion de Turnos
+                      Turnos
                     </button>
                   );
                 }
                 return (
                   <button
                     onClick={() => setActiveTab('myturns')}
-                    className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'myturns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                    className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'myturns' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
                   >
                     Consultar mi malla de turno
                   </button>
@@ -271,9 +199,9 @@ const Dashboard = ({ user, onLogout }) => {
             <li>
               <button
                 onClick={() => setActiveTab('news')}
-                className={`w-full text-left py-3 px-4 rounded-xl font-semibold transition-colors duration-200 mb-2 ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
-                Gestión de Novedades
+                Novedades
               </button>
             </li>
             
@@ -347,14 +275,28 @@ const App = () => {
   // Funcion para obtener el perfil del usuario
   const fetchUserProfile = async () => {
     try {
-      const response = await api.get('/usuarios/profile');
+      console.log('Intentando obtener perfil del usuario...');
+      
+      // Crear un timeout de 10 segundos
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await api.get('/usuarios/profile', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('Perfil obtenido:', response.data);
       setUser(response.data);
       setIsLoading(false);
       if (location.pathname === '/login') {
         navigate('/');
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching user profile:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error response data:', error.response?.data);
       setUser(null);
       setIsLoading(false);
       localStorage.removeItem('token');
@@ -364,16 +306,22 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('App cargando... Token existe:', !!token);
+    console.log('Location pathname:', location.pathname);
+    
     if (token && location.pathname !== '/login') {
+      console.log('Token existe, obteniendo perfil...');
       fetchUserProfile();
     } else {
+      console.log('No hay token o estamos en login');
       setIsLoading(false);
       if (!token && location.pathname !== '/login') {
+        console.log('Redirigiendo a login...');
         navigate('/login');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, []);
 
   const handleLoginSuccess = () => {
     fetchUserProfile(); // Llama a la funcion sin argumentos, ya que el interceptor maneja el token
@@ -421,7 +369,9 @@ export default function AppWrapper() {
   return (
     <Router>
       <ErrorBoundary>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </ErrorBoundary>
     </Router>
   );

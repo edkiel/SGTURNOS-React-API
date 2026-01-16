@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Controlador REST que maneja las operaciones de autenticación
@@ -35,6 +36,8 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger logger = Logger.getLogger(AuthController.class.getName());
 
     /**
      * Componentes necesarios para la autenticación y gestión de usuarios
@@ -152,23 +155,30 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        logger.info("🔐 Login request recibido para: " + loginRequest.getEmail());
         try {
+            logger.info("Intentando autenticar con AuthenticationManager...");
             // Intenta autenticar al usuario con las credenciales proporcionadas
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.getEmail(),
                     loginRequest.getPassword()));
 
+            logger.info("✅ Autenticación exitosa para: " + loginRequest.getEmail());
             // Establece la autenticación en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            logger.info("Generando token JWT...");
             // Genera un token JWT para el usuario autenticado
             String token = jwtTokenProvider.generateToken(authentication);
 
+            logger.info("✅ Token JWT generado exitosamente");
             // Devuelve el token en un objeto JSON con la clave 'accessToken'
             Map<String, String> response = Collections.singletonMap("accessToken", token);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
+            logger.severe("❌ Error en login: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
             // En caso de error de autenticación, devuelve un mensaje de error en JSON
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Credenciales inválidas.");

@@ -110,6 +110,12 @@ const AdminPublishedMallas = () => {
       return;
     }
 
+    // Extraer mes y año del formato YYYY-MM
+    const [year, monthNum] = month.split('-');
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const monthName = monthNames[parseInt(monthNum) - 1];
+
     try {
       await exportGridToPdf(containerId, `Malla_${roleName}_${month}.pdf`, {
         marginX: 10,
@@ -117,7 +123,12 @@ const AdminPublishedMallas = () => {
         fontSize: '11px',
         canvasScale: 2,
         excludeRowMarkers: ['EQUITY_STATS', 'SUMMARY'],
-        excludeRowIds: [-1, -2]
+        excludeRowIds: [-1, -2],
+        headerInfo: {
+          rolName: roleName,
+          month: monthName,
+          year: year
+        }
       });
     } catch (error) {
       console.error('Error exportando PDF:', error);
@@ -300,7 +311,7 @@ const AdminPublishedMallas = () => {
                       className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
                     >
                       <i className="fas fa-file-excel"></i>
-                      Exportar XLSX
+                      Excel
                     </button>
                     <button
                       onClick={() => handleViewPdfModal(roleId, roleNames[roleId])}
@@ -315,7 +326,7 @@ const AdminPublishedMallas = () => {
                       className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
                     >
                       <i className="fas fa-download"></i>
-                      Descargar PDF
+                      PDF
                     </button>
                   </div>
                 </div>
