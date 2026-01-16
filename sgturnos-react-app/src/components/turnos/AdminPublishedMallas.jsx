@@ -4,6 +4,7 @@ import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import TurnosGrid from './TurnosGrid';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import Toast from '../common/Toast';
 
 const AdminPublishedMallas = () => {
   const month = new Date().toISOString().slice(0, 7);
@@ -29,6 +30,12 @@ const AdminPublishedMallas = () => {
     roleName: '',
     isGenerating: false
   });
+
+  // Estado para toast notifications
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
+
+  // Estado para confirmación de despublicación
+  const [confirmUnpublish, setConfirmUnpublish] = useState(null);
 
   // Mapeo de roles a nombres amigables
   const roleNames = {
@@ -82,13 +89,13 @@ const AdminPublishedMallas = () => {
   };
 
   // Exportar a Excel
-  const handleExportExcel = (roleId, roleName) => {
+  const handleExportExcel = async (roleId, roleName) => {
     const malla = mallaData[roleId];
     if (!malla || malla.length === 0) {
       alert('No hay datos para exportar');
       return;
     }
-    exportGridToExcel(malla, `Malla_${roleName}_${month}.xlsx`, {
+    await exportGridToExcel(malla, `Malla_${roleName}_${month}.xlsx`, {
       excludeColumns: ['id'],
       excludeRowMarkers: ['EQUITY_STATS', 'SUMMARY'],
       excludeRowIds: [-1]
@@ -133,6 +140,32 @@ const AdminPublishedMallas = () => {
     } catch (error) {
       console.error('Error exportando PDF:', error);
       alert('Error al exportar PDF. Revisa la consola.');
+    }
+  };
+
+  // Despublicar malla (quitar oficialidad)
+  const handleUnpublishMalla = async (roleId, roleName) => {
+    // Abrir modal de confirmación
+    setConfirmUnpublish({ roleId, roleName });
+  };
+
+  // Confirmar despublicación
+  const confirmUnpublishAction = async () => {
+    if (!confirmUnpublish) return;
+    const { roleId, roleName } = confirmUnpublish;
+
+    try {
+      await api.delete(`/mallas/unpublish?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`);
+      
+      setToastData({ visible: true, message: `Malla de ${roleName} despublicada correctamente`, type: 'success' });
+      
+      // Limpiar los datos en el estado
+      setMallaData(prev => ({ ...prev, [roleId]: null }));
+      setConfirmUnpublish(null);
+    } catch (error) {
+      console.error('Error despublicando malla:', error);
+      setToastData({ visible: true, message: 'Error al despublicar malla. Revisa la consola.', type: 'error' });
+      setConfirmUnpublish(null);
     }
   };
 
@@ -328,6 +361,13 @@ const AdminPublishedMallas = () => {
                       <i className="fas fa-download"></i>
                       PDF
                     </button>
+                    <button
+                      onClick={() => handleUnpublishMalla(roleId, roleNames[roleId])}
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
+                    >
+                      <i className="fas fa-ban"></i>
+                      Despublicar
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -382,6 +422,48 @@ const AdminPublishedMallas = () => {
                 className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      <Toast
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        centered={true}
+      />
+
+      {/* Modal de confirmación de despublicación */}
+      {confirmUnpublish && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-fadeIn">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100">
+              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">¿Despublicar Malla?</h3>
+            <p className="text-center text-gray-600 mb-6">
+              ¿Estás seguro de despublicar la malla de <span className="font-semibold text-gray-900">{confirmUnpublish.roleName}</span>?
+              <br />
+              <span className="text-sm text-orange-600 mt-2 block">Los usuarios asistenciales ya no podrán verla.</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmUnpublish(null)}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmUnpublishAction}
+                className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+              >
+                Despublicar
               </button>
             </div>
           </div>

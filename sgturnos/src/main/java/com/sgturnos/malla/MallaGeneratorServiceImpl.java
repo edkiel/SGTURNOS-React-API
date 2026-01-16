@@ -210,6 +210,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         Map<Long, Integer> consecutiveDays = new HashMap<>();
         Map<Long, Integer> consecutiveNights = new HashMap<>();
         Map<Long, Boolean> hasCMP = new HashMap<>();
+        Map<Long, Integer> nightTurnsByUser = new HashMap<>();  // Contador de turnos nocturnos
 
         for (Usuario u : targetUsers) {
             long id = u.getIdUsuario();
@@ -225,6 +226,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             turnsByUser.put(id, 0);
             consecutiveDays.put(id, 0);
             consecutiveNights.put(id, 0);
+            nightTurnsByUser.put(id, 0);  // Inicializar contador de noches
             hasCMP.put(id, false);
         }
 
@@ -247,11 +249,11 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                     while (assignedDay < needDay) {
                         Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, false, 
                                                                  rows, hoursByUser, consecutiveDays, 
-                                                                 consecutiveNights);
+                                                                 consecutiveNights, nightTurnsByUser, false);
                         if (candidate == null) break;
                         
                         assignShiftV3(candidate.getIdUsuario(), d, "TD", rows, hoursByUser, 
-                                     turnsByUser, consecutiveDays, consecutiveNights, FULL_SHIFT_HOURS, false);
+                                     turnsByUser, consecutiveDays, consecutiveNights, nightTurnsByUser, FULL_SHIFT_HOURS, false);
                         assignedDay++;
                         anyAssigned = true;
                     }
@@ -265,11 +267,11 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                     while (assignedNight < needNight) {
                         Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, true, 
                                                                  rows, hoursByUser, consecutiveDays, 
-                                                                 consecutiveNights);
+                                                                 consecutiveNights, nightTurnsByUser, true);
                         if (candidate == null) break;
                         
                         assignShiftV3(candidate.getIdUsuario(), d, "TN", rows, hoursByUser, 
-                                     turnsByUser, consecutiveDays, consecutiveNights, FULL_SHIFT_HOURS, true);
+                                     turnsByUser, consecutiveDays, consecutiveNights, nightTurnsByUser, FULL_SHIFT_HOURS, true);
                         assignedNight++;
                         anyAssigned = true;
                     }
@@ -307,6 +309,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         for (Map<String, Object> row : rows) {
             Number nid = (Number) row.get("id");
             if (nid == null || nid.longValue() < 1) continue;
+            long id = nid.longValue();
             
             for (int d = 1; d <= days; d++) {
                 String key = "d" + d;
@@ -319,12 +322,48 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                         String prevStr = prev == null ? "" : prev.toString();
                         if (prevStr.equals("TN")) {
                             row.put(key, "PT");
+                            // Resetear contadores cuando asignamos PT
+                            consecutiveDays.put(id, 0);
+                            consecutiveNights.put(id, 0);
                         } else {
                             row.put(key, "LB");
+                            // Resetear contadores cuando asignamos LB
+                            consecutiveDays.put(id, 0);
+                            consecutiveNights.put(id, 0);
                         }
                     } else {
                         row.put(key, "LB");
+                        // Resetear contadores cuando asignamos LB
+                        consecutiveDays.put(id, 0);
+                        consecutiveNights.put(id, 0);
                     }
+                }
+            }
+        }
+
+        // VALIDACIÓN: Evitar más de 2 LIBRES (LB) consecutivos
+        System.out.println("[MALLA] Validando máximo 2 LIBRES consecutivos...");
+        for (Map<String, Object> row : rows) {
+            Number nid = (Number) row.get("id");
+            if (nid == null || nid.longValue() < 1) continue;
+            
+            int consecutiveLB = 0;
+            for (int d = 1; d <= days; d++) {
+                String key = "d" + d;
+                Object cell = row.get(key);
+                String cellStr = cell == null ? "" : cell.toString();
+                
+                if (cellStr.equals("LB")) {
+                    consecutiveLB++;
+                    // Si ya hay 2 LB consecutivos, convertir el tercero en turno de APOYO corto
+                    if (consecutiveLB > MAX_CONSECUTIVE_SAME) {
+                        row.put(key, "AP4h");
+                        long id = nid.longValue();
+                        hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + 4);
+                        consecutiveLB = 0; // Resetear contador
+                    }
+                } else {
+                    consecutiveLB = 0; // Resetear si no es LB
                 }
             }
         }
@@ -572,7 +611,9 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                                          List<Map<String, Object>> rows,
                                          Map<Long, Integer> hoursByUser, 
                                          Map<Long, Integer> consecutiveDays,
-                                         Map<Long, Integer> consecutiveNights) {
+                                         Map<Long, Integer> consecutiveNights,
+                                         Map<Long, Integer> nightTurnsByUser,
+                                         boolean isNightShift) {
         List<Usuario> pool = byCode.getOrDefault(roleCode, List.of()).stream()
             .filter(u -> targetUsers.contains(u))
             .collect(Collectors.toList());
@@ -580,15 +621,23 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         if (pool.isEmpty()) return null;
 
         // Ordenar por:
-        // 1. Menos horas acumuladas (equidad)
-        // 2. No violar restricciones
+        // 1. Para turnos nocturnos: priorizar quien tenga MENOS noches (rotación equitativa)
+        // 2. Luego por menos horas acumuladas (equidad general)
+        // 3. No violar restricciones
         pool.sort((u1, u2) -> {
             long id1 = u1.getIdUsuario();
             long id2 = u2.getIdUsuario();
+            
+            if (isNightShift) {
+                // Para noches: priorizar quien tiene MENOS turnos nocturnos
+                int n1 = nightTurnsByUser.getOrDefault(id1, 0);
+                int n2 = nightTurnsByUser.getOrDefault(id2, 0);
+                if (n1 != n2) return Integer.compare(n1, n2);
+            }
+            
+            // Si es día o si ambos tienen el mismo # de noches, ordenar por horas
             int h1 = hoursByUser.getOrDefault(id1, 0);
             int h2 = hoursByUser.getOrDefault(id2, 0);
-            
-            // Priorizar quien tiene menos horas
             return Integer.compare(h1, h2);
         });
 
@@ -613,17 +662,29 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 if (prevStr.equals("TN")) continue; // Skip: no puede ser día después de noche
             }
 
-            // VALIDACIÓN 2: NO tripletas de días (máximo 2 días seguidos)
-            if (!isNight) {
-                int consecut = consecutiveDays.getOrDefault(id, 0);
-                if (consecut >= MAX_CONSECUTIVE_SAME) continue; // Ya tiene 2 días seguidos
+            // VALIDACIÓN 2 y 3: Recalcular turnos consecutivos mirando hacia atrás
+            int consecDays = 0;
+            int consecNights = 0;
+            
+            // Contar cuántos días/noches consecutivos tiene ANTES del día actual
+            for (int backDay = day - 1; backDay >= 1; backDay--) {
+                Object backCell = row.get("d" + backDay);
+                String backStr = backCell == null ? "" : backCell.toString();
+                
+                if (backStr.equals("TD")) {
+                    consecDays++;
+                } else if (backStr.equals("TN")) {
+                    consecNights++;
+                } else {
+                    break; // Si encuentra cualquier otra cosa (LB, PT, CP, vacío), detener conteo
+                }
             }
 
+            // VALIDACIÓN 2: NO tripletas de días (máximo 2 días seguidos)
+            if (!isNight && consecDays >= MAX_CONSECUTIVE_SAME) continue;
+
             // VALIDACIÓN 3: NO tripletas de noches (máximo 2 noches seguidas)
-            if (isNight) {
-                int consecut = consecutiveNights.getOrDefault(id, 0);
-                if (consecut >= MAX_CONSECUTIVE_SAME) continue; // Ya tiene 2 noches seguidas
-            }
+            if (isNight && consecNights >= MAX_CONSECUTIVE_SAME) continue;
 
             // VALIDACIÓN 4: No exceder 189 horas (dejar espacio para CMP de 3h)
             int currentHours = hoursByUser.getOrDefault(id, 0);
@@ -639,6 +700,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
     private void assignShiftV3(long userId, int day, String shiftCode, List<Map<String, Object>> rows,
                               Map<Long, Integer> hoursByUser, Map<Long, Integer> turnsByUser,
                               Map<Long, Integer> consecutiveDays, Map<Long, Integer> consecutiveNights,
+                              Map<Long, Integer> nightTurnsByUser,
                               int hours, boolean isNight) {
         Map<String, Object> row = rows.stream()
             .filter(r -> ((Number) r.get("id")).longValue() == userId)
@@ -649,6 +711,11 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
         row.put("d" + day, shiftCode);
         hoursByUser.put(userId, hoursByUser.getOrDefault(userId, 0) + hours);
         turnsByUser.put(userId, turnsByUser.getOrDefault(userId, 0) + 1);
+        
+        // Trackear turnos nocturnos para rotación equitativa
+        if (shiftCode.equals("TN")) {
+            nightTurnsByUser.put(userId, nightTurnsByUser.getOrDefault(userId, 0) + 1);
+        }
 
         // Actualizar racha de días/noches consecutivas
         if (isNight) {

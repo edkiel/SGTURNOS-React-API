@@ -53,7 +53,7 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('Novedad aprobada por Jefe Inmediato exitosamente');
+      setSuccess(`✅ Solicitud #${selectedNovedad.idNovedad} aprobada por Jefe Inmediato`);
       setShowModal(false);
       setSelectedNovedad(null);
       cargarNovedadesPendientes();
@@ -86,7 +86,7 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('Novedad rechazada por Jefe Inmediato');
+      setSuccess(`❌ Solicitud #${selectedNovedad.idNovedad} rechazada por Jefe Inmediato`);
       setShowModal(false);
       setSelectedNovedad(null);
       setMotivoRechazo('');

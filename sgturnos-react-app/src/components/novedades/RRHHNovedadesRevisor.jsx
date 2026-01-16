@@ -53,7 +53,7 @@ const RRHHNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('✅ Novedad aprobada completamente. Proceso de aprobación finalizado.');
+      setSuccess(`✅ Solicitud #${selectedNovedad.idNovedad} aprobada completamente. Proceso de aprobación finalizado.`);
       setShowModal(false);
       setSelectedNovedad(null);
       cargarNovedadesPendientes();
@@ -86,7 +86,7 @@ const RRHHNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('Novedad rechazada por Recursos Humanos');
+      setSuccess(`❌ Solicitud #${selectedNovedad.idNovedad} rechazada por Recursos Humanos`);
       setShowModal(false);
       setSelectedNovedad(null);
       setMotivoRechazo('');

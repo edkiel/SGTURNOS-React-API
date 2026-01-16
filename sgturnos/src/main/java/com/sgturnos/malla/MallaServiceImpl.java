@@ -77,4 +77,21 @@ public class MallaServiceImpl implements MallaService {
         if (v instanceof java.util.Map) return (java.util.Map<String, Object>) v;
         return null;
     }
+
+    @Override
+    public void removePublishedInfo(String roleId, String month) throws Exception {
+        Path dir = Path.of(mallaStoragePath);
+        Path published = dir.resolve("published.json");
+        if (!Files.exists(published)) return;
+        
+        String text = Files.readString(published);
+        java.util.Map<String, Object> root = new com.fasterxml.jackson.databind.ObjectMapper().readValue(text, java.util.Map.class);
+        
+        // Remover la entrada de la malla publicada
+        root.remove(roleId + "::" + month);
+        
+        // Guardar el archivo actualizado
+        String out = new com.fasterxml.jackson.databind.ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(root);
+        Files.writeString(published, out);
+    }
 }

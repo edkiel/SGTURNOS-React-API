@@ -8,4 +8,5 @@ public interface MallaService {
     List<File> listMallas();
     void savePublishedInfo(String roleId, String month, String filename, java.util.List<java.util.Map<String, Object>> preview) throws Exception;
     java.util.Map<String, Object> getPublishedInfo(String roleId, String month) throws Exception;
+    void removePublishedInfo(String roleId, String month) throws Exception;
 }

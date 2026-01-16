@@ -458,4 +458,94 @@ public class NovedadController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * Contar novedades pendientes para Jefe Inmediato
+     * GET /api/novedades/contar-pendientes-jefe
+     */
+    @GetMapping("/contar-pendientes-jefe")
+    public ResponseEntity<?> contarPendientesJefe() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesJefe();
+            return ResponseEntity.ok(Map.of("count", novedades.size()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Contar novedades pendientes para Operaciones Clínicas
+     * GET /api/novedades/contar-pendientes-operaciones
+     */
+    @GetMapping("/contar-pendientes-operaciones")
+    public ResponseEntity<?> contarPendientesOperaciones() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesOperaciones();
+            return ResponseEntity.ok(Map.of("count", novedades.size()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Contar novedades pendientes para RRHH
+     * GET /api/novedades/contar-pendientes-rrhh
+     */
+    @GetMapping("/contar-pendientes-rrhh")
+    public ResponseEntity<?> contarPendientesRRHH() {
+        try {
+            List<Novedad> novedades = novedadService.obtenerNovedadesPendientesRRHH();
+            return ResponseEntity.ok(Map.of("count", novedades.size()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Contar todas las novedades pendientes (para Admin)
+     * GET /api/novedades/contar-pendientes-admin
+     */
+    @GetMapping("/contar-pendientes-admin")
+    public ResponseEntity<?> contarPendientesAdmin() {
+        try {
+            // Admin ve todas las novedades que aún no están completamente aprobadas
+            List<Novedad> novedadesJefe = novedadService.obtenerNovedadesPendientesJefe();
+            List<Novedad> novedadesOperaciones = novedadService.obtenerNovedadesPendientesOperaciones();
+            List<Novedad> novedadesRRHH = novedadService.obtenerNovedadesPendientesRRHH();
+            
+            // Usar un Set para evitar duplicados
+            java.util.Set<Long> idsUnicos = new java.util.HashSet<>();
+            novedadesJefe.forEach(n -> idsUnicos.add(n.getIdNovedad()));
+            novedadesOperaciones.forEach(n -> idsUnicos.add(n.getIdNovedad()));
+            novedadesRRHH.forEach(n -> idsUnicos.add(n.getIdNovedad()));
+            
+            return ResponseEntity.ok(Map.of("count", idsUnicos.size()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Obtener todas las novedades pendientes (para Admin)
+     * GET /api/novedades/pendientes-admin
+     */
+    @GetMapping("/pendientes-admin")
+    public ResponseEntity<?> obtenerPendientesAdmin() {
+        try {
+            // Admin ve todas las novedades que aún no están completamente aprobadas
+            List<Novedad> novedadesJefe = novedadService.obtenerNovedadesPendientesJefe();
+            List<Novedad> novedadesOperaciones = novedadService.obtenerNovedadesPendientesOperaciones();
+            List<Novedad> novedadesRRHH = novedadService.obtenerNovedadesPendientesRRHH();
+            
+            // Usar un Map para evitar duplicados por ID
+            java.util.Map<Long, Novedad> novedadesUnicas = new java.util.LinkedHashMap<>();
+            novedadesJefe.forEach(n -> novedadesUnicas.put(n.getIdNovedad(), n));
+            novedadesOperaciones.forEach(n -> novedadesUnicas.put(n.getIdNovedad(), n));
+            novedadesRRHH.forEach(n -> novedadesUnicas.put(n.getIdNovedad(), n));
+            
+            return ResponseEntity.ok(new java.util.ArrayList<>(novedadesUnicas.values()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
