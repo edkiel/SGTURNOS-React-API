@@ -37,6 +37,7 @@ export const ToastProvider = ({ children }) => {
           duration={toast.duration}
           onClose={() => removeToast(toast.id)}
           index={index}
+          isVisible={true}
         />
       ))}
     </ToastContext.Provider>

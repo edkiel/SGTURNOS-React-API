@@ -160,4 +160,62 @@ public class UserController {
             return ResponseEntity.status(401).body("Error al obtener el perfil: " + e.getMessage());
         }
     }
+
+    /**
+     * Endpoint para cambiar la contraseña del usuario actual
+     * POST /api/usuarios/change-password
+     * Body: { "idUsuario": 1, "oldPassword": "xxx", "newPassword": "yyy" }
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            // Obtener el usuario autenticado
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            // Buscar el usuario por correo
+            Usuario usuario = usuarioRepository.findByCorreo(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Verificar que el ID coincida (seguridad adicional)
+            if (!usuario.getIdUsuario().equals(request.getIdUsuario())) {
+                return ResponseEntity.status(403).body("No tienes permiso para cambiar esta contraseña");
+            }
+
+            // Verificar que la contraseña antigua sea correcta
+            if (!passwordEncoder.matches(request.getOldPassword(), usuario.getContrasena())) {
+                return ResponseEntity.status(400).body("La contraseña actual es incorrecta");
+            }
+
+            // Validar nueva contraseña
+            if (request.getNewPassword() == null || request.getNewPassword().length() < 4) {
+                return ResponseEntity.badRequest().body("La nueva contraseña debe tener al menos 4 caracteres");
+            }
+
+            // Actualizar la contraseña
+            usuario.setContrasena(passwordEncoder.encode(request.getNewPassword()));
+            usuarioRepository.save(usuario);
+
+            return ResponseEntity.ok("Contraseña cambiada exitosamente");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al cambiar la contraseña: " + e.getMessage());
+        }
+    }
+
+    // DTO interno para el cambio de contraseña
+    public static class ChangePasswordRequest {
+        private Long idUsuario;
+        private String oldPassword;
+        private String newPassword;
+
+        public Long getIdUsuario() { return idUsuario; }
+        public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+        
+        public String getOldPassword() { return oldPassword; }
+        public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
+        
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    }
 }

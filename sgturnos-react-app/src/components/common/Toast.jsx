@@ -8,32 +8,33 @@ import { createPortal } from 'react-dom';
  * @param {number} duration - Duración en ms (por defecto 4000)
  * @param {function} onClose - Callback al cerrar
  * @param {number} index - Índice del toast para apilar múltiples
+ * @param {boolean} isVisible - Si el toast debe estar visible
+ * @param {boolean} centered - Si el toast debe estar centrado
  */
-const Toast = ({ message, type = 'success', duration = 4000, onClose, index = 0 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
-
-  console.log('🎨 Toast renderizado:', { message, type, duration, index });
+const Toast = ({ message, type = 'success', duration = 4000, onClose, index = 0, centered = true, isVisible = false }) => {
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   useEffect(() => {
-    // Aparecer con animación
-    setTimeout(() => setIsVisible(true), 10);
+    if (!isVisible) {
+      return;
+    }
 
     // Iniciar desvanecimiento antes de cerrar
     const fadeTimer = setTimeout(() => {
-      setIsLeaving(true);
+      setIsAnimatingOut(true);
     }, duration - 500);
 
     // Cerrar completamente
     const closeTimer = setTimeout(() => {
       if (onClose) onClose();
+      setIsAnimatingOut(false);
     }, duration);
 
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(closeTimer);
     };
-  }, [duration, onClose]);
+  }, [duration, onClose, isVisible]);
 
   const typeStyles = {
     success: {
@@ -64,40 +65,45 @@ const Toast = ({ message, type = 'success', duration = 4000, onClose, index = 0 
 
   const style = typeStyles[type] || typeStyles.success;
 
-  // Calcular posición Y basada en el índice para apilar toasts
-  const bottomPosition = 24 + (index * 90); // 24px inicial + 90px por cada toast
+  // Calcular posición Y basada en el índice para apilar toasts (solo si no está centrado)
+  const bottomPosition = !centered ? 24 + (index * 90) : 'auto';
+  const topPosition = centered ? '50%' : 'auto';
 
   const toastContent = (
     <div
-      className={`fixed right-6 transform transition-all duration-500 ease-out ${
-        isVisible && !isLeaving
-          ? 'translate-y-0 opacity-100 scale-100'
-          : 'translate-y-full opacity-0 scale-95'
+      className={`fixed transform transition-all duration-500 ease-out ${
+        centered ? 'left-1/2' : 'right-6'
+      } ${
+        isVisible && !isAnimatingOut
+          ? centered ? 'translate-x-[-50%] translate-y-[-50%] opacity-100 scale-100' : 'translate-y-0 opacity-100 scale-100'
+          : centered ? 'translate-x-[-50%] translate-y-[-50%] opacity-0 scale-95' : 'translate-y-full opacity-0 scale-95'
       }`}
       style={{ 
         zIndex: 99999,
-        bottom: `${bottomPosition}px`
+        bottom: bottomPosition,
+        top: topPosition,
       }}
     >
       <div
-        className={`${style.bg} ${style.shadow} shadow-2xl rounded-xl p-4 pr-12 flex items-center gap-3 min-w-[320px] max-w-md relative`}
+        className={`${style.bg} ${style.shadow} shadow-2xl rounded-xl p-6 pr-14 flex items-center gap-4 ${centered ? 'w-96' : 'min-w-[320px] max-w-md'} relative`}
       >
         {/* Icono */}
-        <div className={`${style.iconBg} rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0`}>
-          <span className="text-white text-xl font-bold">{style.icon}</span>
+        <div className={`${style.iconBg} rounded-full ${centered ? 'w-12 h-12' : 'w-10 h-10'} flex items-center justify-center flex-shrink-0`}>
+          <span className={`text-white font-bold ${centered ? 'text-2xl' : 'text-xl'}`}>{style.icon}</span>
         </div>
 
         {/* Mensaje */}
-        <p className="text-white font-medium text-sm leading-tight flex-1">
+        <p className={`text-white font-medium ${centered ? 'text-lg' : 'text-sm'} leading-tight flex-1 text-center`}>
           {message}
         </p>
 
         {/* Botón cerrar */}
         <button
           onClick={() => {
-            setIsLeaving(true);
+            setIsAnimatingOut(true);
             setTimeout(() => {
               if (onClose) onClose();
+              setIsAnimatingOut(false);
             }, 300);
           }}
           className="absolute top-2 right-2 text-white/80 hover:text-white transition-colors"
@@ -123,6 +129,11 @@ const Toast = ({ message, type = 'success', duration = 4000, onClose, index = 0 
       </div>
     </div>
   );
+
+  // Si no está visible y no está animando, no renderizar nada
+  if (!isVisible && !isAnimatingOut) {
+    return null;
+  }
 
   return createPortal(toastContent, document.body);
 };

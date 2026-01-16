@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import CrearUsuarioCompleto from './CrearUsuarioCompleto';
+import Toast from './common/Toast';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -13,14 +14,11 @@ const UserList = () => {
   const [showCrearAdmin, setShowCrearAdmin] = useState(false);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [isAdminUser, setIsAdminUser] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const toastTimer = useRef(null);
 
   const showToast = (message, type = 'success') => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ message, type });
-    toastTimer.current = setTimeout(() => setToast(null), 4200);
+    setToastData({ visible: true, message, type });
   };
 
   const fetchUsers = async () => {
@@ -100,10 +98,6 @@ const UserList = () => {
       }
     };
     cargarRoles();
-  }, []);
-
-  useEffect(() => () => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
   const handleDelete = (user) => {
@@ -196,39 +190,13 @@ const UserList = () => {
         </div>
       )}
 
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 max-w-xs rounded-lg shadow-xl border border-opacity-60 px-4 py-3 transition-all duration-300 backdrop-blur-sm z-40 ${
-            toast.type === 'error'
-              ? 'bg-red-50/90 border-red-200 text-red-900'
-              : 'bg-green-50/90 border-green-200 text-green-900'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                toast.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-              }`}
-            >
-              {toast.type === 'error' ? '!' : 'OK'}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold uppercase tracking-wide">
-                {toast.type === 'error' ? 'Error' : 'Éxito'}
-              </div>
-              <div className="text-sm leading-snug mt-1">{toast.message}</div>
-            </div>
-            <button
-              type="button"
-              aria-label="Cerrar notificación"
-              onClick={() => setToast(null)}
-              className="ml-2 text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      <Toast 
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        duration={3500}
+      />
 
       {/* Tarjetas de totales por rol */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-5">

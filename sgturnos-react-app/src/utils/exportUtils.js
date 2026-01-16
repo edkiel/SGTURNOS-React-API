@@ -183,6 +183,31 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
   // Clonar para no alterar el DOM visible
   const clone = el.cloneNode(true);
 
+  // Agregar encabezado con información de la malla si se proporciona
+  if (options.headerInfo) {
+    const headerDiv = document.createElement('div');
+    headerDiv.style.marginBottom = '10px';
+    headerDiv.style.fontWeight = 'bold';
+    headerDiv.style.fontSize = '11px';
+    headerDiv.style.textAlign = 'center';
+    headerDiv.style.lineHeight = '1.5';
+    headerDiv.style.color = '#333';
+    
+    let headerHTML = '';
+    if (options.headerInfo.rolName) {
+      headerHTML += `Rol: ${options.headerInfo.rolName}<br>`;
+    }
+    if (options.headerInfo.month) {
+      headerHTML += `Mes: ${options.headerInfo.month}<br>`;
+    }
+    if (options.headerInfo.year) {
+      headerHTML += `Año: ${options.headerInfo.year}`;
+    }
+    
+    headerDiv.innerHTML = headerHTML;
+    clone.insertBefore(headerDiv, clone.firstChild);
+  }
+
   // remove unwanted rows early (so both PDF and XLSX omit them)
   const excludeRowMarkers = Array.isArray(options.excludeRowMarkers) ? options.excludeRowMarkers.map(s => (s||'').trim().toLowerCase()) : ['equity_stats','summary'];
   const excludeRowMarkersSet = new Set(excludeRowMarkers);
@@ -200,9 +225,9 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
     });
   }
 
-  // Aplicar estilo general al clone (contenedor)
+  // Aplicar estilo general al clone (contenedor) - maximizar espacio para nombres
   clone.style.background = '#ffffff';
-  clone.style.padding = '12px';
+  clone.style.padding = '3px';
   clone.style.boxSizing = 'border-box';
   clone.style.fontFamily = fontFamily;
   clone.style.color = '#222';
@@ -259,11 +284,11 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
 
   try {
     // Calcular dimensiones PDF y convertir mm->px para darle al clone un ancho CSS
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('l', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginX = options.marginX || 8; // mm
-    const marginY = options.marginY || 8; // mm
+    const marginX = options.marginX || 3; // mm - mínimo para garantizar que quepa todo
+    const marginY = options.marginY || 3; // mm - mínimo para garantizar que quepa todo
     const usableWidth = pageWidth - marginX * 2;
     const usableHeight = pageHeight - marginY * 2;
 
@@ -273,22 +298,37 @@ export async function exportGridToPdf(elementId, filename = 'malla.pdf', options
     clone.style.width = `${targetCssWidth}px`;
     clone.style.maxWidth = 'none';
 
-    // Ajustes de presentación para impresión: usar tamaño de fuente más compacto por defecto
-    const desiredFontSize = options.fontSize || '10px';
+    // Ajustes de presentación para impresión: fuente clara y legible
+    const desiredFontSize = options.fontSize || '9px';
     clone.style.fontSize = desiredFontSize;
 
-    // Reducir paddings en celdas para que el texto ocupe más espacio relativo
+    // Optimizar paddings en celdas - balance entre legibilidad y fit en página
     const tablesLocal = clone.querySelectorAll('table');
     tablesLocal.forEach((table) => {
       table.style.fontSize = desiredFontSize;
-      table.style.lineHeight = '1.05';
+      table.style.lineHeight = '1.55';
+      table.style.borderCollapse = 'collapse';
       const ths = table.querySelectorAll('th');
       ths.forEach((th) => {
-        th.style.padding = '4px 6px';
+        th.style.padding = '4px 3px';
+        th.style.fontSize = desiredFontSize;
+        th.style.fontWeight = 'bold';
+        th.style.textAlign = 'center';
+        th.style.verticalAlign = 'top';
+        th.style.height = 'auto';
+        th.style.margin = '0';
       });
       const tds = table.querySelectorAll('td');
       tds.forEach((td) => {
-        td.style.padding = '2px 4px';
+        td.style.padding = '3px 2px';
+        td.style.fontSize = desiredFontSize;
+        td.style.wordWrap = 'break-word';
+        td.style.overflow = 'visible';
+        td.style.textAlign = 'center';
+        td.style.verticalAlign = 'top';
+        td.style.height = 'auto';
+        td.style.display = 'table-cell';
+        td.style.margin = '0';
       });
     });
 

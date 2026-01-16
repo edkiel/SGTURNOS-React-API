@@ -9,11 +9,27 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔐 Login form submitted');
+    console.log('Email:', email);
+    console.log('Password:', password ? '***' : 'empty');
     setError('');
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      console.log('Enviando request a /auth/login...');
+      
+      // Crear un timeout de 10 segundos
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.log('⏱️ Timeout: El backend no respondió en 10 segundos');
+      }, 10000);
+      
+      const response = await api.post('/auth/login', { email, password }, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      console.log('✅ Login exitoso:', response.data);
       
       // Guarda el token de acceso en el almacenamiento local
       localStorage.setItem('token', response.data.accessToken);
@@ -22,11 +38,16 @@ const LoginForm = ({ onLoginSuccess }) => {
 
     } catch (err) {
       setLoading(false);
-      console.log('Error capturado:', err);
+      console.log('❌ Error capturado:', err);
       console.log('Error response:', err.response);
       console.log('Error response data:', err.response?.data);
+      console.log('Error message:', err.message);
+      console.log('Error code:', err.code);
       
-      if (err.response) {
+      if (err.code === 'ERR_CANCELED') {
+        console.log('Request abortado por timeout');
+        setError('El servidor tardó demasiado en responder. Verifica que el backend esté corriendo en http://localhost:8085');
+      } else if (err.response) {
         // El servidor respondió con un código de estado fuera del rango 2xx
         if (err.response.status === 401) {
           // Intenta obtener el mensaje del error response (JSON)
@@ -55,7 +76,8 @@ const LoginForm = ({ onLoginSuccess }) => {
         }
       } else if (err.request) {
         // La solicitud fue hecha pero no se recibió respuesta
-        setError('No hay conexión con el servidor. Verifica que el backend esté en funcionamiento.');
+        console.log('No hay respuesta del servidor');
+        setError('No hay conexión con el servidor. Verifica que el backend esté en funcionamiento en http://localhost:8085');
       } else {
         // Algo más causó el error
         setError('Ocurrió un error inesperado. Inténtalo de nuevo.');
@@ -66,7 +88,18 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   return (
     <div className="login-card w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-      <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Iniciar Sesión</h2>
+      <div className="flex flex-col items-center mb-8">
+        <img 
+          src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" 
+          alt="Logo SGTurnos" 
+          className="h-20 w-20 mb-4"
+        />
+        <h1 className="text-3xl font-extrabold text-center text-gray-800 mb-1">Sistema de Gestión de Turnos</h1>
+        <h2 className="text-lg font-semibold text-center text-gray-600 mb-4">SGTurnos</h2>
+      </div>
+      
+      <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Iniciar Sesión</h3>
+      
       {error && (
         <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-md animate-bounce" style={{ animationDuration: '0.5s' }}>
           <div className="flex items-center gap-3">
@@ -90,6 +123,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           </div>
         </div>
       )}
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-gray-700 text-base font-bold mb-2">Correo:</label>

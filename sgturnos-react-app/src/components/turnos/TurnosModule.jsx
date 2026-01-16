@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TurnosGrid from './TurnosGrid';
 import { exportGridToExcel, exportGridToPdf } from '../../utils/exportUtils';
 import PageHeader from '../common/PageHeader';
+import Toast from '../common/Toast';
 import { API_BASE_URL } from '../../api';
 
 // months list removed (we use input type="month")
@@ -16,6 +17,7 @@ const TurnosModule = ({ user }) => {
   const [gridData, setGridData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(true);
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
   // Parámetros para generación de malla (cantidad de pacientes y auxiliares)
   const [patientsCount, setPatientsCount] = useState(0);
   const [auxiliariesCount, setAuxiliariesCount] = useState(0);
@@ -124,7 +126,10 @@ const TurnosModule = ({ user }) => {
 
   // Publish current preview/grid as the official published malla for the selected role and month
   const publishMalla = async () => {
-    if (!gridData || gridData.length === 0) return alert('No hay malla para publicar.');
+    if (!gridData || gridData.length === 0) {
+      setToastData({ visible: true, message: 'No hay malla para publicar.', type: 'warning' });
+      return;
+    }
     const token = localStorage.getItem('token');
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -137,12 +142,16 @@ const TurnosModule = ({ user }) => {
         throw new Error(txt || ('Status ' + res.status));
       }
       const json = await res.json().catch(() => ({}));
-      alert('Malla publicada correctamente.');
+      setToastData({ visible: true, message: '✓ Malla publicada correctamente', type: 'success' });
       // keep gridData as-is; published metadata saved on server
       setGridData(gridData);
     } catch (e) {
       console.error('Error publicando malla', e);
-      alert('Error publicando la malla: ' + (e.message || e));
+      setToastData({ 
+        visible: true, 
+        message: `Error publicando la malla: ${e.message || e}`, 
+        type: 'error' 
+      });
     }
   };
 
@@ -219,13 +228,27 @@ const TurnosModule = ({ user }) => {
           }) }
           className="bg-green-600 text-white px-3 py-2 rounded-md mr-2"
           disabled={!gridData || gridData.length === 0}
-        >Exportar Excel</button>
+        >Excel</button>
 
         <button
-          onClick={() => exportGridToPdf('turnos-grid', `malla_${month}_${role}.pdf`)}
+          onClick={() => {
+            // Extraer mes y año del formato YYYY-MM
+            const [year, monthNum] = month.split('-');
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const monthName = monthNames[parseInt(monthNum) - 1];
+            
+            exportGridToPdf('turnos-grid', `malla_${month}_${role}.pdf`, {
+              headerInfo: {
+                rolName: getRoleLabel(),
+                month: monthName,
+                year: year
+              }
+            });
+          }}
           className="bg-red-600 text-white px-3 py-2 rounded-md mr-2"
           disabled={!gridData || gridData.length === 0}
-        >Exportar PDF</button>
+        >PDF</button>
 
         <button
           onClick={async () => {
@@ -241,12 +264,15 @@ const TurnosModule = ({ user }) => {
               if (!workbookBlob) return;
               const form = new FormData();
               form.append('file', workbookBlob, wbName);
-              const res = await fetch(`${API_BASE_URL}/mallas/upload`, { method: 'POST', body: form });
+              const token = localStorage.getItem('token');
+              const headers = {};
+              if (token) headers.Authorization = `Bearer ${token}`;
+              const res = await fetch(`${API_BASE_URL}/mallas/upload`, { method: 'POST', headers, body: form });
               if (!res.ok) throw new Error('upload failed');
               const text = await res.text();
-              alert('Malla guardada: ' + text);
+              setToastData({ visible: true, message: '✓ Malla guardada en servidor', type: 'success' });
             } catch (e) {
-              alert('Error al subir: ' + (e.message || e));
+              setToastData({ visible: true, message: `Error al subir: ${e.message || e}`, type: 'error' });
             }
           }}
           className="bg-indigo-600 text-white px-3 py-2 rounded-md"
@@ -267,6 +293,14 @@ const TurnosModule = ({ user }) => {
           <TurnosGrid data={gridData} month={month} />
         </div>
       )}
+
+      <Toast 
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        duration={3500}
+      />
     </div>
   );
 };
