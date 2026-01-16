@@ -53,7 +53,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('✅ Novedad aprobada por Operaciones Clínicas. Se generó alerta para recalcular malla.');
+      setSuccess(`✅ Solicitud #${selectedNovedad.idNovedad} aprobada por Operaciones Clínicas. Se generó alerta para recalcular malla.`);
       setShowModal(false);
       setSelectedNovedad(null);
       cargarNovedadesPendientes();
@@ -86,7 +86,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess('Novedad rechazada por Operaciones Clínicas');
+      setSuccess(`❌ Solicitud #${selectedNovedad.idNovedad} rechazada por Operaciones Clínicas`);
       setShowModal(false);
       setSelectedNovedad(null);
       setMotivoRechazo('');

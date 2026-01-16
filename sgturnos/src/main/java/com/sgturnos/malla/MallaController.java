@@ -112,6 +112,27 @@ public class MallaController {
         }
     }
 
+    @DeleteMapping("/unpublish")
+    public ResponseEntity<?> unpublishMalla(@RequestParam("roleId") String roleId, @RequestParam("month") String month) {
+        try {
+            // Solo administradores pueden despublicar
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().toLowerCase().contains("adm"))) {
+                return ResponseEntity.status(403).body("Forbidden: only administrators can unpublish mallas");
+            }
+            
+            // Remover la información de malla publicada
+            mallaService.removePublishedInfo(roleId, month);
+            
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("success", true);
+            resp.put("message", "Malla despublicada correctamente");
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
     @GetMapping
     public List<String> listMallas() {
         List<File> files = mallaService.listMallas();

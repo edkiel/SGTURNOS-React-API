@@ -12,6 +12,8 @@ import JefeInmediatoRevisor from './components/mallas/JefeInmediatoRevisor';
 import RecursosHumanosRevisor from './components/mallas/RecursosHumanosRevisor';
 import AlertasMalla from './components/mallas/AlertasMalla';
 import BadgeAlertas from './components/mallas/BadgeAlertas';
+import BadgeNovedadesPendientes from './components/novedades/BadgeNovedadesPendientes';
+import DashboardComponent from './components/Dashboard';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { api } from './api';
@@ -51,28 +53,8 @@ const Dashboard = ({ user, onLogout }) => {
 
     switch (activeTab) {
       case 'home':
-        if (isAdmin) {
-          return (
-            <div className="w-full p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
-              <div className="mb-4">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Bienvenido, {user?.primerNombre} 
-                  {user?.rol && <span className="text-sm text-gray-500 ml-2">({getRoleName()})</span>}
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Este es tu panel de control de administrador.
-                </p>
-              </div>
-              
-              <div className="mb-4">
-                <AlertasMalla usuarioId={user?.idUsuario} />
-              </div>
-              
-              <AdminPublishedMallas />
-            </div>
-          );
-        }
-        return <PersonalMalla user={user} />;
+        // Usar el nuevo Dashboard component
+        return <DashboardComponent user={user} onLogout={onLogout} />;
       case 'myinfo':
         return <MyAccount user={user} />;
       case 'users':
@@ -199,9 +181,10 @@ const Dashboard = ({ user, onLogout }) => {
             <li>
               <button
                 onClick={() => setActiveTab('news')}
-                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 flex items-center justify-between ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
-                Novedades
+                <span>Novedades</span>
+                <BadgeNovedadesPendientes rol={user?.rol?.rol} />
               </button>
             </li>
             

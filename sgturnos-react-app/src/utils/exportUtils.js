@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -44,67 +45,12 @@ function removeRowsFromTableElement(tableEl, excludeFirstCellLowerSet, excludeId
   return clone;
 }
 
-// Exporta un grid (array de objetos) a Excel con estilos básicos: encabezados centrados,
-// rellenos pastel en encabezado y filas alternadas, bordes y anchos de columna.
-export function exportGridToExcel(gridData, filename = 'malla.xlsx', options = {}) {
-  // allow table-based export even if gridData is empty/null
+// Exporta un grid (array de objetos) a Excel con estilos profesionales usando ExcelJS
+export async function exportGridToExcel(gridData, filename = 'malla.xlsx', options = {}) {
   if ((!gridData || gridData.length === 0) && !(options && options.tableId)) return null;
 
-  // Si se especifica `tableId` en opciones, usar la tabla DOM para generar el Excel
-  if (options.tableId && typeof document !== 'undefined') {
-    const container = document.getElementById(options.tableId);
-    if (container) {
-      try {
-        const tables = container.querySelectorAll('table');
-        const workbook = XLSX.utils.book_new();
-
-        if (!tables || tables.length === 0) {
-          // nothing to export
-          return null;
-        }
-
-        const exclude = Array.isArray(options.excludeColumns) ? options.excludeColumns.map(s => (s||'').trim().toLowerCase()) : [];
-        const excludeSet = new Set(exclude);
-        const excludeRowMarkers = Array.isArray(options.excludeRowMarkers) ? options.excludeRowMarkers.map(s => (s||'').trim().toLowerCase()) : ['equity_stats','summary'];
-        const excludeRowMarkersSet = new Set(excludeRowMarkers);
-        const excludeIdSet = new Set(Array.isArray(options.excludeRowIds) ? options.excludeRowIds.map(Number) : [-2, -1]);
-
-        // Si hay múltiples tablas, crear una hoja por tabla (Semana 1, Semana 2...)
-        if (tables.length > 1) {
-          tables.forEach((t, idx) => {
-            try {
-              // first remove unwanted rows, then remove unwanted columns
-              const withoutRows = excludeRowMarkersSet.size > 0 || excludeIdSet.size > 0 ? removeRowsFromTableElement(t, excludeRowMarkersSet, excludeIdSet) : t;
-              const tableToUse = excludeSet.size > 0 ? removeColumnsFromTableElement(withoutRows, excludeSet) : withoutRows;
-              const ws = XLSX.utils.table_to_sheet(tableToUse, { raw: false });
-              const sheetName = options.sheetName || `Semana ${idx + 1}`;
-              XLSX.utils.book_append_sheet(workbook, ws, sheetName);
-            } catch (err) {
-              console.warn('No se pudo convertir una tabla a hoja:', err);
-            }
-          });
-        } else {
-          const withoutRows = excludeRowMarkersSet.size > 0 || excludeIdSet.size > 0 ? removeRowsFromTableElement(tables[0], excludeRowMarkersSet, excludeIdSet) : tables[0];
-          const tableToUse = excludeSet.size > 0 ? removeColumnsFromTableElement(withoutRows, excludeSet) : withoutRows;
-          const ws = XLSX.utils.table_to_sheet(tableToUse, { raw: false });
-          XLSX.utils.book_append_sheet(workbook, ws, options.sheetName || 'Malla');
-        }
-
-        if (options.returnBlob) {
-          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-          return new Blob([wbout], { type: 'application/octet-stream' });
-        }
-        XLSX.writeFile(workbook, filename);
-        return null;
-      } catch (err) {
-        console.error('Error exportando tabla(s) a XLSX', err);
-      }
-    }
-  }
-
-  // Usar SheetJS (xlsx) como implementación por defecto para evitar dependencias nativas.
   try {
-    // aplicar filtro de columnas si está definido
+    // Filtrar columnas si es necesario
     let dataToUse = gridData || [];
     if (Array.isArray(options.excludeColumns) && options.excludeColumns.length > 0) {
       const excludeSet = new Set(options.excludeColumns.map(s => (s||'').trim().toLowerCase()));
@@ -117,7 +63,7 @@ export function exportGridToExcel(gridData, filename = 'malla.xlsx', options = {
       });
     }
 
-    // aplicar filtro de filas (por marcadores textuales o ids negativos) si está definido
+    // Filtrar filas si es necesario
     const excludeRowMarkers = Array.isArray(options.excludeRowMarkers) ? options.excludeRowMarkers.map(s => (s||'').trim().toLowerCase()) : ['equity_stats','summary'];
     const excludeRowMarkersSet = new Set(excludeRowMarkers);
     const excludeIdSet = new Set(Array.isArray(options.excludeRowIds) ? options.excludeRowIds.map(Number) : [-2, -1]);
@@ -129,41 +75,104 @@ export function exportGridToExcel(gridData, filename = 'malla.xlsx', options = {
         const firstLower = String(firstVal || '').trim().toLowerCase();
         const secondLower = String(secondVal || '').trim().toLowerCase();
         const maybeNum = parseInt(String(firstVal || ''), 10);
-        // keep row unless it matches exclusion criteria
         if (excludeRowMarkersSet.has(firstLower) || excludeRowMarkersSet.has(secondLower)) return false;
         if (!Number.isNaN(maybeNum) && excludeIdSet.has(maybeNum)) return false;
         return true;
       });
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToUse || []);
-    const headers = Object.keys((dataToUse && dataToUse[0]) || {});
-    worksheet['!cols'] = headers.map((h) => ({ wch: Math.max(10, h.length + 8) }));
+    // Crear workbook con ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(options.sheetName || 'Malla');
 
-    // Intento de estilo en encabezados (limitado por el soporte de SheetJS/viewers)
-    const headerRowIndex = 0;
-    headers.forEach((h, idx) => {
-      const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: idx });
-      const cell = worksheet[cellRef];
-      if (cell) {
-        cell.s = cell.s || {};
-        cell.s.font = { bold: true };
-        cell.s.alignment = { horizontal: 'center', vertical: 'center' };
-      }
-    });
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, options.sheetName || 'Malla');
-
-    if (options.returnBlob) {
-      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      return new Blob([wbout], { type: 'application/octet-stream' });
+    if (!dataToUse || dataToUse.length === 0) {
+      return null;
     }
 
-    XLSX.writeFile(workbook, filename);
+    const headers = Object.keys(dataToUse[0] || {});
+
+    // Agregar encabezados
+    const headerRow = worksheet.addRow(headers);
+
+    // Aplicar estilos a encabezados
+    headerRow.eachCell((cell, colNumber) => {
+      cell.value = headers[colNumber - 1];
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2F5496' } // Azul profesional
+      };
+      cell.font = {
+        bold: true,
+        color: { argb: 'FFFFFFFF' }, // Blanco
+        size: 12
+      };
+      cell.alignment = {
+        horizontal: 'center',
+        vertical: 'center',
+        wrapText: true
+      };
+      cell.border = {
+        left: { style: 'thin', color: { argb: 'FF4472C4' } },
+        right: { style: 'thin', color: { argb: 'FF4472C4' } },
+        top: { style: 'thin', color: { argb: 'FF4472C4' } },
+        bottom: { style: 'thin', color: { argb: 'FF4472C4' } }
+      };
+    });
+
+    // Establecer altura de encabezado
+    headerRow.height = 28;
+
+    // Agregar filas de datos
+    dataToUse.forEach((rowData, rowIndex) => {
+      const row = worksheet.addRow(headers.map(h => rowData[h]));
+      
+      const isAlternate = rowIndex % 2 === 1;
+      const bgColor = isAlternate ? 'FFF0F0F0' : 'FFFFFFFF'; // Gris claro o blanco
+
+      row.eachCell((cell) => {
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'center'
+        };
+        cell.border = {
+          left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }
+        };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: bgColor }
+        };
+      });
+    });
+
+    // Configurar ancho de columnas
+    worksheet.columns = headers.map((h) => ({
+      header: h,
+      key: h,
+      width: Math.max(14, h.length + 2)
+    }));
+
+    // Generar buffer y descargar
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    
+    // Crear descarga
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
     return null;
   } catch (e) {
-    console.error('Error exportando a XLSX', e);
+    console.error('Error exportando a Excel con ExcelJS', e);
     return null;
   }
 }
