@@ -20,4 +20,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     java.util.List<com.sgturnos.model.Usuario> findAllByRol_IdRol(String idRol);
 
     java.util.List<com.sgturnos.model.Usuario> findAllByRol_RolIgnoreCase(String rolName);
+
+    // Métodos para desactivación de usuarios
+    /**
+     * Obtiene todos los usuarios activos en el sistema
+     */
+    java.util.List<com.sgturnos.model.Usuario> findAllByActivoTrue();
+
+    /**
+     * Obtiene todos los usuarios desactivados
+     */
+    java.util.List<com.sgturnos.model.Usuario> findAllByActivoFalse();
+
+    /**
+     * Obtiene un usuario activo por correo (para login)
+     */
+    Optional<Usuario> findByCorreoAndActivoTrue(String correo);
 }

@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import Toast from '../common/Toast';
 
-const AdminPublishedMallas = () => {
+const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
   const month = new Date().toISOString().slice(0, 7);
 
   const [mallaData, setMallaData] = useState({
@@ -45,7 +45,14 @@ const AdminPublishedMallas = () => {
     ter04: 'Terapeuta'
   };
 
-  const roleIds = Object.keys(roleNames);
+  // Obtener el ID del rol del usuario actual
+  const userRoleId = user?.rol?.idRol || user?.rol?.id_rol || null;
+  
+  // Si es usuario regular (asistencial), solo mostrar su malla
+  // Si es admin/jefe/operaciones/rrhh, mostrar todas las mallas
+  const roleIds = isUsuarioRegular && userRoleId
+    ? [userRoleId] // Solo el rol del usuario
+    : Object.keys(roleNames); // Todas las mallas
 
   // Cargar malla oficial para un rol específico
   const loadPublishedMalla = async (roleId) => {
@@ -361,13 +368,16 @@ const AdminPublishedMallas = () => {
                       <i className="fas fa-download"></i>
                       PDF
                     </button>
-                    <button
-                      onClick={() => handleUnpublishMalla(roleId, roleNames[roleId])}
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
-                    >
-                      <i className="fas fa-ban"></i>
-                      Despublicar
-                    </button>
+                    {/* Botón Despublicar: solo visible para usuarios administrativos */}
+                    {!isUsuarioRegular && (
+                      <button
+                        onClick={() => handleUnpublishMalla(roleId, roleNames[roleId])}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-ban"></i>
+                        Despublicar
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (

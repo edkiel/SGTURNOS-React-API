@@ -230,7 +230,7 @@ const Dashboard = ({ user, onLogout }) => {
           
           {/* Componente Mallas Publicadas - Para todos los roles */}
           <div className="lg:col-span-2">
-            <AdminPublishedMallas />
+            <AdminPublishedMallas user={user} roleName={roleName} isUsuarioRegular={isUsuarioRegular} />
           </div>
 
           {/* Panel de Novedades */}

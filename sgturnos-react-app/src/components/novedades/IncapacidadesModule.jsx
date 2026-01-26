@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api';
+import Toast from '../common/Toast';
 
 /**
  * Componente para gestionar solicitudes de incapacidades
@@ -23,8 +24,8 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
     motivoMedico: '' // Detalles del motivo médico
   });
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  // Estado para toast notifications
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   // Cargar incapacidades al montar el componente
   useEffect(() => {
@@ -54,7 +55,7 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
       setIncapacidades(incapacidadesFiltradas);
     } catch (err) {
       console.error('Error cargando incapacidades:', err);
-      setError('Error al cargar las incapacidades');
+      setToastData({ visible: true, message: 'Error al cargar las incapacidades', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -72,22 +73,27 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setToastData({ visible: false, message: '', type: 'success' });
 
     // Validar fechas
     if (!form.fechaInicio || !form.fechaFin) {
-      setError('Las fechas de inicio y fin son requeridas');
+      setToastData({ visible: true, message: 'Las fechas de inicio y fin son requeridas', type: 'error' });
       return;
     }
 
     if (new Date(form.fechaInicio) > new Date(form.fechaFin)) {
-      setError('La fecha de inicio debe ser anterior a la fecha de fin');
+      setToastData({ visible: true, message: 'La fecha de inicio debe ser anterior a la fecha de fin', type: 'error' });
       return;
     }
 
     if (form.descripcion.trim().length === 0) {
-      setError('La descripción es requerida');
+      setToastData({ visible: true, message: 'La descripción es requerida', type: 'error' });
+      return;
+    }
+
+    // Requerir soporte en PDF
+    if (!file) {
+      setToastData({ visible: true, message: 'Debes adjuntar el soporte en PDF para crear la incapacidad', type: 'error' });
       return;
     }
 
@@ -125,7 +131,7 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
         );
       }
 
-      setSuccess('Solicitud de incapacidad creada exitosamente');
+      setToastData({ visible: true, message: 'Solicitud de incapacidad creada exitosamente', type: 'success' });
       setForm({ fechaInicio: '', fechaFin: '', descripcion: '', motivoMedico: '' });
       setFile(null);
       setShowForm(false);
@@ -134,7 +140,7 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
       cargarIncapacidades();
     } catch (err) {
       console.error('Error creando incapacidad:', err);
-      setError(err.response?.data?.error || 'Error al crear la solicitud');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al crear la solicitud', type: 'error' });
     }
   };
 
@@ -175,18 +181,6 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
             {showForm ? 'Cancelar' : 'Nueva Incapacidad'}
           </button>
         </div>
-
-        {/* Mensajes de estado */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
-            {success}
-          </div>
-        )}
 
         {/* Formulario */}
         {showForm && (
@@ -367,6 +361,15 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
           )}
         </div>
       </div>
+
+      {/* Toast notification */}
+      <Toast
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        centered={true}
+      />
     </div>
   );
 };

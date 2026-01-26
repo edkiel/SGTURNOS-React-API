@@ -16,6 +16,8 @@ const UserList = () => {
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(null);
+  const [filterActivos, setFilterActivos] = useState(true); // true = solo activos, false = todos
 
   const showToast = (message, type = 'success') => {
     setToastData({ visible: true, message, type });
@@ -102,6 +104,35 @@ const UserList = () => {
 
   const handleDelete = (user) => {
     setConfirmDelete(user);
+  };
+
+  const handleDeactivate = (user) => {
+    setConfirmDeactivate(user);
+  };
+
+  const confirmDeactivateUser = async () => {
+    if (!confirmDeactivate) return;
+    try {
+      await api.post(`/usuarios/${confirmDeactivate.idUsuario}/desactivar`);
+      setConfirmDeactivate(null);
+      fetchUsers();
+      showToast(`✅ Usuario ${confirmDeactivate.correo} desactivado correctamente.`);
+    } catch (err) {
+      console.error('Error al desactivar usuario:', err);
+      showToast('No pudimos desactivar al usuario. Verifica tu conexión o permisos.', 'error');
+      setConfirmDeactivate(null);
+    }
+  };
+
+  const confirmActivateUser = async (user) => {
+    try {
+      await api.post(`/usuarios/${user.idUsuario}/activar`);
+      fetchUsers();
+      showToast(`✅ Usuario ${user.correo} reactivado correctamente.`);
+    } catch (err) {
+      console.error('Error al reactivar usuario:', err);
+      showToast('No pudimos reactivar al usuario. Verifica tu conexión o permisos.', 'error');
+    }
   };
 
   const confirmDeleteUser = async () => {
@@ -319,6 +350,16 @@ const UserList = () => {
             🔐 Crear Administrador
           </button>
           <button
+            onClick={() => setFilterActivos(!filterActivos)}
+            className={`px-4 py-2 rounded flex items-center gap-2 font-medium transition-colors ${
+              filterActivos 
+                ? 'bg-green-600 text-white hover:bg-green-700' 
+                : 'bg-gray-600 text-white hover:bg-gray-700'
+            }`}
+          >
+            {filterActivos ? '✅ Solo Activos' : '⚠️ Mostrar Todos'}
+          </button>
+          <button
             onClick={() => {
               setLoading(true);
               fetchUsers();
@@ -340,6 +381,72 @@ const UserList = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal de confirmación de desactivación */}
+      {confirmDeactivate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white px-6 py-4 rounded-t-xl">
+              <h3 className="text-xl font-bold">⚠️ Desactivar Usuario</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                ¿Estás seguro de que deseas desactivar a <strong>{confirmDeactivate.correo}</strong>?
+              </p>
+              <p className="text-sm text-gray-600 mb-6 bg-gray-50 p-3 rounded">
+                El usuario podrá iniciar sesión pero <strong>no tendrá acceso al sistema</strong> y <strong>no será incluido en las mallas</strong>.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmDeactivate(null)}
+                  className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeactivateUser}
+                  className="px-5 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                >
+                  Desactivar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 rounded-t-xl">
+              <h3 className="text-xl font-bold">🗑️ Eliminar Usuario</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                ¿Estás seguro de que deseas eliminar a <strong>{confirmDelete.correo}</strong>?
+              </p>
+              <p className="text-sm text-red-600 mb-6 bg-red-50 p-3 rounded font-medium">
+                ⚠️ Esta acción es irreversible y eliminará todos los datos del usuario.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeleteUser}
+                  className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de edición */}
       {editingUser && (
@@ -459,12 +566,16 @@ const UserList = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Acciones</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {users
               .filter((user) => {
+                // Filtrar por estado activo/desactivado
+                if (filterActivos && !user.activo) return false;
+                
                 if (!search || search.trim() === '') return true;
                 const q = search.toLowerCase();
                 const fullName = `${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.toLowerCase();
@@ -490,24 +601,48 @@ const UserList = () => {
                 }
               })
               .map((user) => (
-              <tr key={user.idUsuario}>
+              <tr key={user.idUsuario} className={user.activo ? '' : 'bg-gray-100 opacity-60'}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {`${user.primerNombre} ${user.segundoNombre || ''} ${user.primerApellido} ${user.segundoApellido || ''}`}
                 </td>
                   <td className="px-6 py-4 whitespace-nowrap">{user.idUsuario}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{user.correo}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{(user.rol?.rol || user.idRol || '').toString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap w-32 text-center">
-                  <span className="inline-flex items-center gap-3 justify-center">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    user.activo 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user.activo ? '✅ Activo' : '❌ Desactivado'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <span className="inline-flex items-center gap-2 justify-center">
                     <button
                       onClick={() => handleEdit(user)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-blue-600 hover:text-blue-900 text-sm font-medium"
                     >
                       Editar
                     </button>
+                    {user.activo ? (
+                      <button
+                        onClick={() => handleDeactivate(user)}
+                        className="text-orange-600 hover:text-orange-900 text-sm font-medium"
+                      >
+                        Desactivar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => confirmActivateUser(user)}
+                        className="text-green-600 hover:text-green-900 text-sm font-medium"
+                      >
+                        Activar
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(user)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-red-600 hover:text-red-900 text-sm font-medium"
                     >
                       Eliminar
                     </button>
