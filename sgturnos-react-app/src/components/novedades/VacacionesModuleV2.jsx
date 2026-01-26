@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
 import PageHeader from '../common/PageHeader';
+import Toast from '../common/Toast';
 
 /**
  * Componente mejorado para solicitudes de vacaciones
@@ -25,8 +26,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
     idRecursosHumanos: ''
   });
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   // Calcular fecha máxima para periodo cumplido (año anterior)
   const getMaxFechaPeriodoCumplido = () => {
@@ -73,7 +73,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
       setVacaciones(vacacionesFiltradas);
     } catch (err) {
       console.error('Error cargando vacaciones:', err);
-      setError('Error al cargar las vacaciones');
+      setToastData({ visible: true, message: 'Error al cargar las vacaciones', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -174,33 +174,32 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setToastData({ visible: false, message: '', type: 'success' });
 
     // Validar fechas
     if (!form.periodoVacacionInicio || !form.periodoVacacionFin) {
-      setError('Las fechas de inicio y fin del periodo vacacional son requeridas');
+      setToastData({ visible: true, message: 'Las fechas de inicio y fin del periodo vacacional son requeridas', type: 'error' });
       return;
     }
 
     if (!form.periodoCumplidoInicio || !form.periodoCumplidoFin) {
-      setError('Las fechas del periodo cumplido son requeridas');
+      setToastData({ visible: true, message: 'Las fechas del periodo cumplido son requeridas', type: 'error' });
       return;
     }
 
     if (new Date(form.periodoVacacionInicio) > new Date(form.periodoVacacionFin)) {
-      setError('La fecha de inicio debe ser anterior a la fecha de fin');
+      setToastData({ visible: true, message: 'La fecha de inicio debe ser anterior a la fecha de fin', type: 'error' });
       return;
     }
 
     const fechaFinEsperada = calcularFechaFin(form.periodoCumplidoInicio);
     if (form.periodoCumplidoFin !== fechaFinEsperada) {
-      setError(`La fecha final del periodo cumplido debe ser el día anterior del año siguiente: ${fechaFinEsperada}`);
+      setToastData({ visible: true, message: `La fecha final del periodo cumplido debe ser el día anterior del año siguiente: ${fechaFinEsperada}`, type: 'error' });
       return;
     }
 
     if (!form.idJefeInmediato || !form.idOperacionesClinicas || !form.idRecursosHumanos) {
-      setError('Debe seleccionar los 3 aprobadores');
+      setToastData({ visible: true, message: 'Debe seleccionar los 3 aprobadores', type: 'error' });
       return;
     }
 
@@ -230,7 +229,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
         }
       );
 
-      setSuccess('Solicitud de vacaciones creada exitosamente. Pendiente de 3 aprobaciones.');
+      setToastData({ visible: true, message: 'Solicitud de vacaciones creada exitosamente. Pendiente de 3 aprobaciones.', type: 'success' });
       setForm({
         periodoCumplidoInicio: '',
         periodoCumplidoFin: '',
@@ -245,7 +244,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
       cargarVacaciones();
     } catch (err) {
       console.error('Error creando vacaciones:', err);
-      setError(err.response?.data?.error || 'Error al crear la solicitud');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al crear la solicitud', type: 'error' });
     }
   };
 
@@ -274,18 +273,6 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
           userName={userName}
           roleLabel={userRole}
         />
-
-        {/* Mensajes */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
-            {success}
-          </div>
-        )}
 
         {/* Formulario */}
         {showForm && (
@@ -568,6 +555,15 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
             ))}
           </div>
         )}
+
+      {/* Toast notification */}
+      <Toast
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        centered={true}
+      />
     </div>
   );
 };

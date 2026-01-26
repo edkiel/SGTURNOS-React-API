@@ -170,7 +170,8 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
 
     @Override
     public List<Map<String, Object>> preview(String roleId, String month) throws Exception {
-        List<Usuario> allRepoUsers = usuarioRepository.findAll();
+        // Obtener solo usuarios ACTIVOS
+        List<Usuario> allRepoUsers = usuarioRepository.findAllByActivoTrue();
         if (allRepoUsers == null || allRepoUsers.isEmpty()) return List.of();
 
         YearMonth ym = YearMonth.parse(month);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api';
+import Toast from '../common/Toast';
 
 /**
  * Componente para que Operaciones Clínicas apruebe/rechace novedades
@@ -13,8 +14,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState(null); // 'aprobar' o 'rechazar'
   const [motivoRechazo, setMotivoRechazo] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   useEffect(() => {
     cargarNovedadesPendientes();
@@ -33,7 +33,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
       setNovedades(response.data);
     } catch (err) {
       console.error('Error cargando novedades:', err);
-      setError('Error al cargar novedades pendientes');
+      setToastData({ visible: true, message: 'Error al cargar novedades pendientes', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -53,13 +53,13 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess(`✅ Solicitud #${selectedNovedad.idNovedad} aprobada por Operaciones Clínicas. Se generó alerta para recalcular malla.`);
+      setToastData({ visible: true, message: `Solicitud #${selectedNovedad.idNovedad} aprobada por Operaciones Clínicas. Se generó alerta para recalcular malla.`, type: 'success' });
       setShowModal(false);
       setSelectedNovedad(null);
       cargarNovedadesPendientes();
     } catch (err) {
       console.error('Error aprobando novedad:', err);
-      setError(err.response?.data?.error || 'Error al aprobar novedad');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al aprobar novedad', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
 
   const handleRechazar = async () => {
     if (!selectedNovedad || !motivoRechazo.trim()) {
-      setError('Proporciona un motivo de rechazo');
+      setToastData({ visible: true, message: 'Proporciona un motivo de rechazo', type: 'error' });
       return;
     }
 
@@ -86,14 +86,14 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess(`❌ Solicitud #${selectedNovedad.idNovedad} rechazada por Operaciones Clínicas`);
+      setToastData({ visible: true, message: `Solicitud #${selectedNovedad.idNovedad} rechazada por Operaciones Clínicas`, type: 'success' });
       setShowModal(false);
       setSelectedNovedad(null);
       setMotivoRechazo('');
       cargarNovedadesPendientes();
     } catch (err) {
       console.error('Error rechazando novedad:', err);
-      setError(err.response?.data?.error || 'Error al rechazar novedad');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al rechazar novedad', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,6 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
     setSelectedNovedad(novedad);
     setActionType(action);
     setShowModal(true);
-    setError('');
     setMotivoRechazo('');
   };
 
@@ -125,20 +124,6 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
             Revisor: {userName} | Evalúa cobertura en malla y genera alertas de recalculación
           </p>
         </div>
-
-        {/* Mensajes */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
-            {error}
-            <button onClick={() => setError('')} className="float-right text-red-600 hover:text-red-800 font-bold">✕</button>
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
-            {success}
-            <button onClick={() => setSuccess('')} className="float-right text-green-600 hover:text-green-800 font-bold">✕</button>
-          </div>
-        )}
 
         {/* Información importante */}
         <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 mb-6">
@@ -283,6 +268,14 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
             </div>
           </div>
         )}
+
+      <Toast
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        centered={true}
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import com.sgturnos.model.Usuario;
 import com.sgturnos.model.Rol;
 import com.sgturnos.repository.UsuarioRepository;
 import com.sgturnos.repository.RolRepository;
+import com.sgturnos.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,11 +22,14 @@ public class UserController {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioService usuarioService;
 
-    public UserController(UsuarioRepository usuarioRepository, RolRepository rolRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UsuarioRepository usuarioRepository, RolRepository rolRepository, 
+                         PasswordEncoder passwordEncoder, UsuarioService usuarioService) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuarioService = usuarioService;
     }
 
     @GetMapping("/roles")
@@ -36,6 +40,24 @@ public class UserController {
     @GetMapping
     public List<Usuario> getAllUsuarios() {
         return usuarioRepository.findAll();
+    }
+
+    /**
+     * Obtener todos los usuarios activos
+     * GET /api/usuarios/activos
+     */
+    @GetMapping("/activos")
+    public List<Usuario> getUsuariosActivos() {
+        return usuarioService.obtenerUsuariosActivos();
+    }
+
+    /**
+     * Obtener todos los usuarios desactivados
+     * GET /api/usuarios/desactivados
+     */
+    @GetMapping("/desactivados")
+    public List<Usuario> getUsuariosDesactivados() {
+        return usuarioService.obtenerUsuariosDesactivados();
     }
 
     /**
@@ -217,5 +239,98 @@ public class UserController {
         
         public String getNewPassword() { return newPassword; }
         public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    }
+
+    /**
+     * Desactivar un usuario (el usuario actual debe ser administrador)
+     * POST /api/usuarios/{id}/desactivar
+     * Impide que el usuario inicie sesión pero conserva sus datos
+     */
+    @PostMapping("/{id}/desactivar")
+    public ResponseEntity<?> desactivarUsuario(@PathVariable Long id) {
+        try {
+            // Obtener el usuario autenticado actual
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            Usuario usuarioActual = usuarioRepository.findByCorreo(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Desactivar el usuario
+            Usuario usuarioDesactivado = usuarioService.desactivarUsuario(id, usuarioActual.getIdUsuario());
+
+            // Respuesta sin incluir contraseña
+            UsuarioDesactivacionResponse response = new UsuarioDesactivacionResponse();
+            response.setIdUsuario(usuarioDesactivado.getIdUsuario());
+            response.setCorreo(usuarioDesactivado.getCorreo());
+            response.setNombreCompleto(usuarioDesactivado.getPrimerNombre() + " " + usuarioDesactivado.getPrimerApellido());
+            response.setActivo(usuarioDesactivado.isActivo());
+            response.setFechaDesactivacion(usuarioDesactivado.getFechaDesactivacion());
+            response.setDesactivadoPor(usuarioDesactivado.getDesactivadoPor());
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al desactivar usuario: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reactivar un usuario desactivado (el usuario actual debe ser administrador)
+     * POST /api/usuarios/{id}/activar
+     */
+    @PostMapping("/{id}/activar")
+    public ResponseEntity<?> activarUsuario(@PathVariable Long id) {
+        try {
+            // Reactivar el usuario
+            Usuario usuarioActivado = usuarioService.activarUsuario(id);
+
+            // Respuesta sin incluir contraseña
+            UsuarioDesactivacionResponse response = new UsuarioDesactivacionResponse();
+            response.setIdUsuario(usuarioActivado.getIdUsuario());
+            response.setCorreo(usuarioActivado.getCorreo());
+            response.setNombreCompleto(usuarioActivado.getPrimerNombre() + " " + usuarioActivado.getPrimerApellido());
+            response.setActivo(usuarioActivado.isActivo());
+            response.setFechaDesactivacion(usuarioActivado.getFechaDesactivacion());
+            response.setDesactivadoPor(usuarioActivado.getDesactivadoPor());
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al activar usuario: " + e.getMessage());
+        }
+    }
+
+    /**
+     * DTO de respuesta para desactivación/activación de usuarios
+     */
+    public static class UsuarioDesactivacionResponse {
+        private Long idUsuario;
+        private String correo;
+        private String nombreCompleto;
+        private boolean activo;
+        private java.time.LocalDateTime fechaDesactivacion;
+        private Long desactivadoPor;
+
+        // Getters y setters
+        public Long getIdUsuario() { return idUsuario; }
+        public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+
+        public String getCorreo() { return correo; }
+        public void setCorreo(String correo) { this.correo = correo; }
+
+        public String getNombreCompleto() { return nombreCompleto; }
+        public void setNombreCompleto(String nombreCompleto) { this.nombreCompleto = nombreCompleto; }
+
+        public boolean isActivo() { return activo; }
+        public void setActivo(boolean activo) { this.activo = activo; }
+
+        public java.time.LocalDateTime getFechaDesactivacion() { return fechaDesactivacion; }
+        public void setFechaDesactivacion(java.time.LocalDateTime fechaDesactivacion) { this.fechaDesactivacion = fechaDesactivacion; }
+
+        public Long getDesactivadoPor() { return desactivadoPor; }
+        public void setDesactivadoPor(Long desactivadoPor) { this.desactivadoPor = desactivadoPor; }
     }
 }

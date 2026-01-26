@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import java.time.LocalDateTime;
 
 /**
  * Entidad que representa un usuario en el sistema
@@ -71,6 +72,25 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_rol")
     private Rol rol;
+
+    /**
+     * Indica si el usuario está activo (true) o desactivado (false)
+     * Los usuarios desactivados no pueden acceder al sistema
+     */
+    @Column(name = "activo")
+    private boolean activo = true;
+
+    /**
+     * ID del usuario que desactivó esta cuenta (auditoría)
+     */
+    @Column(name = "desactivado_por")
+    private Long desactivadoPor;
+
+    /**
+     * Fecha y hora en que se desactivó la cuenta
+     */
+    @Column(name = "fecha_desactivacion")
+    private LocalDateTime fechaDesactivacion;
 
     /**
      * Constructor por defecto requerido por JPA
@@ -141,5 +161,29 @@ public class Usuario {
 
     public void setRol(Rol rol) {
         this.rol = rol;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Long getDesactivadoPor() {
+        return desactivadoPor;
+    }
+
+    public void setDesactivadoPor(Long desactivadoPor) {
+        this.desactivadoPor = desactivadoPor;
+    }
+
+    public LocalDateTime getFechaDesactivacion() {
+        return fechaDesactivacion;
+    }
+
+    public void setFechaDesactivacion(LocalDateTime fechaDesactivacion) {
+        this.fechaDesactivacion = fechaDesactivacion;
     }
 }

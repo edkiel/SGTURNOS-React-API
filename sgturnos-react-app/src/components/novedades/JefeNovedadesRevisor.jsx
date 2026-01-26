@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api';
+import Toast from '../common/Toast';
 
 /**
  * Componente para que el Jefe Inmediato apruebe/rechace novedades
@@ -13,8 +14,7 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState(null); // 'aprobar' o 'rechazar'
   const [motivoRechazo, setMotivoRechazo] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   useEffect(() => {
     cargarNovedadesPendientes();
@@ -33,7 +33,7 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
       setNovedades(response.data);
     } catch (err) {
       console.error('Error cargando novedades:', err);
-      setError('Error al cargar novedades pendientes');
+      setToastData({ visible: true, message: 'Error al cargar novedades pendientes', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -53,13 +53,13 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess(`✅ Solicitud #${selectedNovedad.idNovedad} aprobada por Jefe Inmediato`);
+      setToastData({ visible: true, message: `Solicitud #${selectedNovedad.idNovedad} aprobada por Jefe Inmediato`, type: 'success' });
       setShowModal(false);
       setSelectedNovedad(null);
       cargarNovedadesPendientes();
     } catch (err) {
       console.error('Error aprobando novedad:', err);
-      setError(err.response?.data?.error || 'Error al aprobar novedad');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al aprobar novedad', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
 
   const handleRechazar = async () => {
     if (!selectedNovedad || !motivoRechazo.trim()) {
-      setError('Proporciona un motivo de rechazo');
+      setToastData({ visible: true, message: 'Proporciona un motivo de rechazo', type: 'error' });
       return;
     }
 
@@ -86,14 +86,14 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
         }
       );
 
-      setSuccess(`❌ Solicitud #${selectedNovedad.idNovedad} rechazada por Jefe Inmediato`);
+      setToastData({ visible: true, message: `Solicitud #${selectedNovedad.idNovedad} rechazada por Jefe Inmediato`, type: 'success' });
       setShowModal(false);
       setSelectedNovedad(null);
       setMotivoRechazo('');
       cargarNovedadesPendientes();
     } catch (err) {
       console.error('Error rechazando novedad:', err);
-      setError(err.response?.data?.error || 'Error al rechazar novedad');
+      setToastData({ visible: true, message: err.response?.data?.error || 'Error al rechazar novedad', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,6 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
     setSelectedNovedad(novedad);
     setActionType(action);
     setShowModal(true);
-    setError('');
     setMotivoRechazo('');
   };
 
@@ -125,20 +124,6 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
             Revisor: {userName} | Evalúa la primacía de las situaciones reportadas
           </p>
         </div>
-
-        {/* Mensajes */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
-            {error}
-            <button onClick={() => setError('')} className="float-right text-red-600 hover:text-red-800 font-bold">✕</button>
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
-            {success}
-            <button onClick={() => setSuccess('')} className="float-right text-green-600 hover:text-green-800 font-bold">✕</button>
-          </div>
-        )}
 
         {/* Lista de novedades */}
         {loading ? (
@@ -262,6 +247,14 @@ const JefeNovedadesRevisor = ({ usuarioId, userName }) => {
             </div>
           </div>
         )}
+
+      <Toast
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        centered={true}
+      />
     </div>
   );
 };
