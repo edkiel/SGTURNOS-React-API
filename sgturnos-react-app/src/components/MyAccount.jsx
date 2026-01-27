@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { api, API_BASE_URL } from '../api';
-import PageHeader from './common/PageHeader';
 import { useToast } from './common/ToastContainer';
 
 const MyAccount = ({ user }) => {
@@ -83,14 +82,55 @@ const MyAccount = ({ user }) => {
   };
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={containerStyle}>
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full">
-        <PageHeader
-          title="Informacion de mi usuario"
-          subtitle="Consulta y actualiza tus datos personales"
-          userName={`${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.trim()}
-          roleLabel={getRoleLabel()}
-        />
+        {/* Header elegante como Dashboard */}
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+          <div className="px-8 py-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">Informacion de mi usuario</h1>
+                  <p className="text-purple-100 text-sm mt-1">Consulta y actualiza tus datos personales</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-purple-200 font-medium">Usuario</p>
+                      <p className="text-sm font-semibold text-white">{`${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.trim()}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-purple-200 font-medium">Rol</p>
+                      <p className="text-sm font-semibold text-white">{getRoleLabel()}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-white/20 pt-3 mt-3">
+              <p className="text-purple-100 text-sm">
+                Visualiza tus datos personales y cambia tu contraseña cuando lo necesites
+              </p>
+            </div>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {/* ID Usuario */}
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border border-blue-200 shadow-sm">

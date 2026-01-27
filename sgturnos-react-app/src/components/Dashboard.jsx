@@ -39,8 +39,8 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
     try {
       // Cargar novedades según el rol
       if (isUsuarioRegular && user?.idUsuario) {
-        // Usuario regular: sus propias novedades
-        const res = await api.get(`/novedades/usuario/${user.idUsuario}`);
+        // Usuario regular: sus propias novedades + cambios de turno donde es compañero
+        const res = await api.get(`/novedades/usuario/${user.idUsuario}/todas`);
         const todasNovedades = res.data || [];
         
         // Filtrar novedades cuya fecha de inicio NO haya llegado aún

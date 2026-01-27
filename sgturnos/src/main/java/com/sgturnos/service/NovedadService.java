@@ -23,6 +23,9 @@ public class NovedadService {
     
     @Autowired
     private AlertaMallaService alertaMallaService;
+    
+    @Autowired
+    private com.sgturnos.repository.CambioTurnoRepository cambioTurnoRepository;
 
     /**
      * Crea una nueva novedad
@@ -42,6 +45,55 @@ public class NovedadService {
             return List.of();
         }
         return novedadRepository.findByUsuario(usuario);
+    }
+    
+    /**
+     * Obtiene todas las novedades relacionadas con un usuario
+     * Incluye: novedades propias + cambios de turno donde es compañero
+     */
+    public List<Novedad> obtenerTodasNovedadesRelacionadas(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) {
+            return List.of();
+        }
+        
+        // Obtener novedades propias
+        List<Novedad> novedadesPropias = novedadRepository.findByUsuario(usuario);
+        
+        // Obtener cambios de turno donde este usuario es el compañero
+        List<com.sgturnos.model.CambioTurno> cambiosComoCompañero = 
+            cambioTurnoRepository.findByUsuarioCompañeroOrderByFechaSolicitudDesc(usuario);
+        
+        // Convertir cambios de turno a novedades
+        for (com.sgturnos.model.CambioTurno cambio : cambiosComoCompañero) {
+            // Crear una pseudo-novedad para representar el cambio de turno
+            Novedad novedad = new Novedad();
+            novedad.setIdNovedad(cambio.getIdCambio());
+            novedad.setUsuario(cambio.getUsuarioCompañero()); // El compañero ve la novedad
+            novedad.setFechaSolicitud(cambio.getFechaSolicitud());
+            novedad.setFechaInicio(cambio.getFechaTurno());
+            novedad.setDescripcion("Cambio de turno con " + 
+                cambio.getUsuarioSolicitante().getPrimerNombre() + " " + 
+                cambio.getUsuarioSolicitante().getPrimerApellido());
+            
+            // Determinar estado basado en aprobaciones
+            if (cambio.getAprobacionJefe() && cambio.getAprobacionOperaciones() && cambio.getAprobacionRrhh()) {
+                novedad.setEstado("APROBADA");
+            } else if ("RECHAZADA".equals(cambio.getEstado())) {
+                novedad.setEstado("RECHAZADA");
+            } else {
+                novedad.setEstado("PENDIENTE");
+            }
+            
+            // Crear tipo de novedad para cambio de turno
+            com.sgturnos.model.TipoNovedad tipo = new com.sgturnos.model.TipoNovedad();
+            tipo.setNombre("Cambio de Turno");
+            novedad.setTipo(tipo);
+            
+            novedadesPropias.add(novedad);
+        }
+        
+        return novedadesPropias;
     }
 
     /**
