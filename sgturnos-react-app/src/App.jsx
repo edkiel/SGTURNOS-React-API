@@ -40,13 +40,6 @@ const Dashboard = ({ user, onLogout }) => {
   // Verificar si el usuario es administrador
   const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
 
-  // Para usuarios no admin, forzar tab inicial de novedades a vacaciones
-  useEffect(() => {
-    if (!isAdmin && novedadesTab === 'registro') {
-      setNovedadesTab('vacaciones');
-    }
-  }, [isAdmin, novedadesTab]);
-
   const renderContent = () => {
     // Obtener nombre amigable del rol
     const getRoleName = () => {
@@ -68,7 +61,12 @@ const Dashboard = ({ user, onLogout }) => {
     switch (activeTab) {
       case 'home':
         // Usar el nuevo Dashboard component
-        return <DashboardComponent user={user} onLogout={onLogout} onNavigateToNovedades={() => setActiveTab('news')} />;
+        return <DashboardComponent user={user} onLogout={onLogout} onNavigateToNovedades={(tipoNovedad) => {
+          if (tipoNovedad) {
+            setNovedadesTab(tipoNovedad);
+          }
+          setActiveTab('news');
+        }} />;
       case 'myinfo':
         return <MyAccount user={user} />;
       case 'users':
@@ -81,6 +79,21 @@ const Dashboard = ({ user, onLogout }) => {
         // Admin: vista principal de Registro de Novedades + filtros
         if (isAdmin && novedadesTab === 'registro') {
           return <AdminNovedades usuarioAdminId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRol={user?.rol?.rol} />;
+        }
+
+        // Mostrar SelectorNovedades para usuarios regulares cuando están en el tab 'registro' o cuando no han seleccionado un submódulo
+        if (novedadesTab === 'registro') {
+          return <SelectorNovedades 
+            onSelect={(tabName) => {
+              setNovedadesTab(tabName);
+            }} 
+            onCreate={(tabName) => {
+              setCreateSignal(prev => prev + 1);
+              setNovedadesTab(tabName);
+            }}
+            userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()}
+            userRole={getRoleName()}
+          />;
         }
 
         // Vista por módulo específico

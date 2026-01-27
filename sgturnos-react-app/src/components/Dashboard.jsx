@@ -210,7 +210,19 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/novedades')}
+                onClick={() => {
+                  // Para administradores, ir a novedades o al tab correcto si es usuario regular
+                  const tipoNovedad = novedadesPendientes[0]?.tipo?.nombre || '';
+                  const mapeoTabs = {
+                    'Vacaciones': 'vacaciones',
+                    'Incapacidades': 'incapacidades',
+                    'Permisos': 'permisos',
+                    'Cambio de Turno': 'cambios',
+                    'Calamidad': 'calamidad'
+                  };
+                  const tabDestino = mapeoTabs[tipoNovedad] || 'vacaciones';
+                  onNavigateToNovedades(tabDestino);
+                }}
                 className="ml-4 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm"
               >
                 Ver ahora →
@@ -259,7 +271,19 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/novedades')}
+                onClick={() => {
+                  // Mapear el tipo de novedad al tab correcto
+                  const tipoNovedad = novedadesResueltas[0]?.tipo?.nombre || '';
+                  const mapeoTabs = {
+                    'Vacaciones': 'vacaciones',
+                    'Incapacidades': 'incapacidades',
+                    'Permisos': 'permisos',
+                    'Cambio de Turno': 'cambios',
+                    'Calamidad': 'calamidad'
+                  };
+                  const tabDestino = mapeoTabs[tipoNovedad] || 'vacaciones';
+                  onNavigateToNovedades(tabDestino);
+                }}
                 className={`ml-4 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
                   novedadesResueltas[0].estado === 'RECHAZADA'
                     ? 'bg-red-500 hover:bg-red-600'
@@ -323,7 +347,19 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
                     <div
                       key={novedad.idNovedad}
                       className="border-l-4 border-indigo-500 bg-gray-50 p-4 rounded-r-lg hover:shadow-md transition cursor-pointer"
-                      onClick={() => navigate('/novedades')}
+                      onClick={() => {
+                        // Navegar al tipo de novedad correcto
+                        const tipoNom = novedad.tipoNovedad?.nombre || novedad.tipo?.nombre || '';
+                        const mapeoTabs = {
+                          'Vacaciones': 'vacaciones',
+                          'Incapacidades': 'incapacidades',
+                          'Permisos': 'permisos',
+                          'Cambio de Turno': 'cambios',
+                          'Calamidad': 'calamidad'
+                        };
+                        const tabDestino = mapeoTabs[tipoNom] || 'vacaciones';
+                        onNavigateToNovedades(tabDestino);
+                      }}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getTipoNovedadColor(tipoCodigo)}`}>

@@ -55,16 +55,6 @@ const SelectorNovedades = ({ onSelect, onCreate, selectedTab, userName = '', use
       borderColor: 'border-orange-200',
       bgLight: 'bg-orange-50',
       textColor: 'text-orange-700'
-    },
-    {
-      id: 'otros',
-      nombre: 'Otros',
-      descripcion: 'Evento no especificado en las opciones anteriores',
-      icono: '📌',
-      color: 'from-slate-500 to-slate-600',
-      borderColor: 'border-slate-200',
-      bgLight: 'bg-slate-50',
-      textColor: 'text-slate-700'
     }
   ];
 
@@ -84,7 +74,7 @@ const SelectorNovedades = ({ onSelect, onCreate, selectedTab, userName = '', use
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Gestión de Novedades</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Novedades</h1>
                 <p className="text-orange-100 text-sm mt-1">Sistema de Solicitudes y Reportes</p>
               </div>
             </div>
