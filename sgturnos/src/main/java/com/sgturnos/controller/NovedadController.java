@@ -1,6 +1,7 @@
 package com.sgturnos.controller;
 
 import com.sgturnos.dto.NovedadDTO;
+import com.sgturnos.dto.NovedadResponseDTO;
 import com.sgturnos.model.Novedad;
 import com.sgturnos.model.Usuario;
 import com.sgturnos.model.TipoNovedad;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.file.Files;
@@ -88,7 +90,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerNovedadesPendientes() {
         try {
             List<Novedad> novedades = novedadService.obtenerNovedadesPendientes();
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -102,7 +105,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerNovedadesPorUsuario(@PathVariable Long idUsuario) {
         try {
             List<Novedad> novedades = novedadService.obtenerNovedadesPorUsuario(idUsuario);
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -190,7 +194,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerTodasLasNovedades() {
         try {
             List<Novedad> novedades = novedadService.obtenerTodasLasNovedades();
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -425,7 +430,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerPendientesJefe() {
         try {
             List<Novedad> novedades = novedadService.obtenerNovedadesPendientesJefe();
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -439,7 +445,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerPendientesOperaciones() {
         try {
             List<Novedad> novedades = novedadService.obtenerNovedadesPendientesOperaciones();
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -453,7 +460,8 @@ public class NovedadController {
     public ResponseEntity<?> obtenerPendientesRRHH() {
         try {
             List<Novedad> novedades = novedadService.obtenerNovedadesPendientesRRHH();
-            return ResponseEntity.ok(novedades);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -543,9 +551,67 @@ public class NovedadController {
             novedadesOperaciones.forEach(n -> novedadesUnicas.put(n.getIdNovedad(), n));
             novedadesRRHH.forEach(n -> novedadesUnicas.put(n.getIdNovedad(), n));
             
-            return ResponseEntity.ok(new java.util.ArrayList<>(novedadesUnicas.values()));
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(new java.util.ArrayList<>(novedadesUnicas.values()));
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * Método helper: Convierte una entidad Novedad a NovedadResponseDTO
+     * Esto evita problemas de serialización circular y proporciona solo los datos necesarios
+     */
+    private NovedadResponseDTO convertirNovedadADTO(Novedad novedad) {
+        if (novedad == null) {
+            return null;
+        }
+
+        NovedadResponseDTO dto = new NovedadResponseDTO();
+        dto.setIdNovedad(novedad.getIdNovedad());
+        dto.setIdUsuario(novedad.getUsuario() != null ? novedad.getUsuario().getIdUsuario() : null);
+        dto.setUsuarioNombre(novedad.getUsuario() != null ? 
+            novedad.getUsuario().getPrimerNombre() + " " + novedad.getUsuario().getPrimerApellido() : 
+            "");
+        dto.setIdTipo(novedad.getTipo() != null ? novedad.getTipo().getIdTipo() : null);
+        
+        // Crear el DTO del tipo con la información esencial
+        if (novedad.getTipo() != null) {
+            NovedadResponseDTO.TipoNovedadDTO tipoDTO = new NovedadResponseDTO.TipoNovedadDTO();
+            tipoDTO.setIdTipo(novedad.getTipo().getIdTipo());
+            tipoDTO.setNombre(novedad.getTipo().getNombre());
+            tipoDTO.setDescripcion(novedad.getTipo().getDescripcion());
+            tipoDTO.setRequiereFechas(novedad.getTipo().getRequiereFechas());
+            dto.setTipo(tipoDTO);
+        }
+        
+        dto.setFechaInicio(novedad.getFechaInicio());
+        dto.setFechaFin(novedad.getFechaFin());
+        dto.setDescripcion(novedad.getDescripcion());
+        dto.setEstado(novedad.getEstado());
+        dto.setMotivoRechazo(novedad.getMotivoRechazo());
+        dto.setSoportePath(novedad.getSoportePath());
+        dto.setFechaSolicitud(novedad.getFechaSolicitud());
+        dto.setFechaAprobacion(novedad.getFechaAprobacion());
+        dto.setAprobacionJefe(novedad.getAprobacionJefe());
+        dto.setAprobacionOperaciones(novedad.getAprobacionOperaciones());
+        dto.setAprobacionRrhh(novedad.getAprobacionRrhh());
+        dto.setAplicadaAMalla(novedad.getAplicadaAMalla());
+        
+        return dto;
+    }
+
+    /**
+     * Método helper: Convierte una lista de Novedad a lista de NovedadResponseDTO
+     */
+    private List<NovedadResponseDTO> convertirListaNovedadesADTO(List<Novedad> novedades) {
+        List<NovedadResponseDTO> dtos = new ArrayList<>();
+        if (novedades != null) {
+            for (Novedad novedad : novedades) {
+                dtos.add(convertirNovedadADTO(novedad));
+            }
+        }
+        return dtos;
+    }
 }
+

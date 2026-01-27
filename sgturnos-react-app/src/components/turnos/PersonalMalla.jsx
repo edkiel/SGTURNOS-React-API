@@ -95,7 +95,7 @@ const PersonalMalla = ({ user }) => {
       <PageHeader
         title="Consultar mi malla de turno"
         subtitle="Visualiza tu malla publicada y descárgala cuando la necesites"
-        userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
+        userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()}
         roleLabel={getRoleName()}
       />
       

@@ -34,6 +34,9 @@ public class AlertaMalla {
     @Column(name = "estado", nullable = false, length = 20)
     private String estado; // PENDIENTE, PROCESADA, IGNORADA
     
+    @Column(name = "visto", nullable = false)
+    private Boolean visto = false; // Indica si la alerta ha sido vista por el usuario
+    
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
     

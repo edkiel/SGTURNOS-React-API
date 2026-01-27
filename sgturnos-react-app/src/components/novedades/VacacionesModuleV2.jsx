@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
-import PageHeader from '../common/PageHeader';
 import Toast from '../common/Toast';
 
 /**
  * Componente mejorado para solicitudes de vacaciones
  * Incluye selección de aprobadores y visualización del flujo de aprobación
  */
-const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSignal }) => {
+const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSignal, isAdmin = false }) => {
   const [vacaciones, setVacaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +43,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
   useEffect(() => {
     cargarVacaciones();
     cargarUsuarios();
-  }, [usuarioId]);
+  }, [usuarioId, isAdmin]);
 
   // Abrir formulario cuando se solicita crear desde el selector
   useEffect(() => {
@@ -67,13 +66,24 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
   const cargarVacaciones = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/novedades/usuario/${usuarioId}`);
-
-      const vacacionesFiltradas = response.data.filter(n => n.tipo?.nombre === 'Vacaciones');
-      setVacaciones(vacacionesFiltradas);
+      let response;
+      
+      if (isAdmin) {
+        // Admin: cargar todas las vacaciones
+        response = await api.get(`/novedades/todas`);
+        const vacacionesFiltradas = response.data?.filter(n => n.tipo?.nombre === 'Vacaciones') || [];
+        setVacaciones(vacacionesFiltradas);
+      } else {
+        // Usuario regular: solo sus vacaciones
+        response = await api.get(`/novedades/usuario/${usuarioId}`);
+        const vacacionesFiltradas = response.data?.filter(n => n.tipo?.nombre === 'Vacaciones') || [];
+        setVacaciones(vacacionesFiltradas);
+      }
+      setToastData({ visible: false, message: '', type: 'success' });
     } catch (err) {
       console.error('Error cargando vacaciones:', err);
-      setToastData({ visible: true, message: 'Error al cargar las vacaciones', type: 'error' });
+      setToastData({ visible: true, message: err.response?.data?.message || 'Error al cargar las vacaciones', type: 'error' });
+      setVacaciones([]);
     } finally {
       setLoading(false);
     }
@@ -267,12 +277,66 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
-        <PageHeader
-          title="Gestión de Vacaciones"
-          subtitle="Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos"
-          userName={userName}
-          roleLabel={userRole}
-        />
+      <div className="w-full">
+        {/* Header estilo Turnos (glassmorphism) */}
+        <div className="w-full min-h-[180px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+          <div className="px-8 py-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7m-9 4v10" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">Vacaciones</h1>
+                  <p className="text-indigo-100 text-sm mt-1">Gestión de solicitudes y aprobaciones en cadena</p>
+                  <p className="text-indigo-100 text-xs">Flujo: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-indigo-200 font-medium">USUARIO</p>
+                      <p className="text-sm font-semibold text-white">{userName || 'Usuario'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-indigo-200 font-medium">ROL</p>
+                      <p className="text-sm font-semibold text-white">{userRole || 'Sin rol'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-white/20 pt-3 mt-3">
+              <p className="text-indigo-100 text-sm">
+                Visualiza, crea y aprueba solicitudes de vacaciones con trazabilidad completa.
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+                  Pendientes: {vacaciones.filter(v => v.estado === 'PENDIENTE').length}
+                </span>
+                <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+                  Total: {vacaciones.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Formulario */}
         {showForm && (
@@ -496,9 +560,9 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
             <p className="text-gray-500">No hay solicitudes de vacaciones</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="w-full space-y-4">
             {vacacionesFiltradas.map(v => (
-              <div key={v.idNovedad} className="bg-white rounded-lg shadow-md p-6">
+              <div key={v.idNovedad} className="w-full bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-400 hover:shadow-lg transition-shadow">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -555,6 +619,8 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
             ))}
           </div>
         )}
+
+      </div>
 
       {/* Toast notification */}
       <Toast

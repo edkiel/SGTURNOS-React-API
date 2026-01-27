@@ -29,9 +29,9 @@ const AprobadorPermisos = ({ usuarioId, userName, tipoAprobador }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Filtrar solo permisos
-      const permisos = response.data.filter(
+      const permisos = response.data?.filter(
         apr => apr.novedad?.tipo?.nombre === 'Permisos'
-      );
+      ) || [];
       setAprobacionesPendientes(permisos);
     } catch (err) {
       console.error('Error cargando aprobaciones:', err);
@@ -175,7 +175,7 @@ const AprobadorPermisos = ({ usuarioId, userName, tipoAprobador }) => {
 
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
                       <div>
-                        <span className="font-semibold">Solicitante:</span> {aprobacion.novedad.usuario?.primerNombre} {aprobacion.novedad.usuario?.primerApellido}
+                        <span className="font-semibold">Solicitante:</span> {aprobacion.novedad.usuario?.primerNombre} {aprobacion.novedad.usuario?.segundoNombre} {aprobacion.novedad.usuario?.primerApellido} {aprobacion.novedad.usuario?.segundoApellido}
                       </div>
                       <div>
                         <span className="font-semibold">Rol/Puesto:</span> {aprobacion.novedad.usuario?.rol?.rol || 'N/A'}
@@ -249,7 +249,7 @@ const AprobadorPermisos = ({ usuarioId, userName, tipoAprobador }) => {
             <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
               <h3 className="text-xl font-bold text-gray-800 mb-2">Rechazar Permiso</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Solicitud de {selectedAprobacion.novedad.usuario?.primerNombre} {selectedAprobacion.novedad.usuario?.primerApellido}
+                Solicitud de {selectedAprobacion.novedad.usuario?.primerNombre} {selectedAprobacion.novedad.usuario?.segundoNombre} {selectedAprobacion.novedad.usuario?.primerApellido} {selectedAprobacion.novedad.usuario?.segundoApellido}
               </p>
 
               <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">

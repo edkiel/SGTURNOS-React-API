@@ -46,6 +46,13 @@ public class CambioTurnoService {
     }
 
     /**
+     * Obtener TODAS las solicitudes donde el usuario es el compañero (pendientes, aprobadas, rechazadas)
+     */
+    public List<CambioTurno> obtenerSolicitudesComoCompañero(Long idUsuario) {
+        return cambioTurnoRepository.findAllByUsuarioCompañero(idUsuario);
+    }
+
+    /**
      * Aprobación del compañero
      */
     @Transactional
@@ -204,4 +211,9 @@ public class CambioTurnoService {
     public CambioTurno obtenerPorId(Long idCambio) {
         return cambioTurnoRepository.findById(idCambio).orElse(null);
     }
-}
+    /**
+     * Obtener todos los cambios de turno
+     */
+    public List<CambioTurno> obtenerTodos() {
+        return cambioTurnoRepository.findAll();
+    }}

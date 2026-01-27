@@ -67,10 +67,10 @@ public class AlertaMallaService {
     }
     
     /**
-     * Contar alertas pendientes
+     * Contar alertas pendientes NO VISTAS
      */
     public Long contarAlertasPendientes() {
-        return alertaMallaRepository.countByEstado("PENDIENTE");
+        return alertaMallaRepository.countByEstadoAndVisto("PENDIENTE", false);
     }
     
     /**
@@ -95,5 +95,29 @@ public class AlertaMallaService {
      */
     public List<AlertaMalla> obtenerAlertasPorMesAnio(Integer mes, Integer anio) {
         return alertaMallaRepository.findByMesAfectadoAndAnioAfectadoAndEstado(mes, anio, "PENDIENTE");
+    }
+    
+    /**
+     * Marcar todas las alertas pendientes como vistas
+     */
+    @Transactional
+    public void marcarTodasComoVistas() {
+        List<AlertaMalla> alertasNoVistas = alertaMallaRepository.findByEstadoAndVistoOrderByFechaCreacionDesc("PENDIENTE", false);
+        for (AlertaMalla alerta : alertasNoVistas) {
+            alerta.setVisto(true);
+            alertaMallaRepository.save(alerta);
+        }
+    }
+    
+    /**
+     * Marcar una alerta específica como vista
+     */
+    @Transactional
+    public void marcarComoVista(Long idAlerta) {
+        AlertaMalla alerta = alertaMallaRepository.findById(idAlerta).orElse(null);
+        if (alerta != null && !alerta.getVisto()) {
+            alerta.setVisto(true);
+            alertaMallaRepository.save(alerta);
+        }
     }
 }

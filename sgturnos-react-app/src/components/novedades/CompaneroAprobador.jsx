@@ -105,7 +105,7 @@ const CompaneroAprobador = ({ usuarioId, userName }) => {
               <div key={s.idCambio} className="bg-white shadow-lg rounded-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="mb-3"><p className="text-xs font-medium text-gray-500 uppercase">Solicitado por</p><p className="text-lg text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.primerApellido}</p><p className="text-xs text-gray-600">{s.usuarioSolicitante?.email}</p></div>
+                    <div className="mb-3"><p className="text-xs font-medium text-gray-500 uppercase">Solicitado por</p><p className="text-lg text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.segundoNombre} {s.usuarioSolicitante?.primerApellido} {s.usuarioSolicitante?.segundoApellido}</p><p className="text-xs text-gray-600">{s.usuarioSolicitante?.email}</p></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <p className="text-xs font-medium text-gray-500 uppercase">Fecha solicitante</p>
@@ -138,7 +138,7 @@ const CompaneroAprobador = ({ usuarioId, userName }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Rechazar Solicitud</h3>
-            <p className="text-gray-600 mb-4">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido}</b></p>
+            <p className="text-gray-600 mb-4">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.segundoNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido} {selectedSolicitud?.usuarioSolicitante?.segundoApellido}</b></p>
             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
             <textarea value={motivoRechazo} onChange={(e) => setMotivoRechazo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 resize-none" rows="4" required />
             <div className="flex gap-3 justify-end mt-4">

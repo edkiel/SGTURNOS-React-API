@@ -159,7 +159,7 @@ const AprobadorVacaciones = ({ usuarioId, userName, tipoAprobador }) => {
 
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-4">
                       <div>
-                        <span className="font-semibold">Solicitante:</span> {aprobacion.novedad.usuario?.primerNombre} {aprobacion.novedad.usuario?.primerApellido || 'N/A'}
+                        <span className="font-semibold">Solicitante:</span> {aprobacion.novedad.usuario?.primerNombre} {aprobacion.novedad.usuario?.segundoNombre} {aprobacion.novedad.usuario?.primerApellido} {aprobacion.novedad.usuario?.segundoApellido || 'N/A'}
                       </div>
                       <div>
                         <span className="font-semibold">Email:</span> {aprobacion.novedad.usuario?.correo || 'N/A'}

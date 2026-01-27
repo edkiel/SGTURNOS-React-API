@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api';
+import Toast from '../common/Toast';
 
 /**
  * Componente para aprobación administrativa de cambios de turno
@@ -12,8 +13,11 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [approvingId, setApprovingId] = useState(null);
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   const roleConfig = {
     'jefe': {
@@ -41,6 +45,10 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
 
   const config = roleConfig[rolAdmin] || roleConfig['jefe'];
 
+  const showToast = (message, type = 'success') => {
+    setToastData({ visible: true, message, type });
+  };
+
   useEffect(() => {
     cargarSolicitudesPendientes();
   }, [usuarioId, rolAdmin]);
@@ -65,25 +73,37 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
     }
   };
 
-  const handleAprobar = async (idCambio) => {
-    if (!confirm('¿Confirmas la aprobación de este cambio?')) return;
+  const handleAprobar = (idCambio) => {
+    const cambio = solicitudesPendientes.find(c => c.idCambio === idCambio);
+    setSelectedSolicitud(cambio);
+    setApprovingId(idCambio);
+    setShowApproveModal(true);
+  };
+
+  const confirmarAprobar = async () => {
+    if (!approvingId) return;
 
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_BASE_URL}/cambios-turno/${config.approveEndpoint}/${idCambio}`,
+        `${API_BASE_URL}/cambios-turno/${config.approveEndpoint}/${approvingId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       const mensaje = rolAdmin === 'rrhh' 
-        ? 'Cambio aprobado. Pendiente de aplicar a la malla.' 
-        : 'Cambio aprobado. Pasa al siguiente nivel.';
+        ? '✓ Cambio aprobado. Pendiente de aplicar a la malla.' 
+        : '✓ Cambio aprobado. Pasa al siguiente nivel.';
       
-      setSuccess(mensaje);
+      showToast(mensaje, 'success');
+      setShowApproveModal(false);
+      setApprovingId(null);
       cargarSolicitudesPendientes();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al aprobar');
+      showToast(err.response?.data?.error || 'Error al aprobar', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,12 +202,12 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
                   <div>
                     <div className="mb-3">
                       <p className="text-xs font-medium text-gray-500 uppercase">Solicitante</p>
-                      <p className="text-base text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.primerApellido}</p>
+                      <p className="text-base text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.segundoNombre} {s.usuarioSolicitante?.primerApellido} {s.usuarioSolicitante?.segundoApellido}</p>
                       <p className="text-xs text-gray-600">{s.usuarioSolicitante?.email}</p>
                     </div>
                     <div className="mb-3">
                       <p className="text-xs font-medium text-gray-500 uppercase">Compañero</p>
-                      <p className="text-base text-gray-800 font-semibold">{s.usuarioCompañero?.primerNombre} {s.usuarioCompañero?.primerApellido}</p>
+                      <p className="text-base text-gray-800 font-semibold">{s.usuarioCompañero?.primerNombre} {s.usuarioCompañero?.segundoNombre} {s.usuarioCompañero?.primerApellido} {s.usuarioCompañero?.segundoApellido}</p>
                       <p className="text-xs text-gray-600">{s.usuarioCompañero?.email}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -241,8 +261,8 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
           <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Rechazar Solicitud</h3>
             <div className="mb-4">
-              <p className="text-gray-600 mb-1">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido}</b></p>
-              <p className="text-gray-600">Compañero: <b>{selectedSolicitud?.usuarioCompañero?.primerNombre} {selectedSolicitud?.usuarioCompañero?.primerApellido}</b></p>
+              <p className="text-gray-600 mb-1">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.segundoNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido} {selectedSolicitud?.usuarioSolicitante?.segundoApellido}</b></p>
+              <p className="text-gray-600">Compañero: <b>{selectedSolicitud?.usuarioCompañero?.primerNombre} {selectedSolicitud?.usuarioCompañero?.segundoNombre} {selectedSolicitud?.usuarioCompañero?.primerApellido} {selectedSolicitud?.usuarioCompañero?.segundoApellido}</b></p>
               <p className="text-gray-600">Fecha: <b>{selectedSolicitud?.fechaTurno}</b></p>
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
@@ -258,6 +278,70 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
           </div>
         </div>
       )}
+
+      {showApproveModal && selectedSolicitud && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">✓</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800">Confirmar Aprobación</h3>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <p className="text-gray-600">¿Confirmas la aprobación de este cambio de turno?</p>
+              
+              <div className={`bg-gradient-to-r ${colors.gradient} p-4 rounded-lg border-2 ${colors.border} space-y-3`}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Solicitante</p>
+                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioSolicitante?.primerNombre} {selectedSolicitud.usuarioSolicitante?.segundoNombre} {selectedSolicitud.usuarioSolicitante?.primerApellido} {selectedSolicitud.usuarioSolicitante?.segundoApellido}</p>
+                    <p className={`text-lg font-bold ${colors.text} mt-1`}>{selectedSolicitud.fechaTurno}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Compañero</p>
+                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioCompañero?.primerNombre} {selectedSolicitud.usuarioCompañero?.segundoNombre} {selectedSolicitud.usuarioCompañero?.primerApellido} {selectedSolicitud.usuarioCompañero?.segundoApellido}</p>
+                    <p className={`text-lg font-bold ${colors.text} mt-1`}>{selectedSolicitud.fechaTurnoCompañero || '-'}</p>
+                  </div>
+                </div>
+                
+                {selectedSolicitud.descripcion && (
+                  <div className="bg-white p-3 rounded border border-gray-200">
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Motivo</p>
+                    <p className="text-sm text-gray-700">{selectedSolicitud.descripcion}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => { setShowApproveModal(false); setApprovingId(null); }} 
+                disabled={loading}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmarAprobar} 
+                disabled={loading}
+                className={`px-6 py-2 ${colors.btn} text-white rounded-lg shadow-md font-medium transition disabled:opacity-50`}
+              >
+                {loading ? 'Procesando...' : '✓ Confirmar Aprobación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toast 
+        message={toastData.message}
+        type={toastData.type}
+        isVisible={toastData.visible}
+        onClose={() => setToastData({ ...toastData, visible: false })}
+        duration={3500}
+      />
     </div>
   );
 };

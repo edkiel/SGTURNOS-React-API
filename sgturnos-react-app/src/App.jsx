@@ -11,7 +11,6 @@ import RRHHNovedadesRevisor from './components/novedades/RRHHNovedadesRevisor';
 import JefeInmediatoRevisor from './components/mallas/JefeInmediatoRevisor';
 import RecursosHumanosRevisor from './components/mallas/RecursosHumanosRevisor';
 import AlertasMalla from './components/mallas/AlertasMalla';
-import BadgeAlertas from './components/mallas/BadgeAlertas';
 import BadgeNovedadesPendientes from './components/novedades/BadgeNovedadesPendientes';
 import DashboardComponent from './components/Dashboard';
 import React, { useState, useEffect } from 'react';
@@ -34,19 +33,34 @@ const UserManagement = () => {
 // Componente del dashboard (pagina principal despues del login)
 const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('home'); // Estado para controlar la pestana activa
-  const [novedadesTab, setNovedadesTab] = useState('vacaciones'); // Tab para módulo de novedades
+  const [novedadesTab, setNovedadesTab] = useState('registro'); // Tab para módulo de novedades (admin por defecto)
   const [createSignal, setCreateSignal] = useState(0); // señal para abrir formulario de creación
+  const [novedadesMenuOpen, setNovedadesMenuOpen] = useState(false); // Control del submenú de novedades
 
   // Verificar si el usuario es administrador
   const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
+
+  // Para usuarios no admin, forzar tab inicial de novedades a vacaciones
+  useEffect(() => {
+    if (!isAdmin && novedadesTab === 'registro') {
+      setNovedadesTab('vacaciones');
+    }
+  }, [isAdmin, novedadesTab]);
 
   const renderContent = () => {
     // Obtener nombre amigable del rol
     const getRoleName = () => {
       if (!user || !user.rol) return '';
       const roleId = (user.rol.idRol || user.rol.rol || '').toLowerCase();
-      const roleMap = { 'aux01': 'Auxiliar', 'enf02': 'Enfermero', 'med03': 'Médico', 'ter04': 'Terapeuta', 'adm': 'Administrador' };
-      return roleMap[roleId] || roleId;
+      
+      // Búsqueda parcial para IDs que incluyen números (ej: adm05, enf02)
+      if (roleId.includes('adm')) return 'Administrador';
+      if (roleId.includes('aux')) return 'Auxiliar';
+      if (roleId.includes('enf')) return 'Enfermero';
+      if (roleId.includes('med')) return 'Médico';
+      if (roleId.includes('ter')) return 'Terapeuta';
+      
+      return roleId;
     };
     
     const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
@@ -54,7 +68,7 @@ const Dashboard = ({ user, onLogout }) => {
     switch (activeTab) {
       case 'home':
         // Usar el nuevo Dashboard component
-        return <DashboardComponent user={user} onLogout={onLogout} />;
+        return <DashboardComponent user={user} onLogout={onLogout} onNavigateToNovedades={() => setActiveTab('news')} />;
       case 'myinfo':
         return <MyAccount user={user} />;
       case 'users':
@@ -64,47 +78,39 @@ const Dashboard = ({ user, onLogout }) => {
       case 'turns':
         return <TurnosModule user={user} />;
       case 'news':
-        if (isAdmin) {
-          return <AdminNovedades usuarioAdminId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRol={user?.rol?.rol} />;
+        // Admin: vista principal de Registro de Novedades + filtros
+        if (isAdmin && novedadesTab === 'registro') {
+          return <AdminNovedades usuarioAdminId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRol={user?.rol?.rol} />;
         }
 
+        // Vista por módulo específico
         return (
           <div className="space-y-8">
-            {/* Selector elegante de novedades */}
-            <SelectorNovedades 
-              onSelect={setNovedadesTab}
-              onCreate={(id) => { setNovedadesTab(id); setCreateSignal(Date.now()); }}
-              selectedTab={novedadesTab}
-              userName={`${user?.primerNombre} ${user?.primerApellido}`}
-              userRole={getRoleName()}
-            />
-
-            {/* Contenido según tab seleccionado */}
             {novedadesTab === 'vacaciones' && (
-              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} userRole={getRoleName()} openCreateSignal={createSignal} />
+              <VacacionesModuleV2 usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRole={getRoleName()} openCreateSignal={createSignal} isAdmin={isAdmin} />
             )}
             {novedadesTab === 'incapacidades' && (
-              <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
+              <IncapacidadesModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRole={getRoleName()} openCreateSignal={createSignal} isAdmin={isAdmin} />
             )}
             {novedadesTab === 'permisos' && (
-              <PermisosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
+              <PermisosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRole={getRoleName()} openCreateSignal={createSignal} isAdmin={isAdmin} />
             )}
             {novedadesTab === 'cambios' && (
-              <CambiosTurnosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
+              <CambiosTurnosModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRole={getRoleName()} openCreateSignal={createSignal} isAdmin={isAdmin} />
             )}
             {novedadesTab === 'calamidad' && (
-              <CalamidadModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} openCreateSignal={createSignal} />
+              <CalamidadModule usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} userRole={getRoleName()} openCreateSignal={createSignal} isAdmin={isAdmin} />
             )}
           </div>
         );
       case 'jefe-revisor':
         return <JefeInmediatoRevisor usuarioId={user?.idUsuario} />;
       case 'jefe-novedades':
-        return <JefeNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
+        return <JefeNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} />;
       case 'operaciones-novedades':
-        return <OperacionesNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
+        return <OperacionesNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} />;
       case 'rrhh-novedades':
-        return <RRHHNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre} ${user?.primerApellido}`} />;
+        return <RRHHNovedadesRevisor usuarioId={user?.idUsuario} userName={`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()} />;
       case 'rrhh-revisor':
         return <RecursosHumanosRevisor usuarioId={user?.idUsuario} />;
       default:
@@ -125,10 +131,9 @@ const Dashboard = ({ user, onLogout }) => {
             <li>
               <button
                 onClick={() => setActiveTab('home')}
-                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 flex items-center justify-between ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
-                <span>Inicio</span>
-                {isAdmin && <BadgeAlertas />}
+                Inicio
               </button>
             </li>
             <li>
@@ -179,13 +184,114 @@ const Dashboard = ({ user, onLogout }) => {
               })()}
             </li>
             <li>
+              {/* Botón principal de Novedades con submenú */}
               <button
-                onClick={() => setActiveTab('news')}
+                onClick={() => {
+                  setActiveTab('news');
+                  setNovedadesTab('registro');
+                }}
                 className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 flex items-center justify-between ${activeTab === 'news' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
-                <span>Novedades</span>
+                <span className="flex items-center gap-2">
+                  Novedades
+                  <span
+                    className="text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setNovedadesMenuOpen(!novedadesMenuOpen);
+                    }}
+                  >
+                    {novedadesMenuOpen ? '▼' : '▶'}
+                  </span>
+                </span>
                 <BadgeNovedadesPendientes rol={user?.rol?.rol} />
               </button>
+              
+              {/* Submenú de Novedades */}
+              {novedadesMenuOpen && (
+                <ul className="ml-4 mt-1 space-y-1">
+                  <li>
+                    <button
+                      onClick={() => {
+                        setActiveTab('news');
+                        setNovedadesTab('vacaciones');
+                      }}
+                      className={`w-full text-left py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 ${
+                        activeTab === 'news' && novedadesTab === 'vacaciones'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                      }`}
+                    >
+                      <span>🏖️</span>
+                      <span>Vacaciones</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setActiveTab('news');
+                        setNovedadesTab('permisos');
+                      }}
+                      className={`w-full text-left py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 ${
+                        activeTab === 'news' && novedadesTab === 'permisos'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                      }`}
+                    >
+                      <span>✅</span>
+                      <span>Permisos</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setActiveTab('news');
+                        setNovedadesTab('incapacidades');
+                      }}
+                      className={`w-full text-left py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 ${
+                        activeTab === 'news' && novedadesTab === 'incapacidades'
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-md'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                      }`}
+                    >
+                      <span>🏥</span>
+                      <span>Incapacidades</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setActiveTab('news');
+                        setNovedadesTab('calamidad');
+                      }}
+                      className={`w-full text-left py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 ${
+                        activeTab === 'news' && novedadesTab === 'calamidad'
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                      }`}
+                    >
+                      <span>⚠️</span>
+                      <span>Calamidades</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setActiveTab('news');
+                        setNovedadesTab('cambios');
+                      }}
+                      className={`w-full text-left py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 ${
+                        activeTab === 'news' && novedadesTab === 'cambios'
+                          ? 'bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white shadow-md'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                      }`}
+                    >
+                      <span>🔄</span>
+                      <span>Cambios de Turno</span>
+                    </button>
+                  </li>
+                </ul>
+              )}
             </li>
             
             {/* Menú de roles administrativos */}

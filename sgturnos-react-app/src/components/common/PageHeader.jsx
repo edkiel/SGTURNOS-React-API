@@ -1,7 +1,17 @@
 import React from 'react';
 
 // Header reutilizable para mostrar título, usuario y rol
-const PageHeader = ({ title, subtitle, userName, roleLabel }) => {
+const PageHeader = ({ 
+  title, 
+  subtitle, 
+  userName, 
+  roleLabel,
+  icon = '📋',
+  description = '',
+  pendientes,
+  total,
+  gradientColors = ''
+}) => {
   // Generar un gradiente variado basado en el rol para más dinamismo
   const getGradientByRole = (role) => {
     const roleStr = (role || '').toLowerCase();
@@ -15,45 +25,74 @@ const PageHeader = ({ title, subtitle, userName, roleLabel }) => {
     return 'from-indigo-600 via-purple-600 to-blue-600';
   };
 
-  const gradientClass = getGradientByRole(roleLabel);
+  // Usar gradiente de la novedad si se proporciona, sino usar el del rol
+  const gradientClass = gradientColors || getGradientByRole(roleLabel);
 
   return (
-    <div className={`bg-gradient-to-r ${gradientClass} rounded-xl shadow-2xl p-8 md:p-10 mb-8 relative overflow-hidden`}>
+    <div className={`bg-gradient-to-r ${gradientClass} rounded-xl shadow-2xl px-12 md:px-16 py-4 md:py-5 mb-8 relative overflow-hidden`}>
       {/* Efecto de fondo decorativo */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
       
-      <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {/* Título y Subtítulo */}
-        <div className="flex-1">
-          <div className="flex items-start gap-3 mb-2">
-            <span className="text-4xl">📋</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">{title}</h2>
+      <div className="relative z-10 space-y-2">
+        {/* Primera fila: Icono + Título | Pendientes/Total */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl md:text-4xl">{icon}</span>
+            <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">{title}</h2>
           </div>
-          {subtitle && (
-            <p className="text-white/90 text-sm md:text-base ml-12 font-medium leading-relaxed">{subtitle}</p>
+
+          {/* Pendientes y Total */}
+          {(pendientes !== undefined || total !== undefined) && (
+            <div className="flex gap-2 flex-wrap md:flex-nowrap">
+              {pendientes !== undefined && (
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30 min-w-fit">
+                  <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Pendientes</p>
+                  <p className="text-lg font-bold text-white">{pendientes}</p>
+                </div>
+              )}
+              {total !== undefined && (
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30 min-w-fit">
+                  <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Total</p>
+                  <p className="text-lg font-bold text-white">{total}</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Usuario y Rol */}
-        {(userName || roleLabel) && (
-          <div className="flex flex-col items-start md:items-end gap-3 mt-4 md:mt-0">
-            {userName && (
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/30">
-                <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Usuario</p>
-                <p className="text-lg font-bold text-white">{userName}</p>
-              </div>
-            )}
-            {roleLabel && (
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/30">
-                <span className="text-xl">👤</span>
-                <div>
-                  <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Rol</p>
-                  <p className="text-sm font-bold text-white">{roleLabel}</p>
+        {/* Segunda fila: Descripción | Usuario/Rol */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* Descripción */}
+          {description && (
+            <p className="text-white/90 text-sm md:text-base font-medium leading-relaxed flex-1">{description}</p>
+          )}
+
+          {/* Usuario y Rol */}
+          {(userName || roleLabel) && (
+            <div className="flex flex-col items-start md:items-end gap-1.5">
+              {userName && (
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30">
+                  <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Usuario</p>
+                  <p className="text-sm font-bold text-white">{userName}</p>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+              {roleLabel && (
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30">
+                  <span className="text-base">👤</span>
+                  <div>
+                    <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Rol</p>
+                    <p className="text-xs font-bold text-white">{roleLabel}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Tercera fila: Subtítulo (ancho completo, abajo) */}
+        {subtitle && (
+          <p className="text-white/90 text-xs md:text-sm font-medium pt-1 border-t border-white/20">{subtitle}</p>
         )}
       </div>
     </div>

@@ -79,7 +79,7 @@ const VacacionesModule = ({ usuarioId, userName }) => {
       );
 
       // Filtrar solo vacaciones (tipo 1, ajustar según tu DB)
-      const vacacionesFiltradas = response.data.filter(n => n.tipo?.nombre === 'Vacaciones');
+      const vacacionesFiltradas = response.data?.filter(n => n.tipo?.nombre === 'Vacaciones') || [];
       setVacaciones(vacacionesFiltradas);
 
       // Cargar aprobadores para cada solicitud
