@@ -88,7 +88,7 @@ const MyAccount = ({ user }) => {
         <PageHeader
           title="Informacion de mi usuario"
           subtitle="Consulta y actualiza tus datos personales"
-          userName={`${user.primerNombre || ''} ${user.primerApellido || ''}`.trim()}
+          userName={`${user.primerNombre || ''} ${user.segundoNombre || ''} ${user.primerApellido || ''} ${user.segundoApellido || ''}`.trim()}
           roleLabel={getRoleLabel()}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

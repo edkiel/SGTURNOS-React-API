@@ -160,7 +160,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
                       </span>
                     </div>
                     <p className="text-gray-600">
-                      <span className="font-semibold">Empleado:</span> {novedad.usuario?.primerNombre} {novedad.usuario?.primerApellido}
+                      <span className="font-semibold">Empleado:</span> {novedad.usuario?.primerNombre} {novedad.usuario?.segundoNombre} {novedad.usuario?.primerApellido} {novedad.usuario?.segundoApellido}
                     </p>
                     <p className="text-gray-600">
                       <span className="font-semibold">Rol:</span> {novedad.usuario?.rol?.rol}
@@ -214,7 +214,7 @@ const OperacionesNovedadesRevisor = ({ usuarioId, userName }) => {
                   <span className="font-semibold">Tipo:</span> {selectedNovedad.tipo?.nombre}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Empleado:</span> {selectedNovedad.usuario?.primerNombre} {selectedNovedad.usuario?.primerApellido}
+                  <span className="font-semibold">Empleado:</span> {selectedNovedad.usuario?.primerNombre} {selectedNovedad.usuario?.segundoNombre} {selectedNovedad.usuario?.primerApellido} {selectedNovedad.usuario?.segundoApellido}
                 </p>
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold">Período:</span> {selectedNovedad.fechaInicio} al {selectedNovedad.fechaFin}

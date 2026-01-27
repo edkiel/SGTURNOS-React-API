@@ -6,7 +6,6 @@ import AdminAprobadorCambios from './AdminAprobadorCambios';
 import JefeNovedadesRevisor from './JefeNovedadesRevisor';
 import OperacionesNovedadesRevisor from './OperacionesNovedadesRevisor';
 import RRHHNovedadesRevisor from './RRHHNovedadesRevisor';
-import PageHeader from '../common/PageHeader';
 
 /**
  * Componente para que administradores aprueben o rechacen novedades
@@ -214,15 +213,66 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
-        <PageHeader
-          title="Gestión de Aprobaciones de Novedades"
-          subtitle="Revisa y aprueba solicitudes según tu rol administrativo"
-          userName={userName}
-          roleLabel={userRol || ''}
-        />
+      {/* Header Principal de Gestión de Aprobaciones */}
+      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+        {/* Contenedor Principal */}
+        <div className="px-8 py-6">
+          {/* Fila 1: Título y Usuario/Rol */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+            {/* Título Aprobaciones */}
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Gestión de Aprobaciones de Novedades</h1>
+                <p className="text-orange-100 text-sm mt-1">Centro de Control Administrativo</p>
+              </div>
+            </div>
+
+            {/* Usuario y Rol */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* Card Usuario */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs text-orange-200 font-medium">USUARIO</p>
+                    <p className="text-sm font-semibold text-white">{userName || 'Susana Ruíz'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Rol */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs text-orange-200 font-medium">ROL</p>
+                    <p className="text-sm font-semibold text-white">{userRol || 'ADMINISTRADOR'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fila 2: Descripción */}
+          <div className="border-t border-white/20 pt-3 mt-3">
+            <p className="text-orange-100 text-sm">
+              Revisa y aprueba solicitudes según tu rol administrativo
+            </p>
+          </div>
+        </div>
+      </div>
 
         {/* Navegación con icon cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8 md:justify-items-center md:[&>button]:w-full md:[&>button]:max-w-xl">
           {adminCards.map((card) => {
             const stats = obtenerStatsPorTipo(card);
             const isActive = activeTab === card.id;
@@ -456,7 +506,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
                   <div className="col-span-1">
                     <p className="text-xs font-medium text-gray-500 uppercase">Usuario</p>
                     <h3 className="text-lg font-semibold text-gray-800 mt-1">
-                      {n.usuario?.primerNombre} {n.usuario?.primerApellido}
+                      {n.usuario?.primerNombre} {n.usuario?.segundoNombre} {n.usuario?.primerApellido} {n.usuario?.segundoApellido}
                     </h3>
                     <p className="text-gray-600 text-xs mt-1">
                       {n.usuario?.correo}

@@ -8,7 +8,7 @@ import Toast from '../common/Toast';
  * Permite a los usuarios crear solicitudes de incapacidad (médica o licencia)
  * El rol de administrador valida y aprueba/rechaza
  */
-const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
+const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSignal, isAdmin = false }) => {
   const [incapacidades, setIncapacidades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -30,7 +30,7 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
   // Cargar incapacidades al montar el componente
   useEffect(() => {
     cargarIncapacidades();
-  }, [usuarioId]);
+  }, [usuarioId, isAdmin]);
 
   // Abrir formulario cuando se solicita crear desde el selector
   useEffect(() => {
@@ -43,19 +43,34 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/novedades/usuario/${usuarioId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      // Filtrar solo incapacidades (tipo 2, ajustar según tu DB)
-      const incapacidadesFiltradas = response.data.filter(n => n.tipo?.nombre === 'Incapacidades');
-      setIncapacidades(incapacidadesFiltradas);
+      let response;
+      
+      if (isAdmin) {
+        // Admin: cargar todas las incapacidades
+        response = await axios.get(
+          `${API_BASE_URL}/novedades/todas`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const incapacidadesFiltradas = response.data?.filter(n => n.tipo?.nombre === 'Incapacidades') || [];
+        setIncapacidades(incapacidadesFiltradas);
+      } else {
+        // Usuario regular: solo sus incapacidades
+        response = await axios.get(
+          `${API_BASE_URL}/novedades/usuario/${usuarioId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const incapacidadesFiltradas = response.data?.filter(n => n.tipo?.nombre === 'Incapacidades') || [];
+        setIncapacidades(incapacidadesFiltradas);
+      }
+      setToastData({ visible: false, message: '', type: 'success' });
     } catch (err) {
       console.error('Error cargando incapacidades:', err);
-      setToastData({ visible: true, message: 'Error al cargar las incapacidades', type: 'error' });
+      setToastData({ 
+        visible: true, 
+        message: err.response?.data?.message || 'Error al cargar las incapacidades', 
+        type: 'error' 
+      });
+      setIncapacidades([]);
     } finally {
       setLoading(false);
     }
@@ -166,19 +181,78 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
   });
 
   return (
-    <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Incapacidades</h1>
-            <p className="text-gray-600 mt-1">Usuario: {userName}</p>
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-red-50 to-orange-50 min-h-screen" style={{ maxWidth: '1400px' }}>
+      <div className="w-full">
+        <div className="w-full min-h-[180px] bg-gradient-to-r from-rose-600 via-red-600 to-orange-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+          <div className="px-8 py-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 10h10M7 14h10M5 7h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">Incapacidades</h1>
+                  <p className="text-rose-100 text-sm mt-1">Administración y validación de incapacidades</p>
+                  <p className="text-rose-100 text-xs">Flujo: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-rose-200 font-medium">USUARIO</p>
+                      <p className="text-sm font-semibold text-white">{userName || 'Usuario'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-rose-200 font-medium">ROL</p>
+                      <p className="text-sm font-semibold text-white">{userRole || 'Sin rol'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-white/20 pt-3 mt-3">
+              <p className="text-rose-100 text-sm">
+                Gestiona solicitudes con soporte médico y trazabilidad completa.
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+                  Pendientes: {incapacidades.filter(i => i.estado === 'PENDIENTE').length}
+                </span>
+                <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+                  Total: {incapacidades.length}
+                </span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Botón Toggle Formulario */}
+        <div className="mb-6 flex justify-end">
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+              showForm
+                ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
           >
-            {showForm ? 'Cancelar' : 'Nueva Incapacidad'}
+            {showForm ? '✕ Cancelar' : '+ Nueva Incapacidad'}
           </button>
         </div>
 
@@ -297,21 +371,21 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
         </div>
 
         {/* Lista de incapacidades */}
-        <div className="space-y-4">
+        <div className="w-full space-y-4">
           {loading ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
               <p className="text-gray-600 mt-2">Cargando incapacidades...</p>
             </div>
           ) : incapacidadesFiltradas.length === 0 ? (
-            <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
-              <p className="text-gray-500">No hay solicitudes de incapacidad para mostrar</p>
+            <div className="bg-white rounded-lg p-8 text-center border">
+              <p className="text-gray-500">No hay incapacidades para mostrar</p>
             </div>
           ) : (
             incapacidadesFiltradas.map(i => (
               <div
                 key={i.idNovedad}
-                className="bg-white shadow rounded-lg p-6 border-l-4 border-red-400 hover:shadow-lg transition-shadow"
+                className="w-full bg-white shadow-md rounded-lg p-6 border-l-4 border-red-400 hover:shadow-lg transition-shadow"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>

@@ -12,6 +12,8 @@ const AlertasMalla = ({ usuarioId }) => {
 
   useEffect(() => {
     cargarAlertas();
+    // Marcar todas las alertas como vistas al abrir el componente
+    marcarComoVistas();
   }, []);
 
   const cargarAlertas = async () => {
@@ -24,6 +26,15 @@ const AlertasMalla = ({ usuarioId }) => {
       setError('Error al cargar las alertas');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const marcarComoVistas = async () => {
+    try {
+      await api.post(`/alertas-malla/marcar-visto`);
+    } catch (err) {
+      console.error('Error marcando alertas como vistas:', err);
+      // No mostrar error al usuario, es una operación silenciosa
     }
   };
 

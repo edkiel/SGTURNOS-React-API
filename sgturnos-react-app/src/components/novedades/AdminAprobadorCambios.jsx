@@ -202,12 +202,12 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
                   <div>
                     <div className="mb-3">
                       <p className="text-xs font-medium text-gray-500 uppercase">Solicitante</p>
-                      <p className="text-base text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.primerApellido}</p>
+                      <p className="text-base text-gray-800 font-semibold">{s.usuarioSolicitante?.primerNombre} {s.usuarioSolicitante?.segundoNombre} {s.usuarioSolicitante?.primerApellido} {s.usuarioSolicitante?.segundoApellido}</p>
                       <p className="text-xs text-gray-600">{s.usuarioSolicitante?.email}</p>
                     </div>
                     <div className="mb-3">
                       <p className="text-xs font-medium text-gray-500 uppercase">Compañero</p>
-                      <p className="text-base text-gray-800 font-semibold">{s.usuarioCompañero?.primerNombre} {s.usuarioCompañero?.primerApellido}</p>
+                      <p className="text-base text-gray-800 font-semibold">{s.usuarioCompañero?.primerNombre} {s.usuarioCompañero?.segundoNombre} {s.usuarioCompañero?.primerApellido} {s.usuarioCompañero?.segundoApellido}</p>
                       <p className="text-xs text-gray-600">{s.usuarioCompañero?.email}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -261,8 +261,8 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
           <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Rechazar Solicitud</h3>
             <div className="mb-4">
-              <p className="text-gray-600 mb-1">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido}</b></p>
-              <p className="text-gray-600">Compañero: <b>{selectedSolicitud?.usuarioCompañero?.primerNombre} {selectedSolicitud?.usuarioCompañero?.primerApellido}</b></p>
+              <p className="text-gray-600 mb-1">Solicitante: <b>{selectedSolicitud?.usuarioSolicitante?.primerNombre} {selectedSolicitud?.usuarioSolicitante?.segundoNombre} {selectedSolicitud?.usuarioSolicitante?.primerApellido} {selectedSolicitud?.usuarioSolicitante?.segundoApellido}</b></p>
+              <p className="text-gray-600">Compañero: <b>{selectedSolicitud?.usuarioCompañero?.primerNombre} {selectedSolicitud?.usuarioCompañero?.segundoNombre} {selectedSolicitud?.usuarioCompañero?.primerApellido} {selectedSolicitud?.usuarioCompañero?.segundoApellido}</b></p>
               <p className="text-gray-600">Fecha: <b>{selectedSolicitud?.fechaTurno}</b></p>
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
@@ -296,12 +296,12 @@ const AdminAprobadorCambios = ({ usuarioId, userName, rolAdmin }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase mb-1">Solicitante</p>
-                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioSolicitante?.primerNombre} {selectedSolicitud.usuarioSolicitante?.primerApellido}</p>
+                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioSolicitante?.primerNombre} {selectedSolicitud.usuarioSolicitante?.segundoNombre} {selectedSolicitud.usuarioSolicitante?.primerApellido} {selectedSolicitud.usuarioSolicitante?.segundoApellido}</p>
                     <p className={`text-lg font-bold ${colors.text} mt-1`}>{selectedSolicitud.fechaTurno}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase mb-1">Compañero</p>
-                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioCompañero?.primerNombre} {selectedSolicitud.usuarioCompañero?.primerApellido}</p>
+                    <p className="text-sm font-bold text-gray-800">{selectedSolicitud.usuarioCompañero?.primerNombre} {selectedSolicitud.usuarioCompañero?.segundoNombre} {selectedSolicitud.usuarioCompañero?.primerApellido} {selectedSolicitud.usuarioCompañero?.segundoApellido}</p>
                     <p className={`text-lg font-bold ${colors.text} mt-1`}>{selectedSolicitud.fechaTurnoCompañero || '-'}</p>
                   </div>
                 </div>

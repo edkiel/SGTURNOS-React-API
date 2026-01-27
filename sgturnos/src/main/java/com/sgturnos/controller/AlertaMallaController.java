@@ -94,4 +94,32 @@ public class AlertaMallaController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    
+    /**
+     * Marcar todas las alertas pendientes como vistas
+     * POST /api/alertas-malla/marcar-visto
+     */
+    @PostMapping("/marcar-visto")
+    public ResponseEntity<?> marcarTodasComoVistas() {
+        try {
+            alertaMallaService.marcarTodasComoVistas();
+            return ResponseEntity.ok(Map.of("mensaje", "Alertas marcadas como vistas"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Marcar una alerta específica como vista
+     * POST /api/alertas-malla/{idAlerta}/marcar-visto
+     */
+    @PostMapping("/{idAlerta}/marcar-visto")
+    public ResponseEntity<?> marcarComoVista(@PathVariable Long idAlerta) {
+        try {
+            alertaMallaService.marcarComoVista(idAlerta);
+            return ResponseEntity.ok(Map.of("mensaje", "Alerta marcada como vista"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

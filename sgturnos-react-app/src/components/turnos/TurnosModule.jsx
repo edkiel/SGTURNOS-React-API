@@ -158,13 +158,64 @@ const TurnosModule = ({ user }) => {
   
 
   return (
-    <div className="w-full p-4 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
-      <PageHeader
-        title="Planificación de Turnos"
-        subtitle="Genera, revisa y publica las mallas de cada rol"
-        userName={`${user?.primerNombre || ''} ${user?.primerApellido || ''}`.trim()}
-        roleLabel={getRoleLabel()}
-      />
+    <div className="w-full p-4 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
+      {/* Header Principal de Turnos */}
+      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+        {/* Contenedor Principal */}
+        <div className="px-8 py-6">
+          {/* Fila 1: Título y Usuario/Rol */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+            {/* Título Planificación */}
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Planificación de Turnos</h1>
+                <p className="text-green-100 text-sm mt-1">Sistema de Gestión de Mallas</p>
+              </div>
+            </div>
+
+            {/* Usuario y Rol */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* Card Usuario */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs text-green-200 font-medium">Usuario</p>
+                    <p className="text-sm font-semibold text-white">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim() || 'Usuario'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Rol */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs text-green-200 font-medium">Rol</p>
+                    <p className="text-sm font-semibold text-white">{getRoleLabel() || 'Sin rol asignado'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fila 2: Descripción */}
+          <div className="border-t border-white/20 pt-3 mt-3">
+            <p className="text-green-100 text-sm">
+              Genera, revisa y publica las mallas de turnos para cada rol del personal médico
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Role buttons moved to Inicio (PersonalMalla) per UX request */}
 

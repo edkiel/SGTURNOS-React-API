@@ -135,13 +135,62 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header con PageHeader */}
-        <PageHeader 
-          title="Dashboard"
-          subtitle="Visualiza tus mallas de turnos y novedades"
-          userName={user?.nombre || user?.correo}
-          roleLabel={roleName}
-        />
+        {/* Header Principal del Dashboard */}
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+          {/* Contenedor Principal */}
+          <div className="px-8 py-6">
+            {/* Fila 1: Título y Usuario/Rol */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+              {/* Título Dashboard */}
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">Panel de Control Principal</h1>
+                </div>
+              </div>
+
+              {/* Usuario y Rol */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                {/* Card Usuario */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-blue-200 font-medium">Usuario</p>
+                      <p className="text-sm font-semibold text-white">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim() || 'Usuario'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Rol */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs text-blue-200 font-medium">Rol</p>
+                      <p className="text-sm font-semibold text-white">{roleName || 'Sin rol asignado'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fila 2: Descripción */}
+            <div className="border-t border-white/20 pt-3 mt-3">
+              <p className="text-blue-100 text-sm">
+                Visualiza tus mallas de turnos, gestiona novedades y accede a todas las funciones del sistema
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Box de Notificación - Solo para administradores con novedades pendientes */}
         {(isAdmin || isJefeInmediato || isOperacionesClinicas || isRecursosHumanos) && novedadesPendientes.length > 0 && (
@@ -268,7 +317,7 @@ const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
                   // Extraer tipo de novedad de forma segura
                   const tipoNombre = novedad.tipoNovedad?.nombre || novedad.tipo?.nombre || 'Sin tipo';
                   const tipoCodigo = novedad.tipoNovedad?.codigo || novedad.tipo?.codigo || '';
-                  const usuarioNombre = novedad.usuario?.nombre || `${novedad.usuario?.primerNombre || ''} ${novedad.usuario?.primerApellido || ''}`.trim() || 'Usuario';
+                  const usuarioNombre = novedad.usuario?.nombre || `${novedad.usuario?.primerNombre || ''} ${novedad.usuario?.segundoNombre || ''} ${novedad.usuario?.primerApellido || ''} ${novedad.usuario?.segundoApellido || ''}`.trim() || 'Usuario';
                   
                   return (
                     <div

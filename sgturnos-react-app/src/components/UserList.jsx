@@ -199,7 +199,7 @@ const UserList = () => {
             </div>
             <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Confirmar Eliminación</h3>
             <p className="text-center text-gray-600 mb-6">
-              ¿Estás seguro de que deseas eliminar al usuario <span className="font-semibold text-gray-900">{confirmDelete.primerNombre} {confirmDelete.primerApellido}</span>?
+              ¿Estás seguro de que deseas eliminar al usuario <span className="font-semibold text-gray-900">{confirmDelete.primerNombre} {confirmDelete.segundoNombre} {confirmDelete.primerApellido} {confirmDelete.segundoApellido}</span>?
               <br />
               <span className="text-sm text-red-600 mt-2 block">Esta acción no se puede deshacer.</span>
             </p>

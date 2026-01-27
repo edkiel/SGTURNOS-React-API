@@ -13,4 +13,9 @@ public interface AlertaMallaRepository extends JpaRepository<AlertaMalla, Long> 
     List<AlertaMalla> findByMesAfectadoAndAnioAfectadoAndEstado(Integer mes, Integer anio, String estado);
     
     Long countByEstado(String estado);
+    
+    // Métodos para manejo de alertas vistas/no vistas
+    Long countByEstadoAndVisto(String estado, Boolean visto);
+    
+    List<AlertaMalla> findByEstadoAndVistoOrderByFechaCreacionDesc(String estado, Boolean visto);
 }
