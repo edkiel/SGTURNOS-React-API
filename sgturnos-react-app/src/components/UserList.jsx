@@ -187,8 +187,44 @@ const UserList = () => {
   const roleEntries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="w-full p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
-      {/* Modal de confirmación de eliminación */}
+    <div className="w-full p-4 bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
+      {/* Header Principal de Usuarios */}
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+        {/* Contenedor Principal */}
+        <div className="px-8 py-6">
+          {/* Fila 1: Título */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Título Gestión de Usuarios */}
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292m0 0H7.465M12.354 9.354H16.465m-8.109-4a3 3 0 01-3-3H3.5m0 0h4m0 0a3 3 0 013-3h4a3 3 0 110 6h-4a3 3 0 01-3-3m0 0H3.5m4 6a3 3 0 013 3v4a3 3 0 01-3 3h-4a3 3 0 01-3-3v-4a3 3 0 013-3h4z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Gestión de Usuarios</h1>
+                <p className="text-purple-100 text-sm mt-1">Administración de cuentas y permisos</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjetas de totales por rol en una fila compacta */}
+          <div className="border-t border-white/20 pt-4 mt-4">
+            <p className="text-purple-100 text-xs font-semibold mb-3">Usuarios por Rol</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              {roleEntries.slice(0, 5).map(([rol, total]) => (
+                <div
+                  key={rol}
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 text-center"
+                >
+                  <p className="text-xs text-purple-100 font-medium">{rol}</p>
+                  <p className="text-lg font-bold text-white">{total}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
       {confirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-fadeIn">
@@ -229,23 +265,6 @@ const UserList = () => {
         duration={3500}
       />
 
-      {/* Tarjetas de totales por rol */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-5">
-        {roleEntries.map(([rol, total]) => (
-          <div
-            key={rol}
-            className="flex items-center gap-3 p-4 rounded-lg border shadow-sm bg-white"
-          >
-            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
-              👥
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-semibold">{rol}</div>
-              <div className="text-xl font-bold text-gray-800">{total} usuario{total === 1 ? '' : 's'}</div>
-            </div>
-          </div>
-        ))}
-      </div>
       {/* Formulario para usuarios normales */}
       {showCrearUsuario && (
         <div className="mb-6 p-4 bg-white rounded-lg shadow-lg border-2 border-blue-200">
