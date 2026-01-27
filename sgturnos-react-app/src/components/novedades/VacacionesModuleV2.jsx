@@ -268,7 +268,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
         <PageHeader
-          title="Gestión de Vacaciones"
+          title="Vacaciones"
           subtitle="Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos"
           userName={userName}
           roleLabel={userRole}

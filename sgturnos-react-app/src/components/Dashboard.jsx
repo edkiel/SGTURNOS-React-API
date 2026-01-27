@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { useNavigate } from 'react-router-dom';
 import AdminPublishedMallas from './turnos/AdminPublishedMallas';
 import PageHeader from './common/PageHeader';
 import BadgeNovedadesPendientes from './novedades/BadgeNovedadesPendientes';
 
-const Dashboard = ({ user, onLogout }) => {
-  const navigate = useNavigate();
+const Dashboard = ({ user, onLogout, onNavigateToNovedades }) => {
   const [novedadesPendientes, setNovedadesPendientes] = useState([]);
   const [novedadesResueltas, setNovedadesResueltas] = useState([]);
   const [alertasMalla, setAlertasMalla] = useState([]);
@@ -304,7 +302,7 @@ const Dashboard = ({ user, onLogout }) => {
             )}
 
             <button
-              onClick={() => navigate('/novedades')}
+              onClick={() => onNavigateToNovedades()}
               className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-200"
             >
               Ver todas las novedades →

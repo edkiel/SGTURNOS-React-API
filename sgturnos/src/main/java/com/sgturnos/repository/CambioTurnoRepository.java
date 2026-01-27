@@ -45,4 +45,8 @@ public interface CambioTurnoRepository extends JpaRepository<CambioTurno, Long> 
     // Buscar cambios aprobados pero no aplicados a la malla
     @Query("SELECT c FROM CambioTurno c WHERE c.estado = 'APROBADA' AND c.aplicadaAMalla = false")
     List<CambioTurno> findAprobadosPendientesAplicar();
+
+    // Buscar TODAS las solicitudes donde el usuario es compañero (pendientes, aprobadas, rechazadas)
+    @Query("SELECT c FROM CambioTurno c WHERE c.usuarioCompañero.idUsuario = :idUsuario ORDER BY c.fechaSolicitud DESC")
+    List<CambioTurno> findAllByUsuarioCompañero(@Param("idUsuario") Long idUsuario);
 }

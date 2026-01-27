@@ -250,7 +250,13 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                     while (assignedDay < needDay) {
                         Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, false, 
                                                                  rows, hoursByUser, consecutiveDays, 
-                                                                 consecutiveNights, nightTurnsByUser, false);
+                                                                 consecutiveNights, nightTurnsByUser, false, false);
+                        if (candidate == null) {
+                            // Fallback: relajar restricciones (permite tripleta u horas cercanas al límite) para no dejar el día sin cobertura
+                            candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, false,
+                                                             rows, hoursByUser, consecutiveDays,
+                                                             consecutiveNights, nightTurnsByUser, false, true);
+                        }
                         if (candidate == null) break;
                         
                         assignShiftV3(candidate.getIdUsuario(), d, "TD", rows, hoursByUser, 
@@ -268,7 +274,13 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                     while (assignedNight < needNight) {
                         Usuario candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, true, 
                                                                  rows, hoursByUser, consecutiveDays, 
-                                                                 consecutiveNights, nightTurnsByUser, true);
+                                                                 consecutiveNights, nightTurnsByUser, true, false);
+                        if (candidate == null) {
+                            // Fallback relajado para asegurar cobertura nocturna
+                            candidate = selectBestCandidateV3(targetUsers, byCode, roleCode, d, true,
+                                                             rows, hoursByUser, consecutiveDays,
+                                                             consecutiveNights, nightTurnsByUser, true, true);
+                        }
                         if (candidate == null) break;
                         
                         assignShiftV3(candidate.getIdUsuario(), d, "TN", rows, hoursByUser, 
@@ -379,16 +391,24 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             if (nid == null || nid.longValue() < 1) continue;
             long id = nid.longValue();
 
-            // Buscar un día LB para asignar CP
+            // Buscar un día LB para asignar CP, ajustando las horas del CP a lo que falta para llegar a 192h
             for (int d = 1; d <= days; d++) {
                 String key = "d" + d;
                 Object cell = row.get(key);
                 String cellStr = cell == null ? "" : cell.toString();
 
                 if (cellStr.equals("LB")) {
-                    // Marcar que tiene CP pero no asignar aún, se combinará con AP si es necesario
-                    row.put(key, "CP");
-                    hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + CMP_HOURS);
+                    int currentHours = hoursByUser.getOrDefault(id, 0);
+                    int remainingToTarget = TARGET_HOURS_PER_USER - currentHours;
+                    // Si ya está en 192h o más, NO asignar CP
+                    if (remainingToTarget <= 0) break;
+
+                    int cpHours = Math.min(CMP_HOURS, remainingToTarget);
+
+                    // Marcar CP con las horas reales (CP, o CP2h/CP1h si faltan menos de 3h)
+                    String cpCode = cpHours == CMP_HOURS ? "CP" : ("CP" + cpHours + "h");
+                    row.put(key, cpCode);
+                    hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + cpHours);
                     hasCMP.put(id, true);
                     break;
                 }
@@ -426,18 +446,29 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 Object cell = row.get(key);
                 String cellStr = cell == null ? "" : cell.toString();
 
+                int cpHours = 0;
                 if (cellStr.equals("CP")) {
-                    // CP = 3h, entonces AP máximo = 9h para no exceder 12h por día
-                    int maxApoyoThisDay = Math.min(remaining, 12 - CMP_HOURS); // máximo 9h
+                    cpHours = CMP_HOURS;
+                } else if (cellStr.startsWith("CP") && cellStr.endsWith("h")) {
+                    try {
+                        cpHours = Integer.parseInt(cellStr.substring(2, cellStr.length() - 1));
+                    } catch (NumberFormatException ignored) {
+                        cpHours = CMP_HOURS;
+                    }
+                }
+
+                if (cpHours > 0) {
+                    // CP parcial posible: AP máximo = 12 - cpHours
+                    int maxApoyoThisDay = Math.min(remaining, 12 - cpHours);
                     
                     if (maxApoyoThisDay > 0) {
-                        String combinado = "CP" + CMP_HOURS + "h+AP" + maxApoyoThisDay + "h";
+                        String combinado = "CP" + cpHours + "h+AP" + maxApoyoThisDay + "h";
                         row.put(key, combinado);
                         hoursByUser.put(id, hoursByUser.getOrDefault(id, 0) + maxApoyoThisDay);
                         remaining -= maxApoyoThisDay;
                         
                         System.out.println("[MALLA] Usuario " + row.get("name") + 
-                                         " - Combinado: " + combinado + " (total día: " + (CMP_HOURS + maxApoyoThisDay) + "h, quedan " + remaining + "h)");
+                                         " - Combinado: " + combinado + " (total día: " + (cpHours + maxApoyoThisDay) + "h, quedan " + remaining + "h)");
                         
                         if (remaining == 0) {
                             apoyoAsignado = true;
@@ -614,7 +645,8 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                                          Map<Long, Integer> consecutiveDays,
                                          Map<Long, Integer> consecutiveNights,
                                          Map<Long, Integer> nightTurnsByUser,
-                                         boolean isNightShift) {
+                                         boolean isNightShift,
+                                         boolean relaxedConstraints) {
         List<Usuario> pool = byCode.getOrDefault(roleCode, List.of()).stream()
             .filter(u -> targetUsers.contains(u))
             .collect(Collectors.toList());
@@ -656,7 +688,7 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
             // Ya tiene turno asignado
             if (!cellStr.isEmpty() && !cellStr.isBlank()) continue;
 
-            // VALIDACIÓN 1: NO noche → día (sería 24h continuas)
+            // VALIDACIÓN 1: NO noche → día (sería 24h continuas). Aún en relajado no permitimos romper descanso básico.
             if (!isNight && day > 1) {
                 Object prev = row.get("d" + (day - 1));
                 String prevStr = prev == null ? "" : prev.toString();
@@ -681,15 +713,16 @@ public class MallaGeneratorServiceImpl implements MallaGeneratorService {
                 }
             }
 
-            // VALIDACIÓN 2: NO tripletas de días (máximo 2 días seguidos)
-            if (!isNight && consecDays >= MAX_CONSECUTIVE_SAME) continue;
+            // VALIDACIÓN 2: NO tripletas de días (máximo 2 días seguidos). En modo relajado permitimos un 3er día para cubrir huecos críticos.
+            if (!isNight && consecDays >= MAX_CONSECUTIVE_SAME && !relaxedConstraints) continue;
 
-            // VALIDACIÓN 3: NO tripletas de noches (máximo 2 noches seguidas)
-            if (isNight && consecNights >= MAX_CONSECUTIVE_SAME) continue;
+            // VALIDACIÓN 3: NO tripletas de noches (máximo 2 noches seguidas). En modo relajado permitimos un 3er turno nocturno si es necesario.
+            if (isNight && consecNights >= MAX_CONSECUTIVE_SAME && !relaxedConstraints) continue;
 
-            // VALIDACIÓN 4: No exceder 189 horas (dejar espacio para CMP de 3h)
+            // VALIDACIÓN 4: No exceder 189 horas (dejar espacio para CMP de 3h). En modo relajado permitimos llegar al tope (192h)
             int currentHours = hoursByUser.getOrDefault(id, 0);
-            if (currentHours + FULL_SHIFT_HOURS > 189) continue;
+            int limit = relaxedConstraints ? TARGET_HOURS_PER_USER : 189;
+            if (currentHours + FULL_SHIFT_HOURS > limit) continue;
 
             // Candidato válido
             return u;

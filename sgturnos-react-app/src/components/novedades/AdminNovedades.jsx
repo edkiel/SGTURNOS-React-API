@@ -26,7 +26,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
   const adminCards = [
     {
       id: 'vacaciones',
-      title: 'Gestión de Vacaciones',
+      title: 'Vacaciones',
       description: 'Revisa y valida las solicitudes de vacaciones con sus aprobaciones en cadena.',
       icon: '🏖️',
       color: 'from-blue-500 to-indigo-600',
@@ -35,7 +35,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     },
     {
       id: 'permisos',
-      title: 'Gestión de Permisos',
+      title: 'Permisos',
       description: 'Gestiona permisos especiales y licencias solicitadas por el personal.',
       icon: '✅',
       color: 'from-emerald-500 to-teal-600',
@@ -44,7 +44,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     },
     {
       id: 'incapacidades',
-      title: 'Gestión de Incapacidades',
+      title: 'Incapacidades',
       description: 'Administra y valida incapacidades presentadas por los colaboradores.',
       icon: '🏥',
       color: 'from-rose-500 to-red-600',
@@ -53,7 +53,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     },
     {
       id: 'calamidad',
-      title: 'Gestión de Calamidad',
+      title: 'Calamidades',
       description: 'Revisa reportes de calamidad personal o familiar para su trámite.',
       icon: '⚠️',
       color: 'from-orange-500 to-amber-600',
@@ -62,7 +62,7 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
     },
     {
       id: 'cambios',
-      title: 'Gestión de Cambios de Turno',
+      title: 'Cambios de Turno',
       description: 'Coordina el flujo multirrol para autorizar cambios de turno.',
       icon: '🔄',
       color: 'from-purple-500 to-fuchsia-600'
@@ -73,15 +73,17 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
   const [rolCambios, setRolCambios] = useState('jefe'); // 'jefe' | 'operaciones' | 'rrhh'
 
   const [tipos, setTipos] = useState([]);
+  const [cambiosTurno, setCambiosTurno] = useState([]);
 
   // Cargar tipos disponibles
   useEffect(() => {
     cargarTipos();
   }, []);
 
-  // Cargar todas las novedades
+  // Cargar todas las novedades y cambios de turno
   useEffect(() => {
     cargarNovedades();
+    cargarCambiosTurno();
   }, []);
 
   const cargarTipos = async () => {
@@ -103,6 +105,16 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
       setError('Error al cargar las novedades');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarCambiosTurno = async () => {
+    try {
+      const response = await api.get(`/cambios-turno/todos`);
+      setCambiosTurno(response.data || []);
+    } catch (err) {
+      console.error('Error cargando cambios de turno:', err);
+      // No mostrar error al usuario, solo loguear
     }
   };
 
@@ -161,6 +173,18 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
 
   const obtenerStatsPorTipo = (card) => {
     if (!card) return null;
+    
+    // Caso especial: Cambios de turno (no son novedades regulares)
+    if (card.id === 'cambios') {
+      return {
+        total: cambiosTurno.length,
+        pendientes: cambiosTurno.filter(c => 
+          c.estado === 'PENDIENTE_COMPAÑERO' || c.estado === 'PENDIENTE_ADMIN'
+        ).length,
+      };
+    }
+    
+    // Para el resto de novedades
     const norm = (v) => (v || '').toString().toLowerCase();
     let coincidencias = novedades;
     if (card.typeName) {
@@ -345,6 +369,14 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
           </div>
         )}
 
+        {/* Título de Sección Histórico */}
+        <div className="mb-6 text-center">
+          <h2 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
+            📋 Registro de Novedades
+          </h2>
+          <p className="text-gray-600 text-sm mt-2">Consulta el historial completo de solicitudes y su estado de aprobación</p>
+        </div>
+
         {/* Filtros */}
         <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Filtros</h2>
@@ -383,11 +415,14 @@ const AdminNovedades = ({ usuarioAdminId, userName, userRol }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="todos">Todos</option>
-                {tipos.map(t => (
-                  <option key={t.idTipo} value={t.nombre}>
-                    {t.nombre}
-                  </option>
-                ))}
+                {tipos
+                  .filter(t => t.nombre !== 'Improvistos')
+                  .map(t => (
+                    <option key={t.idTipo} value={t.nombre}>
+                      {t.nombre}
+                    </option>
+                  ))
+                }
               </select>
             </div>
           </div>

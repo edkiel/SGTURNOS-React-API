@@ -54,7 +54,7 @@ const Dashboard = ({ user, onLogout }) => {
     switch (activeTab) {
       case 'home':
         // Usar el nuevo Dashboard component
-        return <DashboardComponent user={user} onLogout={onLogout} />;
+        return <DashboardComponent user={user} onLogout={onLogout} onNavigateToNovedades={() => setActiveTab('news')} />;
       case 'myinfo':
         return <MyAccount user={user} />;
       case 'users':

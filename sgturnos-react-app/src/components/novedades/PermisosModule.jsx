@@ -186,7 +186,7 @@ const PermisosModule = ({ usuarioId, userName, openCreateSignal }) => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">🔐 Gestión de Permisos</h1>
+            <h1 className="text-3xl font-bold text-gray-800">🔐 Permisos</h1>
             <p className="text-gray-600 mt-1">Usuario: {userName}</p>
             <p className="text-sm text-gray-500 mt-1">Requiere aprobación de: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
           </div>

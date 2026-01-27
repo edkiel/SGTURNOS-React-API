@@ -84,6 +84,20 @@ public class CambioTurnoController {
     }
 
     /**
+     * Obtener TODAS las solicitudes donde el usuario es el compañero (pendientes, aprobadas, rechazadas)
+     * GET /api/cambios-turno/compañero/{idUsuario}
+     */
+    @GetMapping("/compañero/{idUsuario}")
+    public ResponseEntity<?> obtenerSolicitudesComoCompañero(@PathVariable Long idUsuario) {
+        try {
+            List<CambioTurno> solicitudes = cambioTurnoService.obtenerSolicitudesComoCompañero(idUsuario);
+            return ResponseEntity.ok(solicitudes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * Obtener solicitudes pendientes donde el usuario es el compañero
      * GET /api/cambios-turno/pendientes-compañero/{idUsuario}
      */
@@ -357,6 +371,20 @@ public class CambioTurnoController {
 
             return ResponseEntity.ok(cambio);
 
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Obtener todos los cambios de turno (para estadísticas)
+     * GET /api/cambios-turno/todos
+     */
+    @GetMapping("/todos")
+    public ResponseEntity<?> obtenerTodos() {
+        try {
+            List<CambioTurno> cambios = cambioTurnoService.obtenerTodos();
+            return ResponseEntity.ok(cambios);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

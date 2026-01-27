@@ -171,7 +171,7 @@ const IncapacidadesModule = ({ usuarioId, userName, openCreateSignal }) => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Gestión de Incapacidades</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Incapacidades</h1>
             <p className="text-gray-600 mt-1">Usuario: {userName}</p>
           </div>
           <button

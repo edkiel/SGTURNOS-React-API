@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api';
+import Toast from '../common/Toast';
 
 /**
  * Componente para gestionar solicitudes de cambio de turno
@@ -14,9 +15,11 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
   const [showForm, setShowForm] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
   const [selectedCambio, setSelectedCambio] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState('');
   const [filter, setFilter] = useState('todas');
+  const [approvingId, setApprovingId] = useState(null);
 
   const [form, setForm] = useState({
     fechaTurno: '',
@@ -27,6 +30,7 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toastData, setToastData] = useState({ visible: false, message: '', type: 'success' });
 
   useEffect(() => {
     cargarCambios();
@@ -40,15 +44,36 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
     }
   }, [openCreateSignal]);
 
+  const showToast = (message, type = 'success') => {
+    setToastData({ visible: true, message, type });
+  };
+
   const cargarCambios = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(
+      
+      // Traer cambios donde soy SOLICITANTE
+      const responseSolicitante = await axios.get(
         `${API_BASE_URL}/cambios-turno/usuario/${usuarioId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCambios(response.data);
+      
+      // Traer cambios donde soy COMPAÑERO
+      const responseCompañero = await axios.get(
+        `${API_BASE_URL}/cambios-turno/compañero/${usuarioId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Combinar ambas listas sin duplicados
+      const todosCambios = [...responseSolicitante.data, ...responseCompañero.data];
+      
+      // Eliminar duplicados por ID si existieran
+      const cambiosUnicos = todosCambios.filter((cambio, index, self) =>
+        index === self.findIndex((c) => c.idCambio === cambio.idCambio)
+      );
+      
+      setCambios(cambiosUnicos);
     } catch (err) {
       console.error('Error cargando cambios:', err);
       setError('Error al cargar los cambios de turno');
@@ -90,7 +115,7 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setSuccess('Solicitud creada. Pendiente de aprobación del compañero.');
+      showToast('✓ Solicitud creada. Pendiente de aprobación del compañero.', 'success');
       setForm({ fechaTurno: '', fechaTurnoCompañero: '', descripcion: '', idUsuarioCompañero: '' });
       setShowForm(false);
       setShowConfirm(false);
@@ -129,20 +154,32 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
     setShowConfirm(true);
   };
 
-  const handleAprobarCompañero = async (idCambio) => {
-    if (!confirm('¿Confirmas que aceptas este cambio de turno?')) return;
+  const handleAprobarCompañero = (idCambio) => {
+    const cambio = cambios.find(c => c.idCambio === idCambio);
+    setSelectedCambio(cambio);
+    setApprovingId(idCambio);
+    setShowApproveModal(true);
+  };
+
+  const confirmarAprobarCompañero = async () => {
+    if (!approvingId) return;
 
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_BASE_URL}/cambios-turno/aprobar-compañero/${idCambio}`,
+        `${API_BASE_URL}/cambios-turno/aprobar-compañero/${approvingId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess('Cambio aprobado. Pasa a revisión administrativa.');
+      showToast('✓ Cambio aprobado. Pasa a revisión administrativa.', 'success');
+      setShowApproveModal(false);
+      setApprovingId(null);
       cargarCambios();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al aprobar');
+      showToast(err.response?.data?.error || 'Error al aprobar', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -378,6 +415,76 @@ const CambiosTurnosModule = ({ usuarioId, userName, openCreateSignal }) => {
         </div>
       </div>
     )}
+
+    {showApproveModal && selectedCambio && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl">✓</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800">Confirmar Aprobación</h3>
+          </div>
+          
+          <div className="space-y-4 mb-6">
+            <p className="text-gray-600">¿Confirmas que aceptas este cambio de turno?</p>
+            
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200 space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">Tu Turno</p>
+                  <p className="text-lg font-bold text-gray-800">{selectedCambio.fechaTurno}</p>
+                  <p className="text-sm text-gray-600 mt-1">{selectedCambio.usuarioSolicitante?.primerNombre} {selectedCambio.usuarioSolicitante?.primerApellido}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">Turno del Compañero</p>
+                  <p className="text-lg font-bold text-gray-800">{selectedCambio.fechaTurnoCompañero || '-'}</p>
+                  <p className="text-sm text-gray-600 mt-1">{selectedCambio.usuarioCompañero?.primerNombre} {selectedCambio.usuarioCompañero?.primerApellido}</p>
+                </div>
+              </div>
+              
+              {selectedCambio.descripcion && (
+                <div className="bg-white p-3 rounded border border-gray-200">
+                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">Motivo</p>
+                  <p className="text-sm text-gray-700">{selectedCambio.descripcion}</p>
+                </div>
+              )}
+              
+              <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                <p className="text-xs font-semibold text-blue-800">
+                  📋 Después de tu aprobación, se enviará a revisión de administradores (Jefe, Operaciones y RRHH).
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 justify-end">
+            <button 
+              onClick={() => { setShowApproveModal(false); setApprovingId(null); }} 
+              disabled={loading}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={confirmarAprobarCompañero} 
+              disabled={loading}
+              className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-md font-medium transition disabled:opacity-50"
+            >
+              {loading ? 'Procesando...' : '✓ Confirmar Aprobación'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <Toast 
+      message={toastData.message}
+      type={toastData.type}
+      isVisible={toastData.visible}
+      onClose={() => setToastData({ ...toastData, visible: false })}
+      duration={3500}
+    />
     </div>
   );
 };
