@@ -263,8 +263,8 @@ const CambiosTurnosModule = ({ usuarioId, userName, userRole = '', openCreateSig
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-purple-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
       <div className="w-full">
-        <div className="w-full min-h-[180px] bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
+        <div className="w-full min-h-[150px] sm:min-h-[180px] bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
@@ -322,14 +322,14 @@ const CambiosTurnosModule = ({ usuarioId, userName, userRole = '', openCreateSig
           </div>
         </div>
 
-        {error && <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center gap-2"><span>⚠️</span><span>{error}</span></div>}
-        {success && <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg flex items-center gap-2"><span>✓</span><span>{success}</span></div>}
+        {error && <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg text-sm sm:text-base flex items-center gap-2"><span>⚠️</span><span>{error}</span></div>}
+        {success && <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm sm:text-base flex items-center gap-2"><span>✓</span><span>{success}</span></div>}
 
         {/* Botón Toggle Formulario */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-semibold transition-colors ${
               showForm
                 ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
                 : 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -340,45 +340,45 @@ const CambiosTurnosModule = ({ usuarioId, userName, userRole = '', openCreateSig
         </div>
 
         {showForm && (
-          <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border-l-4 border-purple-600">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Nueva Solicitud de Cambio de Turno</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white shadow-xl rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border-l-4 border-purple-600">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Solicitud de Cambio de Turno</h2>
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tu fecha de turno (a entregar)</label>
-                  <input type="date" name="fechaTurno" value={form.fechaTurno} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required />
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tu fecha de turno (a entregar)</label>
+                  <input type="date" name="fechaTurno" value={form.fechaTurno} onChange={handleInputChange} className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Fecha del compañero (a recibir)</label>
-                  <input type="date" name="fechaTurnoCompañero" value={form.fechaTurnoCompañero} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required />
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Fecha del compañero (a recibir)</label>
+                  <input type="date" name="fechaTurnoCompañero" value={form.fechaTurnoCompañero} onChange={handleInputChange} className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Compañero</label>
-                <select name="idUsuarioCompañero" value={form.idUsuarioCompañero} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Compañero</label>
+                <select name="idUsuarioCompañero" value={form.idUsuarioCompañero} onChange={handleInputChange} className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
                   <option value="">Selecciona...</option>
                   {compañerosDisponibles.map(c => <option key={c.idUsuario} value={c.idUsuario}>{c.primerNombre} {c.segundoNombre} {c.primerApellido} {c.segundoApellido} - {c.documento}</option>)}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Solo compañeros del mismo rol</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Motivo</label>
-                <textarea name="descripcion" value={form.descripcion} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none" rows="4" required />
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Motivo</label>
+                <textarea name="descripcion" value={form.descripcion} onChange={handleInputChange} className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none" rows="4" required />
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded p-4 text-sm text-purple-700">
+              <div className="bg-purple-50 border border-purple-200 rounded p-3 sm:p-4 text-xs sm:text-sm text-purple-700">
                 <b>Proceso:</b> 1) Compañero aprueba → 2) Jefe → 3) Operaciones → 4) RRHH → 5) Malla se actualiza
               </div>
-              <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancelar</button>
-                <button type="submit" className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-md">Enviar</button>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancelar</button>
+                <button type="submit" className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-md">Enviar</button>
               </div>
             </form>
           </div>
         )}
 
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 sm:mb-6 flex-wrap">
           {['todas', 'pendientes', 'aprobadas', 'rechazadas'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg font-medium ${filter === f ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-gray-700 border hover:bg-gray-50'}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium ${filter === f ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-gray-700 border hover:bg-gray-50'}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}

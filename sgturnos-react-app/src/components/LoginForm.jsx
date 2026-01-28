@@ -87,24 +87,24 @@ const LoginForm = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="login-card w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-      <div className="flex flex-col items-center mb-8">
+    <div className="login-card w-full max-w-md p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow-2xl">
+      <div className="flex flex-col items-center mb-6 sm:mb-8">
         <img 
           src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" 
           alt="Logo SGTurnos" 
-          className="h-20 w-20 mb-4"
+          className="h-16 w-16 sm:h-20 sm:w-20 mb-3 sm:mb-4"
         />
-        <h1 className="text-3xl font-extrabold text-center text-gray-800 mb-1">Sistema de Gestión de Turnos</h1>
-        <h2 className="text-lg font-semibold text-center text-gray-600 mb-4">SGTurnos</h2>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-center text-gray-800 mb-1">Sistema de Gestión de Turnos</h1>
+        <h2 className="text-base sm:text-lg font-semibold text-center text-gray-600 mb-3 sm:mb-4">SGTurnos</h2>
       </div>
       
-      <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Iniciar Sesión</h3>
+      <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-4 sm:mb-6">Iniciar Sesión</h3>
       
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-md animate-bounce" style={{ animationDuration: '0.5s' }}>
-          <div className="flex items-center gap-3">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-md animate-bounce" style={{ animationDuration: '0.5s' }}>
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </div>
@@ -124,11 +124,11 @@ const LoginForm = ({ onLoginSuccess }) => {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <div>
-          <label className="block text-gray-700 text-base font-bold mb-2">Correo:</label>
+          <label className="block text-gray-700 text-sm sm:text-base font-bold mb-2">Correo:</label>
           <input
-            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -137,9 +137,9 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <div>
-          <label className="block text-gray-700 text-base font-bold mb-2">Contraseña:</label>
+          <label className="block text-gray-700 text-sm sm:text-base font-bold mb-2">Contraseña:</label>
           <input
-            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="shadow-sm appearance-none border-2 border-gray-200 rounded-xl w-full py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -148,7 +148,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
         <button
-          className={`text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform ${
+          className={`text-white font-bold py-2.5 sm:py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 w-full transition-colors duration-300 transform text-sm sm:text-base ${
             loading 
               ? 'bg-blue-400 cursor-not-allowed' 
               : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'

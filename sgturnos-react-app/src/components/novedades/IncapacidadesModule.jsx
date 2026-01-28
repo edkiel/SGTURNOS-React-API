@@ -183,8 +183,8 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-red-50 to-orange-50 min-h-screen" style={{ maxWidth: '1400px' }}>
       <div className="w-full">
-        <div className="w-full min-h-[180px] bg-gradient-to-r from-rose-600 via-red-600 to-orange-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
+        <div className="w-full min-h-[150px] sm:min-h-[180px] bg-gradient-to-r from-rose-600 via-red-600 to-orange-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
@@ -243,10 +243,10 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
         </div>
 
         {/* Botón Toggle Formulario */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-semibold transition-colors ${
               showForm
                 ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
                 : 'bg-red-600 hover:bg-red-700 text-white'
@@ -258,13 +258,13 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
 
         {/* Formulario */}
         {showForm && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-8 border-l-4 border-red-600">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Nueva Solicitud de Incapacidad</h2>
+          <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border-l-4 border-red-600">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Solicitud de Incapacidad</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Inicio
                   </label>
                   <input
@@ -272,13 +272,13 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
                     name="fechaInicio"
                     value={form.fechaInicio}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Fin
                   </label>
                   <input
@@ -286,27 +286,27 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
                     name="fechaFin"
                     value={form.fechaFin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Soporte en PDF (opcional)
                 </label>
                 <input
                   type="file"
                   accept="application/pdf"
                   onChange={handleFileChange}
-                  className="w-full text-sm"
+                  className="w-full text-xs sm:text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">Adjunta el certificado o incapacidad en formato PDF.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Diagnóstico / Motivo Médico
                 </label>
                 <input
@@ -315,12 +315,12 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
                   value={form.motivoMedico}
                   onChange={handleInputChange}
                   placeholder="Ej: Gripe, Cirugía, Recuperación..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Descripción / Observaciones
                 </label>
                 <textarea
@@ -328,23 +328,23 @@ const IncapacidadesModule = ({ usuarioId, userName, userRole = '', openCreateSig
                   value={form.descripcion}
                   onChange={handleInputChange}
                   placeholder="Ingresa detalles de tu incapacidad..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   rows="4"
                   required
                 />
               </div>
 
-              <div className="flex gap-3 justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Enviar Solicitud
                 </button>

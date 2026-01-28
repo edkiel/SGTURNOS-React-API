@@ -187,38 +187,38 @@ const UserList = () => {
   const roleEntries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="w-full p-4 bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
+    <div className="w-full p-2 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
       {/* Header Principal de Usuarios */}
-      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
         {/* Contenedor Principal */}
-        <div className="px-8 py-6">
+        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
           {/* Fila 1: Título */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-4">
             {/* Título Gestión de Usuarios */}
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292m0 0H7.465M12.354 9.354H16.465m-8.109-4a3 3 0 01-3-3H3.5m0 0h4m0 0a3 3 0 013-3h4a3 3 0 110 6h-4a3 3 0 01-3-3m0 0H3.5m4 6a3 3 0 013 3v4a3 3 0 01-3 3h-4a3 3 0 01-3-3v-4a3 3 0 013-3h4z" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Gestión de Usuarios</h1>
-                <p className="text-purple-100 text-sm mt-1">Administración de cuentas y permisos</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">Gestión de Usuarios</h1>
+                <p className="text-purple-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Administración de cuentas y permisos</p>
               </div>
             </div>
           </div>
 
           {/* Tarjetas de totales por rol en una fila compacta */}
-          <div className="border-t border-white/20 pt-4 mt-4">
-            <p className="text-purple-100 text-xs font-semibold mb-3">Usuarios por Rol</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className="border-t border-white/20 pt-3 sm:pt-4 mt-3 sm:mt-4">
+            <p className="text-purple-100 text-xs font-semibold mb-2 sm:mb-3">Usuarios por Rol</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
               {roleEntries.slice(0, 5).map(([rol, total]) => (
                 <div
                   key={rol}
-                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 text-center"
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-center"
                 >
-                  <p className="text-xs text-purple-100 font-medium">{rol}</p>
-                  <p className="text-lg font-bold text-white">{total}</p>
+                  <p className="text-xs text-purple-100 font-medium truncate">{rol}</p>
+                  <p className="text-base sm:text-lg font-bold text-white">{total}</p>
                 </div>
               ))}
             </div>
@@ -226,23 +226,23 @@ const UserList = () => {
         </div>
       </div>
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-fadeIn">
-            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-red-100">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-md w-full animate-fadeIn">
+            <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-red-100">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Confirmar Eliminación</h3>
-            <p className="text-center text-gray-600 mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-center text-gray-900 mb-2">Confirmar Eliminación</h3>
+            <p className="text-center text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               ¿Estás seguro de que deseas eliminar al usuario <span className="font-semibold text-gray-900">{confirmDelete.primerNombre} {confirmDelete.segundoNombre} {confirmDelete.primerApellido} {confirmDelete.segundoApellido}</span>?
               <br />
-              <span className="text-sm text-red-600 mt-2 block">Esta acción no se puede deshacer.</span>
+              <span className="text-xs sm:text-sm text-red-600 mt-2 block">Esta acción no se puede deshacer.</span>
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors text-sm sm:text-base"
               >
                 Cancelar
               </button>
@@ -309,14 +309,15 @@ const UserList = () => {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <div className="w-full sm:w-auto flex items-center gap-3">
-          <h2 className="text-2xl font-bold">Lista de Usuarios</h2>
+      <div className="flex flex-col gap-3 mb-4">
+        {/* Fila 1: Título y Select */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Lista de Usuarios</h2>
           <select
             aria-label="Campo de busqueda"
             value={searchField}
             onChange={(e) => setSearchField(e.target.value)}
-            className="ml-3 p-2 border rounded"
+            className="p-2 border rounded text-sm sm:text-base w-full sm:w-auto"
           >
             <option value="all">Todos</option>
             <option value="name">Nombre</option>
@@ -324,6 +325,10 @@ const UserList = () => {
             <option value="rol">Rol</option>
             <option value="correo">Correo</option>
           </select>
+        </div>
+        
+        {/* Fila 2: Input y botones de búsqueda */}
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             aria-label="Buscar usuarios"
@@ -340,37 +345,41 @@ const UserList = () => {
             }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ml-2 p-2 border rounded w-60"
+            className="p-2 border rounded text-sm sm:text-base flex-1"
           />
-          <button
-            onClick={() => fetchUsers()}
-            className="ml-2 bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600"
-          >
-            Buscar
-          </button>
-          <button
-            onClick={() => { setSearch(''); setSearchField('all'); }}
-            className="ml-2 bg-gray-200 px-3 py-2 rounded hover:bg-gray-300"
-          >
-            Limpiar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fetchUsers()}
+              className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 text-sm sm:text-base flex-1 sm:flex-initial"
+            >
+              Buscar
+            </button>
+            <button
+              onClick={() => { setSearch(''); setSearchField('all'); }}
+              className="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 text-sm sm:text-base flex-1 sm:flex-initial"
+            >
+              Limpiar
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        
+        {/* Fila 3: Botones de acción */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <button
             onClick={() => setShowCrearUsuario(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 font-medium"
+            className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center gap-2 font-medium text-sm sm:text-base"
           >
-            ➕ Crear Usuario (normal)
+            ➕ <span className="hidden sm:inline">Crear Usuario (normal)</span><span className="sm:hidden">Usuario</span>
           </button>
           <button
             onClick={() => setShowCrearAdmin(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2 font-medium"
+            className="bg-purple-600 text-white px-3 sm:px-4 py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2 font-medium text-sm sm:text-base"
           >
-            🔐 Crear Administrador
+            🔐 <span className="hidden sm:inline">Crear Administrador</span><span className="sm:hidden">Admin</span>
           </button>
           <button
             onClick={() => setFilterActivos(!filterActivos)}
-            className={`px-4 py-2 rounded flex items-center gap-2 font-medium transition-colors ${
+            className={`px-3 sm:px-4 py-2 rounded flex items-center justify-center gap-2 font-medium transition-colors text-sm sm:text-base ${
               filterActivos 
                 ? 'bg-green-600 text-white hover:bg-green-700' 
                 : 'bg-gray-600 text-white hover:bg-gray-700'

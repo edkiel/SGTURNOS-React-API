@@ -158,45 +158,45 @@ const TurnosModule = ({ user }) => {
   
 
   return (
-    <div className="w-full p-4 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
+    <div className="w-full p-2 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg" style={{ maxWidth: '100%' }}>
       {/* Header Principal de Turnos */}
-      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
+      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
         {/* Contenedor Principal */}
-        <div className="px-8 py-6">
+        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
           {/* Fila 1: Título y Usuario/Rol */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-4 mb-2">
             {/* Título Planificación */}
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Planificación de Turnos</h1>
-                <p className="text-green-100 text-sm mt-1">Sistema de Gestión de Mallas</p>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">Planificación de Turnos</h1>
+                <p className="text-green-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Sistema de Gestión de Mallas</p>
               </div>
             </div>
 
             {/* Usuario y Rol */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               {/* Card Usuario */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-green-200 font-medium">Usuario</p>
-                    <p className="text-sm font-semibold text-white">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim() || 'Usuario'}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white truncate">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim() || 'Usuario'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Card Rol */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                   </svg>
                   <div>

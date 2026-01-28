@@ -87,42 +87,42 @@ const TurnosGrid = ({ data, month }) => {
 
   return (
     <div>
-      {/* Leyenda profesional de tipos de turno */}
-      <div className="mb-4">
-        <div className="flex flex-wrap items-center gap-4">
+      {/* Leyenda profesional de tipos de turno - RESPONSIVE */}
+      <div className="mb-3 sm:mb-4 overflow-x-auto pb-2">
+        <div className="flex flex-nowrap items-center gap-2 sm:gap-3 sm:gap-4 min-w-min">
           {legendItems.map((it) => {
             // Forzamos etiqueta oscura y accesible; aumentamos tamaño del chip
             const forcedTextCol = '#2C3E50';
             return (
-              <div key={it.label} className="flex items-center gap-2 text-sm" title={it.label} aria-label={`Leyenda ${it.label}`}>
-                <div role="img" aria-hidden="false" title={it.label} style={{ width: 22, height: 22, backgroundColor: it.hex, borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)' }} />
+              <div key={it.label} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0" title={it.label} aria-label={`Leyenda ${it.label}`}>
+                <div role="img" aria-hidden="false" title={it.label} style={{ width: 18, height: 18, minWidth: 18, backgroundColor: it.hex, borderRadius: 4, border: '1px solid rgba(0,0,0,0.08)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ color: forcedTextCol, fontWeight: 600 }}>{it.label}</div>
-                  {it.horario && <div style={{ color: '#6B7280', fontSize: '11px', marginTop: '2px' }}>{it.horario}</div>}
+                  <div style={{ color: forcedTextCol, fontWeight: 600, fontSize: '11px' }}>{it.label}</div>
+                  {it.horario && <div style={{ color: '#6B7280', fontSize: '9px', marginTop: '1px' }}>{it.horario}</div>}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-      {/* Vista mensual completa - todos los días en una sola tabla horizontal */}
-      <div id={containerId} className="overflow-x-auto bg-white p-2 rounded shadow-sm" style={{ width: '100%' }}>
-        <table role="table" aria-label="Malla mensual completa" className="w-full border-collapse" style={{ fontSize: '10px', width: '100%' }}>
+      {/* Vista mensual completa - todos los días en una sola tabla horizontal - RESPONSIVE */}
+      <div id={containerId} className="overflow-x-auto bg-white p-1 sm:p-2 rounded shadow-sm" style={{ width: '100%' }}>
+        <table role="table" aria-label="Malla mensual completa" className="w-full border-collapse" style={{ fontSize: 'clamp(8px, 1.2vw, 10px)', width: '100%' }}>
           <thead>
             <tr>
-              <th className="border p-1 bg-gray-100 sticky left-0 z-10 text-left" style={{ width: '110px', fontSize: '10px' }}>Empleado</th>
+              <th className="border p-1 bg-gray-100 sticky left-0 z-10 text-left" style={{ width: '90px', fontSize: 'clamp(8px, 1.1vw, 10px)' }}>Empleado</th>
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                 const date = new Date(year, monthNum - 1, day);
                 const dayName = ['D', 'L', 'M', 'X', 'J', 'V', 'S'][date.getDay()];
                 return (
-                  <th key={`h-${day}`} className="border p-1 bg-blue-100 text-center" style={{ fontSize: '8px', lineHeight: '1.1', padding: '2px' }}>
+                  <th key={`h-${day}`} className="border p-0.5 sm:p-1 bg-blue-100 text-center" style={{ fontSize: 'clamp(7px, 1vw, 8px)', lineHeight: '1.1', padding: '2px' }}>
                     <div className="font-semibold">{dayName}</div>
-                    <div style={{ fontSize: '8px' }}>{day}</div>
+                    <div style={{ fontSize: '7px' }}>{day}</div>
                   </th>
                 );
               })}
-              <th className="border p-1 bg-gray-100" style={{ width: '32px', fontSize: '9px' }}>T</th>
-              <th className="border p-1 bg-gray-100" style={{ width: '32px', fontSize: '9px' }}>H</th>
+              <th className="border p-1 bg-gray-100" style={{ width: '28px', fontSize: '8px' }}>T</th>
+              <th className="border p-1 bg-gray-100" style={{ width: '28px', fontSize: '8px' }}>H</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +136,7 @@ const TurnosGrid = ({ data, month }) => {
               })
               .map((row) => (
                 <tr key={`${row.id}`}> 
-                  <td className="border p-1 font-medium bg-white sticky left-0 z-10" style={{ width: '110px', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.name}</td>
+                  <td className="border p-0.5 sm:p-1 font-medium bg-white sticky left-0 z-10" style={{ width: '90px', fontSize: 'clamp(8px, 1.1vw, 9px)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.name}</td>
                   {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                     const turnoValue = row[`d${day}`] || '';
                     const colorClasses = getTurnoColorClasses(turnoValue);
@@ -148,10 +148,10 @@ const TurnosGrid = ({ data, month }) => {
                           backgroundColor: colorClasses.bgHex || undefined, 
                           borderColor: colorClasses.borderHex || undefined, 
                           color: colorClasses.textHex || undefined, 
-                          fontSize: '8px',
-                          padding: '2px 1px',
-                          lineHeight: '1.0',
-                          minWidth: '28px'
+                          fontSize: 'clamp(7px, 1vw, 8px)',
+                          padding: '1px',
+                          lineHeight: '1.1',
+                          minWidth: '24px'
                         }}
                       >
                         {/* Normalizar valores largos a códigos cortos */}
@@ -174,8 +174,8 @@ const TurnosGrid = ({ data, month }) => {
                       </td>
                     );
                   })}
-                  <td className="border text-center font-semibold" style={{ width: '32px', fontSize: '9px', padding: '2px' }}>{row.turnos || ''}</td>
-                  <td className="border text-center font-semibold" style={{ width: '32px', fontSize: '9px', padding: '2px' }}>{row.horas || ''}</td>
+                  <td className="border p-0.5 sm:p-1 text-center font-semibold" style={{ width: '28px', fontSize: '8px', padding: '2px' }}>{row.turnos || ''}</td>
+                  <td className="border p-0.5 sm:p-1 text-center font-semibold" style={{ width: '28px', fontSize: '8px', padding: '2px' }}>{row.horas || ''}</td>
                 </tr>
               ))}
           </tbody>

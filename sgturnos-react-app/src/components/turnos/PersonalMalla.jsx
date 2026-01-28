@@ -90,89 +90,93 @@ const PersonalMalla = ({ user }) => {
   if (!malla || malla.length === 0) return <div className="bg-white p-4 rounded-md shadow">No hay malla generada para tu rol.</div>;
 
   return (
-    <div className="w-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-green-50 to-emerald-100">
-      {/* Header elegante como Dashboard */}
+    <div className="w-full p-2 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-green-50 to-emerald-100">
+      {/* Header elegante como Dashboard - Responsivo */}
       <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-        <div className="px-8 py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-4 mb-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Consultar mi malla de turno</h1>
-                <p className="text-green-100 text-sm mt-1">Visualiza tu malla publicada y descárgala cuando la necesites</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">Consultar mi malla de turno</h1>
+                <p className="text-green-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Visualiza tu malla publicada y descárgala cuando la necesites</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-green-200 font-medium">Usuario</p>
-                    <p className="text-sm font-semibold text-white">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white truncate">{`${user?.primerNombre || ''} ${user?.segundoNombre || ''} ${user?.primerApellido || ''} ${user?.segundoApellido || ''}`.trim()}</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                   </svg>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-green-200 font-medium">Rol</p>
-                    <p className="text-sm font-semibold text-white">{getRoleName()}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white truncate">{getRoleName()}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="border-t border-white/20 pt-3 mt-3">
-            <p className="text-green-100 text-sm">
+          <div className="border-t border-white/20 pt-2 sm:pt-3 mt-2 sm:mt-3">
+            <p className="text-green-100 text-xs sm:text-sm">
               Descarga tu malla en Excel o PDF para tenerla siempre disponible
             </p>
           </div>
         </div>
       </div>
-      <div className="w-full bg-white rounded-md shadow">
+      <div className="w-full bg-white rounded-md shadow p-2 sm:p-4 md:p-6">
       
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">📅</span>
-            <div>
-              <h3 className="font-bold text-xl text-gray-800">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl flex-shrink-0">📅</span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-base sm:text-lg md:text-xl text-gray-800 truncate">
                 {isAdmin ? `Tu malla (${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })})` : `Malla de turno - ${getRoleName()}`}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">Semana 1 de 7</p>
+              <p className="text-xs text-gray-500 mt-0.5 sm:mt-1">Semana 1 de 7</p>
             </div>
           </div>
-          {isOfficial && <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold px-4 py-2 rounded-full shadow-md text-sm flex items-center gap-1"><span>✓</span> Oficial</span>}
+          {isOfficial && (
+            <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-md text-xs sm:text-sm flex items-center gap-1">
+              <span>✓</span> Oficial
+            </span>
+          )}
         </div>
         {/* Código de colores: centrado inmediatamente debajo del título de la malla */}
-        <div className="mb-4 flex justify-center">
+        <div className="mb-3 sm:mb-4 flex justify-center">
           <CodigoColoresMalla inline={true} showTitle={false} />
         </div>
 
-        <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-        {/* Botones de roles solo visibles para administrador */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        {/* Botones de roles solo visibles para administrador - Scroll horizontal en móvil */}
         {isAdmin && (
-          <div className="flex items-center gap-2">
-            <button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('aux01')}>🔧 AUXILIARES</button>
-            <button className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('enf02')}>💉 ENFERMEROS</button>
-            <button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('med03')}>🏥 MEDICOS</button>
-            <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition" onClick={async () => await loadPublished('ter04')}>✨ TERAPEUTAS</button>
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition whitespace-nowrap flex-shrink-0" onClick={async () => await loadPublished('aux01')}>🔧 AUX</button>
+            <button className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition whitespace-nowrap flex-shrink-0" onClick={async () => await loadPublished('enf02')}>💉 ENF</button>
+            <button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition whitespace-nowrap flex-shrink-0" onClick={async () => await loadPublished('med03')}>🏥 MED</button>
+            <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition whitespace-nowrap flex-shrink-0" onClick={async () => await loadPublished('ter04')}>✨ TER</button>
           </div>
         )}
         {/* Espaciador si no es admin */}
         {!isAdmin && <div></div>}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-2 justify-end">
           <button
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1 whitespace-nowrap"
             onClick={() => exportGridToExcel(malla, `malla_${new Date().toISOString().slice(0,7)}.xlsx`, {
               excludeColumns: [
                 'MED_min','MED_max','MED_avg','MED_std','JEF_min','JEF_max','JEF_avg','JEF_std',
@@ -182,12 +186,12 @@ const PersonalMalla = ({ user }) => {
               ]
             })}
           >
-            <span>📊</span>
+            <span className="hidden sm:inline">📊</span>
             Excel
           </button>
 
           <button
-            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1"
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-lg font-semibold shadow-md transition flex items-center gap-1 whitespace-nowrap"
             onClick={async () => {
               try {
                 // Crear un contenedor temporal que incluya leyenda + malla
@@ -252,14 +256,14 @@ const PersonalMalla = ({ user }) => {
       </div>
     </div>
 
-    {/* Marco elegante para la malla */}
-    <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-2xl border-2 border-indigo-200 shadow-2xl overflow-hidden">
-        {/* Encabezado decorativo del marco */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-4 flex items-center gap-3">
-          <span className="text-2xl animate-pulse">📋</span>
-          <div className="text-white">
-            <h4 className="font-bold text-lg">Visualización de Malla de Turno</h4>
-            <p className="text-indigo-100 text-xs mt-1">Calendario de turnos publicado para {getRoleName()}</p>
+    {/* Marco elegante para la malla - Responsivo */}
+    <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-lg sm:rounded-2xl border border-sm:border-2 border-indigo-200 shadow-xl overflow-hidden">
+        {/* Encabezado decorativo del marco - Responsivo */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
+          <span className="text-lg sm:text-2xl animate-pulse flex-shrink-0">📋</span>
+          <div className="text-white min-w-0">
+            <h4 className="font-bold text-sm sm:text-lg truncate">Visualización de Malla de Turno</h4>
+            <p className="text-indigo-100 text-xs mt-0.5 sm:mt-1 truncate">Calendario de turnos publicado para {getRoleName()}</p>
           </div>
         </div>
 
@@ -271,7 +275,7 @@ const PersonalMalla = ({ user }) => {
         )}
 
         {/* Visible grid view (TurnosGrid) for conventional users - always show calendar/week cards */}
-        <div id="personal-malla-table" className="p-6 bg-white">
+        <div id="personal-malla-table" className="p-2 sm:p-4 md:p-6 bg-white overflow-x-auto">
           {/* código de colores mostrado arriba, eliminado aquí para evitar duplicados */}
 
           {/* Grid de turnos */}
@@ -284,20 +288,20 @@ const PersonalMalla = ({ user }) => {
             </>
           ) : (
             /* Fallback: simple summary table if no day columns */
-            <div className="text-sm">
+            <div className="text-xs sm:text-sm overflow-x-auto">
               <table className="min-w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="border p-2 bg-gray-100">Empleado</th>
-                    <th className="border p-2 bg-gray-100">Turnos</th>
-                    <th className="border p-2 bg-gray-100">Horas</th>
+                    <th className="border p-1 sm:p-2 bg-gray-100">Empleado</th>
+                    <th className="border p-1 sm:p-2 bg-gray-100">Turnos</th>
+                    <th className="border p-1 sm:p-2 bg-gray-100">Horas</th>
                   </tr>
                 </thead>
                 <tbody>
                   {malla.map((r, idx) => (
                     <tr key={idx}>
-                      <td className="border p-2">{r.name}</td>
-                      <td className="border p-2">{r.turnos ?? ''}</td>
+                      <td className="border p-1 sm:p-2">{r.name}</td>
+                      <td className="border p-1 sm:p-2">{r.turnos ?? ''}</td>
                       <td className="border p-2">{r.horas ?? ''}</td>
                     </tr>
                   ))}
