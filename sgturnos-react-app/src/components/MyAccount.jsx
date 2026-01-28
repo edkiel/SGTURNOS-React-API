@@ -82,21 +82,21 @@ const MyAccount = ({ user }) => {
   };
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="w-full mx-auto p-2 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full">
-        {/* Header elegante como Dashboard */}
+        {/* Header elegante como Dashboard - Responsivo */}
         <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-4 mb-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white">Informacion de mi usuario</h1>
-                  <p className="text-purple-100 text-sm mt-1">Consulta y actualiza tus datos personales</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">Informacion de mi usuario</h1>
+                  <p className="text-purple-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Consulta y actualiza tus datos personales</p>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

@@ -194,8 +194,8 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen" style={{ maxWidth: '1400px' }}>
       <div className="w-full">
-        <div className="w-full min-h-[180px] bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
+        <div className="w-full min-h-[150px] sm:min-h-[180px] bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
@@ -254,10 +254,10 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
         </div>
 
         {/* Botón Toggle Formulario */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-semibold transition-colors ${
               showForm
                 ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
                 : 'bg-amber-600 hover:bg-amber-700 text-white'
@@ -269,26 +269,26 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
 
         {/* Mensajes de estado */}
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg text-sm sm:text-base">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm sm:text-base">
             {success}
           </div>
         )}
 
         {/* Formulario */}
         {showForm && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-8 border-l-4 border-amber-600">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud de Permiso</h2>
+          <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border-l-4 border-amber-600">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Nueva Solicitud de Permiso</h2>
 
             <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Fechas */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Inicio *
                   </label>
                   <input
@@ -296,13 +296,13 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                     name="fechaInicio"
                     value={form.fechaInicio}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Fin *
                   </label>
                   <input
@@ -310,21 +310,21 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                     name="fechaFin"
                     value={form.fechaFin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 {/* Selección de aprobadores */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Jefe Inmediato *
                   </label>
                   <select
                     name="idJefeInmediato"
                     value={form.idJefeInmediato}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -337,14 +337,14 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Operaciones Clínicas *
                   </label>
                   <select
                     name="idOperacionesClinicas"
                     value={form.idOperacionesClinicas}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -357,14 +357,14 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Recursos Humanos *
                   </label>
                   <select
                     name="idRecursosHumanos"
                     value={form.idRecursosHumanos}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -378,7 +378,7 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
 
                 {/* Tipo de Permiso */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Tipo de Permiso *
                   </label>
                   <input
@@ -387,13 +387,13 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                     value={form.tipoPermiso}
                     onChange={handleInputChange}
                     placeholder="Ej: Permiso de asuntos personales, Cita médica, etc..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Descripción */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Descripción / Motivo *
                   </label>
                   <textarea
@@ -401,24 +401,24 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
                     value={form.descripcion}
                     onChange={handleInputChange}
                     placeholder="Ingresa detalles de tu solicitud de permiso..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                     rows="4"
                     required
                   />
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-4">
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Enviar Solicitud
                 </button>
@@ -428,12 +428,12 @@ const PermisosModule = ({ usuarioId, userName, userRole = '', openCreateSignal, 
         )}
 
         {/* Filtros */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 sm:mb-6 flex-wrap">
           {['todas', 'pendientes', 'aprobadas', 'rechazadas'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
                 filter === f
                   ? 'bg-amber-600 text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'

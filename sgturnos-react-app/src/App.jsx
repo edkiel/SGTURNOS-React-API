@@ -36,6 +36,31 @@ const Dashboard = ({ user, onLogout }) => {
   const [novedadesTab, setNovedadesTab] = useState('registro'); // Tab para módulo de novedades (admin por defecto)
   const [createSignal, setCreateSignal] = useState(0); // señal para abrir formulario de creación
   const [novedadesMenuOpen, setNovedadesMenuOpen] = useState(false); // Control del submenú de novedades
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Control del sidebar responsivo
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Detectar si es móvil
+
+  // Hook para detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Cerrar sidebar automáticamente si volvemos a desktop
+      if (!mobile) {
+        setSidebarOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Cerrar sidebar cuando se cambia de tab en móvil
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
 
   // Verificar si el usuario es administrador
   const isAdmin = user && ((user.rol && user.rol.rol && String(user.rol.rol).toUpperCase().includes('ADMIN')) || (user.rol && user.rol.idRol && String(user.rol.idRol).toLowerCase().includes('adm')));
@@ -132,18 +157,43 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar de navegacion */}
-      <aside className="w-64 bg-gray-800 text-white flex flex-col p-6 rounded-r-3xl shadow-xl">
-        <div className="flex-shrink-0 flex items-center mb-8">
-          <img src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" alt="Logo" className="w-12 h-12 mr-3"/>
-          <h2 className="text-2xl font-bold">SGTurnos</h2>
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* Overlay móvil para cerrar sidebar */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar de navegacion - Responsivo */}
+      <aside className={`${
+        isMobile 
+          ? `fixed left-0 top-0 h-full w-64 z-40 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}` 
+          : 'w-64 relative'
+      } bg-gray-800 text-white flex flex-col p-6 rounded-r-3xl shadow-xl`}>
+        <div className="flex-shrink-0 flex items-center mb-8 justify-between">
+          <div className="flex items-center">
+            <img src="https://i.ibb.co/BV0Xp3sF/logosinfondo-SGT-naranja1.png" alt="Logo" className="w-12 h-12 mr-3"/>
+            <h2 className="text-2xl font-bold">SGTurnos</h2>
+          </div>
+          {/* Botón cerrar sidebar en móvil */}
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-white hover:bg-gray-700 p-2 rounded-lg md:hidden"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
         <nav className="flex-grow">
           <ul>
             <li>
               <button
-                onClick={() => setActiveTab('home')}
+                onClick={() => handleTabChange('home')}
                 className={`w-full text-left py-3.5 px-5 rounded-xl font-semibold text-base md:text-lg transition-colors duration-200 mb-2 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-700'}`}
               >
                 Inicio
@@ -358,7 +408,19 @@ const Dashboard = ({ user, onLogout }) => {
       </aside>
 
       {/* Contenido principal */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'p-3 sm:p-4' : 'p-4 sm:p-6 lg:p-8'}`}>
+        {/* Botón hamburger en móvil */}
+        {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden flex items-center justify-center bg-gray-800 text-white p-3 rounded-lg mb-4 w-full hover:bg-gray-700 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="ml-2 font-semibold">Menú</span>
+          </button>
+        )}
         <div className="w-full">
           {renderContent()}
         </div>
