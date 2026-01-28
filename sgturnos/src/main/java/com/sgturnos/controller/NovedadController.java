@@ -111,6 +111,22 @@ public class NovedadController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    
+    /**
+     * Obtener todas las novedades relacionadas con un usuario
+     * Incluye novedades propias + cambios de turno donde es compañero
+     * GET /api/novedades/usuario/{idUsuario}/todas
+     */
+    @GetMapping("/usuario/{idUsuario}/todas")
+    public ResponseEntity<?> obtenerTodasNovedadesRelacionadas(@PathVariable Long idUsuario) {
+        try {
+            List<Novedad> novedades = novedadService.obtenerTodasNovedadesRelacionadas(idUsuario);
+            List<NovedadResponseDTO> dtos = convertirListaNovedadesADTO(novedades);
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     /**
      * Aprobar una novedad
