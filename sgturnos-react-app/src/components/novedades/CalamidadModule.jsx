@@ -172,8 +172,8 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
   return (
     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-orange-50 to-red-50 min-h-screen" style={{ maxWidth: '1400px' }}>
       <div className="w-full">
-        <div className="w-full min-h-[180px] bg-gradient-to-r from-orange-600 via-amber-600 to-red-500 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
+        <div className="w-full min-h-[150px] sm:min-h-[180px] bg-gradient-to-r from-orange-600 via-amber-600 to-red-500 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
@@ -232,10 +232,10 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
         </div>
         
         {/* Botón Toggle Formulario */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-semibold transition-colors ${
               showForm
                 ? 'bg-gray-300 hover:bg-gray-400 text-gray-800'
                 : 'bg-orange-600 hover:bg-orange-700 text-white'
@@ -247,25 +247,25 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
         
         {/* Mensajes de estado */}
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg text-sm sm:text-base">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm sm:text-base">
             {success}
           </div>
         )}
 
         {/* Formulario */}
         {showForm && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-8 border-l-4 border-orange-600">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Nuevo Reporte de Calamidad</h2>
+          <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border-l-4 border-orange-600">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Nuevo Reporte de Calamidad</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Inicio
                   </label>
                   <input
@@ -273,13 +273,13 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
                     name="fechaInicio"
                     value={form.fechaInicio}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Fin
                   </label>
                   <input
@@ -287,21 +287,21 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
                     name="fechaFin"
                     value={form.fechaFin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Tipo de Calamidad
                 </label>
                 <select
                   name="tipoCalamidad"
                   value={form.tipoCalamidad}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="">Selecciona un tipo...</option>
                   <option value="muerte">Muerte en la familia</option>
@@ -313,7 +313,7 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Descripción Detallada
                 </label>
                 <textarea
@@ -321,24 +321,24 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
                   value={form.descripcion}
                   onChange={handleInputChange}
                   placeholder="Describe la situación de calamidad en detalle. Incluye información relevante que ayude a procesar tu solicitud."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                   rows="5"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Archivos de Soporte (Opcional)
                 </label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={handleFileChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full text-xs sm:text-sm"
                 />
                 {file && (
-                  <p className="text-sm text-green-600 mt-2">
+                  <p className="text-xs sm:text-sm text-green-600 mt-2">
                     ✓ Archivo seleccionado: {file.name}
                   </p>
                 )}
@@ -347,23 +347,23 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
                 </p>
               </div>
 
-              <div className="bg-orange-50 border border-orange-200 rounded p-4">
-                <p className="text-sm text-orange-700">
+              <div className="bg-orange-50 border border-orange-200 rounded p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-orange-700">
                   <span className="font-semibold">ℹ️ Información:</span> Puedes adjuntar documentos de soporte (opcional) que ayuden a respaldar tu reporte de calamidad. Sin archivos, tu solicitud será procesada normalmente.
                 </p>
               </div>
 
-              <div className="flex gap-3 justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Enviar Reporte
                 </button>
@@ -373,12 +373,12 @@ const CalamidadModule = ({ usuarioId, userName, userRole = '', openCreateSignal,
         )}
 
         {/* Filtros */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 sm:mb-6 flex-wrap">
           {['todas', 'pendientes', 'aprobadas', 'rechazadas'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
                 filter === f
                   ? 'bg-orange-600 text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'

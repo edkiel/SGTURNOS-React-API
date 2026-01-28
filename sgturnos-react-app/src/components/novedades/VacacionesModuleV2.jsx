@@ -276,54 +276,54 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
   });
 
   return (
-    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
+    <div className="w-full mx-auto p-2 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen" style={{ maxWidth: '1400px' }}>
       <div className="w-full">
         {/* Header estilo Turnos (glassmorphism) */}
-        <div className="w-full min-h-[180px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-6 overflow-hidden">
-          <div className="px-8 py-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-full min-h-[150px] sm:min-h-[180px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-4 sm:mb-6 overflow-hidden">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-4 mb-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7m-9 4v10" />
                   </svg>
                 </div>
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white">Vacaciones</h1>
-                  <p className="text-indigo-100 text-sm mt-1">Gestión de solicitudes y aprobaciones en cadena</p>
-                  <p className="text-indigo-100 text-xs">Flujo: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">Vacaciones</h1>
+                  <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Gestión de solicitudes y aprobaciones en cadena</p>
+                  <p className="text-indigo-100 text-xs hidden sm:block">Flujo: Jefe Inmediato → Operaciones Clínicas → Recursos Humanos</p>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-indigo-200 font-medium">USUARIO</p>
-                      <p className="text-sm font-semibold text-white">{userName || 'Usuario'}</p>
+                      <p className="text-xs sm:text-sm font-semibold text-white truncate">{userName || 'Usuario'}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 shadow-lg">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-indigo-200 font-medium">ROL</p>
-                      <p className="text-sm font-semibold text-white">{userRole || 'Sin rol'}</p>
+                      <p className="text-xs sm:text-sm font-semibold text-white truncate">{userRole || 'Sin rol'}</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-white/20 pt-3 mt-3">
-              <p className="text-indigo-100 text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-white/20 pt-2 sm:pt-3 mt-2 sm:mt-3">
+              <p className="text-indigo-100 text-xs sm:text-sm">
                 Visualiza, crea y aprueba solicitudes de vacaciones con trazabilidad completa.
               </p>
               <div className="flex items-center gap-2 flex-wrap">
@@ -340,15 +340,15 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
         {/* Formulario */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud de Vacaciones</h2>
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Nueva Solicitud de Vacaciones</h2>
             <form onSubmit={handleSubmit}>
               {/* Bloque destacado para periodo cumplido */}
-              <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-xl p-4 shadow-sm">
-                <h3 className="text-lg font-semibold text-indigo-800 mb-4">Peridodo cumplido</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mb-4 sm:mb-6 bg-indigo-50 border border-indigo-200 rounded-xl p-3 sm:p-4 shadow-sm">
+                <h3 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3 sm:mb-4">Peridodo cumplido</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       Periodo cumplido - Inicio
                     </label>
                     <input
@@ -357,12 +357,12 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                       value={form.periodoCumplidoInicio}
                       onChange={handleInputChange}
                       max={getMaxFechaPeriodoCumplido()}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       Periodo cumplido - Fin
                     </label>
                     <input
@@ -370,7 +370,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                       name="periodoCumplidoFin"
                       value={form.periodoCumplidoFin}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       required
                     />
                     {form.periodoCumplidoInicio && (
@@ -382,10 +382,10 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Fechas */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Inicio *
                   </label>
                   <input
@@ -394,13 +394,13 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                     value={form.periodoVacacionInicio}
                     onChange={handleInputChange}
                     min={getMinFechaPeriodoVacacional()}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Fecha de Fin *
                   </label>
                   <input
@@ -408,7 +408,7 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                     name="periodoVacacionFin"
                     value={form.periodoVacacionFin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                   {form.periodoVacacionInicio && (
@@ -420,14 +420,14 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
                 {/* Días solicitados */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Días solicitados
                   </label>
                   <input
                     type="text"
                     value={calcularDiasSolicitados(form.periodoVacacionInicio, form.periodoVacacionFin)}
                     readOnly
-                    className="w-full px-4 py-2 bg-blue-50 border border-blue-300 rounded-lg text-lg font-bold text-blue-700 text-center"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-50 border border-blue-300 rounded-lg text-base sm:text-lg font-bold text-blue-700 text-center"
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-600 mt-1">
@@ -437,14 +437,14 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
 
                 {/* Selección de aprobadores */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Jefe Inmediato *
                   </label>
                   <select
                     name="idJefeInmediato"
                     value={form.idJefeInmediato}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -457,14 +457,14 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Operaciones Clínicas *
                   </label>
                   <select
                     name="idOperacionesClinicas"
                     value={form.idOperacionesClinicas}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
@@ -477,14 +477,14 @@ const VacacionesModuleV2 = ({ usuarioId, userName, userRole = '', openCreateSign
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Recursos Humanos *
                   </label>
                   <select
                     name="idRecursosHumanos"
                     value={form.idRecursosHumanos}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
                     <option value="">Seleccione...</option>
