@@ -7,8 +7,9 @@ import jsPDF from 'jspdf';
 import Toast from '../common/Toast';
 
 const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
-  const month = new Date().toISOString().slice(0, 7);
-
+  // Estado para el mes seleccionado (inicialmente mes actual)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  
   const [mallaData, setMallaData] = useState({
     med03: null,
     aux01: null,
@@ -61,7 +62,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
     setLoading(prev => ({ ...prev, [roleId]: true }));
 
     try {
-      const res = await api.get(`/mallas/published?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`);
+      const res = await api.get(`/mallas/published?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(selectedMonth)}`);
       
       const json = res.data;
       if (json && json.preview) {
@@ -81,13 +82,13 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
     }
   };
 
-  // Cargar todas las mallas al montar el componente
+  // Cargar todas las mallas al montar el componente o cuando cambie el mes seleccionado
   useEffect(() => {
     roleIds.forEach(roleId => {
       loadPublishedMalla(roleId);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month]);
+  }, [selectedMonth]);
 
   // Detectar si hay columnas de días
   const hasDayColumns = (malla) => {
@@ -102,7 +103,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
       alert('No hay datos para exportar');
       return;
     }
-    await exportGridToExcel(malla, `Malla_${roleName}_${month}.xlsx`, {
+    await exportGridToExcel(malla, `Malla_${roleName}_${selectedMonth}.xlsx`, {
       excludeColumns: ['id'],
       excludeRowMarkers: ['EQUITY_STATS', 'SUMMARY'],
       excludeRowIds: [-1]
@@ -125,13 +126,13 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
     }
 
     // Extraer mes y año del formato YYYY-MM
-    const [year, monthNum] = month.split('-');
+    const [year, monthNum] = selectedMonth.split('-');
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const monthName = monthNames[parseInt(monthNum) - 1];
 
     try {
-      await exportGridToPdf(containerId, `Malla_${roleName}_${month}.pdf`, {
+      await exportGridToPdf(containerId, `Malla_${roleName}_${selectedMonth}.pdf`, {
         marginX: 10,
         marginY: 10,
         fontSize: '11px',
@@ -162,7 +163,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
     const { roleId, roleName } = confirmUnpublish;
 
     try {
-      await api.delete(`/mallas/unpublish?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(month)}`);
+      await api.delete(`/mallas/unpublish?roleId=${encodeURIComponent(roleId)}&month=${encodeURIComponent(selectedMonth)}`);
       
       setToastData({ visible: true, message: `Malla de ${roleName} despublicada correctamente`, type: 'success' });
       
@@ -250,7 +251,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
       // Agregar título
       pdf.setFontSize(16);
       pdf.setTextColor(0, 0, 0);
-      pdf.text(`Malla de ${roleName} - ${month}`, margin, margin + 5);
+      pdf.text(`Malla de ${roleName} - ${selectedMonth}`, margin, margin + 5);
 
       let heightLeft = imgHeight;
       let position = margin + 10; // Dejar espacio para el título
@@ -299,6 +300,37 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
     });
   };
 
+  // Generar opciones de meses (mes actual y próximo mes)
+  const generateMonthOptions = () => {
+    const options = [];
+    const currentDate = new Date();
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    // Mes actual
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentMonthValue = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    options.push({
+      value: currentMonthValue,
+      label: `${monthNames[currentMonth]} ${currentYear}`
+    });
+    
+    // Próximo mes
+    const nextDate = new Date(currentYear, currentMonth + 1, 1);
+    const nextYear = nextDate.getFullYear();
+    const nextMonth = nextDate.getMonth();
+    const nextMonthValue = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
+    options.push({
+      value: nextMonthValue,
+      label: `${monthNames[nextMonth]} ${nextYear}`
+    });
+    
+    return options;
+  };
+
+  const monthOptions = generateMonthOptions();
+
   return (
     <div className="w-full">
       <div className="w-full mb-4">
@@ -307,8 +339,23 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
             <span className="text-2xl">📋</span>
             <div>
               <h3 className="text-xl font-bold text-gray-800">Mallas Oficiales Publicadas</h3>
-              <p className="text-sm text-gray-600">Mes: <span className="font-semibold">{month}</span></p>
             </div>
+          </div>
+          
+          {/* Selector de mes */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Ver mallas de:</label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800 font-semibold"
+            >
+              {monthOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -336,7 +383,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
                   {/* Grid de turnos */}
                   <div id={`malla-grid-${roleId}`} className="mb-6 overflow-x-auto">
                     {hasDayColumns(mallaData[roleId]) ? (
-                      <TurnosGrid data={mallaData[roleId]} month={month} />
+                      <TurnosGrid data={mallaData[roleId]} month={selectedMonth} />
                     ) : (
                       <p className="text-gray-500 text-center py-8">
                         Formato de malla no reconocido
@@ -383,7 +430,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
               ) : (
                 <div className="w-full text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
                   <p className="text-gray-500 text-lg">
-                    No hay malla oficial publicada para {roleNames[roleId].toLowerCase()} en {month}
+                    No hay malla oficial publicada para {roleNames[roleId].toLowerCase()} en {selectedMonth}
                   </p>
                 </div>
               )}
@@ -399,7 +446,7 @@ const AdminPublishedMallas = ({ user, roleName, isUsuarioRegular }) => {
             {/* Header del modal */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-2xl font-bold text-gray-800">
-                Malla de {pdfModal.roleName} - {month}
+                Malla de {pdfModal.roleName} - {selectedMonth}
               </h3>
               <button
                 onClick={closePdfModal}
